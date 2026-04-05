@@ -136,7 +136,8 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 .block-edit-btn:hover{background:rgba(0,0,0,0.25)!important}
 
 /* live conflict */
-.block-ath-line{display:flex;align-items:center;gap:2px;line-height:1.4;font-size:7.5px;font-family:'Calibri',sans-serif}
+.block-ath-line{display:none;align-items:center;gap:2px;line-height:1.4;font-size:7.5px;font-family:'Calibri',sans-serif}
+.block-ath-line.live-conflict{display:flex!important}
 .roster-row-sel{background:#dbeafe !important;outline:1.5px solid #3b82f6;}
 .block-ath-line.live-conflict{color:var(--conflict)!important;font-weight:700}
 .block-ath-line.live-conflict::before{content:'⚠';font-size:7px;margin-right:1px}
@@ -755,7 +756,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-018</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-020</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1201,7 +1202,8 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 .block-edit-btn:hover{background:rgba(0,0,0,0.25)!important}
 
 /* live conflict */
-.block-ath-line{display:flex;align-items:center;gap:2px;line-height:1.4;font-size:7.5px;font-family:'Calibri',sans-serif}
+.block-ath-line{display:none;align-items:center;gap:2px;line-height:1.4;font-size:7.5px;font-family:'Calibri',sans-serif}
+.block-ath-line.live-conflict{display:flex!important}
 .roster-row-sel{background:#dbeafe !important;outline:1.5px solid #3b82f6;}
 .block-ath-line.live-conflict{color:var(--conflict)!important;font-weight:700}
 .block-ath-line.live-conflict::before{content:'⚠';font-size:7px;margin-right:1px}
@@ -1730,7 +1732,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-018<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-020<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4199,9 +4201,9 @@ function getConflicts(athIdx) {
       if (sorted[i].day !== sorted[i+1].day) continue;
       const gap = sorted[i+1].wu_start - sorted[i].cp_end;
       if (gap < 0)
-        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'conflict'});
+        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'conflict', bid1:sorted[i].bid, bid2:sorted[i+1].bid});
       else if (gap < WARN_GAP)
-        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'warn'});
+        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'warn', bid1:sorted[i].bid, bid2:sorted[i+1].bid});
     }
     if (conflicts.length) out[k] = conflicts;
   }
@@ -4407,7 +4409,6 @@ function renderBlocks(conflicts) {
         line.className = 'block-ath-line';
         line.dataset.athKey = k;
         line.dataset.bid = b.id;
-        line.style.display = 'none'; // shown only when conflicting
         line.textContent = a.prenom + ' ' + a.nom;
         comp.appendChild(line);
       });
@@ -4762,7 +4763,7 @@ function liveConflictHighlight(draggedBid) {
 
   // Update all block elements
   document.querySelectorAll('.block').forEach(blockEl => {
-    const bid = parseInt(blockEl.dataset.bid);
+    const bid = blockEl.dataset.bid;  // bids are strings e.g. 'prov_1'
     const isConflicted = conflictBids.has(bid);
     const isWarned = !isConflicted && warnBids.has(bid);
     const conflictAthsForBlock = bidConflictAths.get(bid) || new Set();
