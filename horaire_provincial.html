@@ -756,7 +756,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-020</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-021</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1732,7 +1732,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-020<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-021<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3569,45 +3569,62 @@ function _autoGenerate() {
 // DM and TU get their own parallel lanes starting at startM.
 // Blocks flagged with _overflow=true if they go past 21h00.
 function _conflictAwareLayout(dayBlks, allAthletes, startM) {
+  // Smart per-athlete constraint layout:
+  // Each DM/TU block waits only for its specific athletes' TR blocks.
+  // Athletes who only do DM start at 8h00.
+  // Athletes who do TR+DM start DM after their TR block ends.
   var GAP = 5;
-  var MAX_END = 1260; // 21h00 hard limit
 
-  // Only layout DM and TU — TR/TR2/TRS already handled by _smartSplitTR
-  var overflowCount = 0;
-  ['DM', 'TU'].forEach(function(app) {
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+
+  function layoutApp(app, dependsOn) {
     var blks = dayBlks.filter(function(b){ return b.app === app; });
     if (!blks.length) return;
+    var depBlks = dayBlks.filter(function(b){ return dependsOn.indexOf(b.app) >= 0; });
 
+    // Compute earliest start per block based on shared athletes
+    blks.forEach(function(b) {
+      var earliest = startM;
+      (b.athletes || []).forEach(function(a) {
+        var k = a.nom + '|' + a.prenom;
+        depBlks.forEach(function(dep) {
+          if ((dep.athletes || []).some(function(da){ return da.nom+'|'+da.prenom === k; })) {
+            earliest = Math.max(earliest, dep.cp_end + GAP);
+          }
+        });
+      });
+      b._earliest = snap5(earliest);
+    });
+
+    // Sort: earliest first, then catOrder, then prelim before finale
     blks.sort(function(a, b) {
-      var aCat = (a.cats&&a.cats[0])||a.cat||'';
-      var bCat = (b.cats&&b.cats[0])||b.cat||'';
-      var ao = _catOrder(aCat), bo = _catOrder(bCat);
+      if (a._earliest !== b._earliest) return a._earliest - b._earliest;
+      var ao = _catOrder((a.cats&&a.cats[0])||a.cat||'');
+      var bo = _catOrder((b.cats&&b.cats[0])||b.cat||'');
       if (ao !== bo) return ao - bo;
       var aF = a.passType==='FINALE'?1:0, bF = b.passType==='FINALE'?1:0;
       if (aF !== bF) return aF - bF;
       return (a.passNum||1) - (b.passNum||1);
     });
 
+    // Greedy stack: place each block at max(cur, _earliest)
     var cur = startM;
     blks.forEach(function(b) {
+      var t = snap5(Math.max(cur, b._earliest));
       var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end   - b.cp_start;
-      b.wu_start = cur;
-      b.cp_start = cur + wu_dur;
-      b.cp_end   = cur + wu_dur + cp_dur;
-      if (b.cp_end > MAX_END) { overflowCount++; b._overflow = true; }
+      var cp_dur = b.cp_end - b.cp_start;
+      b.wu_start = t; b.cp_start = t + wu_dur; b.cp_end = t + wu_dur + cp_dur;
       cur = b.cp_end + GAP;
+      delete b._earliest;
     });
-  });
-
-  // Also check TR/TR2/TRS for overflow
-  dayBlks.filter(function(b){ return ['TR','TR2','TRS'].indexOf(b.app)>=0; }).forEach(function(b){
-    if (b.cp_end > MAX_END) { overflowCount++; b._overflow = true; }
-  });
-
-  if (overflowCount > 0) {
-    console.warn('[Prov] ' + overflowCount + ' bloc(s) dépassent 21h00 — vérifier la grille');
   }
+
+  // TR/TR2 already positioned by _smartSplitTR
+  layoutApp('DM',  ['TR', 'TR2']);           // DM waits for TR athletes
+  layoutApp('TU',  ['TR', 'TR2', 'DM']);     // TU waits for TR and DM athletes
+  layoutApp('TRS', ['TR', 'TR2']);            // TRS waits for TR athletes
+
+  // Auto-spillover: blocks past 21h → moved to other day in _gsRebuild
 }
 
 
