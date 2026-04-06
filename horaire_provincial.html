@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-066</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-067</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-066<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-067<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -12002,7 +12002,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-066</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-067</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -12250,14 +12250,14 @@ function sortCats(cats) {
     return aa - ab;
   });
 }
-const EXTRA = {"athletes_full":[],"awards":[],"competition":{"nom":"","date_sam":"","date_dim":""}};
+EXTRA = {"athletes_full":[],"awards":[],"competition":{"nom":"","date_sam":"","date_dim":""}};
 // ── Constants ─────────────────────────────────────
-const PX_PER_MIN = 3.2;
-let DAY_START = 450;  // updated dynamically per day
-let DAY_END = 1170;   // updated dynamically per day
-const GAP_MIN = 0;
-const MAX_BLOCK = 16;
-let TOTAL_H = (DAY_END - DAY_START) * PX_PER_MIN;
+PX_PER_MIN = 3.2;
+DAY_START = 450;  // updated dynamically per day
+DAY_END = 1170;   // updated dynamically per day
+GAP_MIN = 0;
+MAX_BLOCK = 16;
+TOTAL_H = (DAY_END - DAY_START) * PX_PER_MIN;
 
 function updateDayBounds() {
   // Find first block start and last block/award end
@@ -12284,15 +12284,15 @@ function updateDayBounds() {
   TOTAL_H = (DAY_END - DAY_START) * PX_PER_MIN;
 }
 
-const APP_COLORS = {
+APP_COLORS = {
   TR:  {pale:'#dbeafe', bright:'#2563eb', text:'#1e3a8a', comp_text:'#eff6ff', divider:'#93c5fd'},
   TR2: {pale:'#e0f2fe', bright:'#0284c7', text:'#0c4a6e', comp_text:'#f0f9ff', divider:'#7dd3fc'},
   DM:  {pale:'#ffedd5', bright:'#ea580c', text:'#7c2d12', comp_text:'#fff7ed', divider:'#fdba74'},
   TU:  {pale:'#dcfce7', bright:'#16a34a', text:'#14532d', comp_text:'#f0fdf4', divider:'#86efac'},
   TRS: {pale:'#fef9c3', bright:'#ca8a04', text:'#713f12', comp_text:'#fefce8', divider:'#fde047'}};
-const LEVEL_ACCENT = ['#60a5fa','#f97316','#4ade80','#a78bfa','#f472b6'];
+LEVEL_ACCENT = ['#60a5fa','#f97316','#4ade80','#a78bfa','#f472b6'];
 // Level-based block colors: R1=Blue, R2=Orange, R3=Green, R4=Magenta, R5=Brown
-const LEVEL_COLORS = {
+LEVEL_COLORS = {
   'N1':     {pale:'#dbeafe', bright:'#2563eb', text:'#1e3a8a', comp_text:'#eff6ff', divider:'#93c5fd'},
   'N2':     {pale:'#ffedd5', bright:'#ea580c', text:'#7c2d12', comp_text:'#fff7ed', divider:'#fdba74'},
   'N3':     {pale:'#dcfce7', bright:'#16a34a', text:'#14532d', comp_text:'#f0fdf4', divider:'#86efac'},
@@ -12348,7 +12348,7 @@ function getBlockColor(b) {
 // Global metadata store (must be declared before template literals that reference it)
 var _gsCompMeta = { nom: '', club: '', date: '', year: '' };
 
-const _htmlBefore = `<!DOCTYPE html>
+_htmlBefore = `<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -13016,7 +13016,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-066<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-067<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13219,7 +13219,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
 <${'/'}div>
 
 `;
-const _htmlAfter = `
+_htmlAfter = `
 
 
 <!-- ── Help Modal ── -->
@@ -13566,16 +13566,16 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;padding:1px 5p
 <${'/'}html>`;
 // SAVED_STATE is replaced by the export function to bake in current schedule
 // Data populated dynamically from Google Sheets
-const SAVED_STATE = {"blocks":[],"awBlocks":[]};
-const SS_DIM    = {"blocks":[],"awBlocks":[]};
-const EXTRA_DIM = {"athletes_full":[],"awards":[]};
-let _BAKED_AT = '';
+SAVED_STATE = {"blocks":[],"awBlocks":[]};
+SS_DIM    = {"blocks":[],"awBlocks":[]};
+EXTRA_DIM = {"athletes_full":[],"awards":[]};
+_BAKED_AT = '';
 
 // ═══════════════════════════════════════════════════════════════
 // GOOGLE SHEETS LIVE DATA LOADER
 // ═══════════════════════════════════════════════════════════════
-let _GS_SHEET_ID = '';
-let _GS_GID = '';
+_GS_SHEET_ID = '';
+_GS_GID = '';
 
 (function _gsInit() {
   const params = new URLSearchParams(window.location.search);
@@ -14465,7 +14465,7 @@ function _gsRebuildPartnerMap(athletes) {
 // ═══════════════════════════════════════════════════════════════
 
 // ── Competition type ────────────────────────────────────────────
-let _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
+_COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
 
 function onCompType(val) {
   _COMP_TYPE = val;
@@ -14476,7 +14476,7 @@ function onCompType(val) {
 // ── FMT Rules ───────────────────────────────────────────────────
 // Format: { prelim: N, finale: N, finN: max_athletes_finale, na: skip_entirely }
 // finDay: override day for finals ('sam'|'dim')
-const FMT = {
+FMT = {
   coupeQc: {
     // Coupe QC 2025-2026 — PR-2025-2026_V03 8.1.1 et 8.2.4
     // Novice (11-14 ans), N5 15-16 (15-16 ans), N5 17+ (17 ans et +)
@@ -14603,7 +14603,7 @@ const FMT = {
 };
 
 // ── Timing constants per apparatus (minutes) ──────────────────
-const DUR = {
+DUR = {
   // Timing matches regional competition formula (wu_per + cp_per per athlete)
   TR:  { wu_per: 1.5, cp_per: 2.0 },  // 3.5 min/ath total
   TR2: { wu_per: 1.5, cp_per: 2.0 },
@@ -15362,12 +15362,12 @@ function _gsRebuild(athletes) {
 }
 
 
-let currentDay = 'sam';
-let _blocks_sam = null;
-let _blocks_dim = JSON.parse(JSON.stringify(SS_DIM.blocks));
-let _awBlocks_sam = null;
-let _awBlocks_dim = null;
-let blocks = JSON.parse(JSON.stringify(RAW.blocks));
+currentDay = 'sam';
+_blocks_sam = null;
+_blocks_dim = JSON.parse(JSON.stringify(SS_DIM.blocks));
+_awBlocks_sam = null;
+_awBlocks_dim = null;
+blocks = JSON.parse(JSON.stringify(RAW.blocks));
 // Expose state getter for console/copy
 window._getHoraireState = function() {
   return JSON.stringify({
@@ -15383,13 +15383,13 @@ window._copyHoraireState = function() {
   navigator.clipboard.writeText(s).then(() => alert('✓ État copié dans le presse-papier!'));
   return s;
 };
-let filterText = '';
-let filterClub = '';
-let activeTab = 'Horaire';
+filterText = '';
+filterClub = '';
+activeTab = 'Horaire';
 
 // ── Invisible holding pools (one per apparatus, cross-day) ──────────────────
 // Athletes removed from a real block land here; athletes_full is never mutated.
-let poolBlocks = { TR:[], TR2:[], DM:[], TU:[], TRS:[] };
+poolBlocks = { TR:[], TR2:[], DM:[], TU:[], TRS:[] };
 
 function _assignedForApp(app) {
   // Athletes assigned to real blocks of THIS apparatus only (both days, live current day)
@@ -15439,23 +15439,23 @@ function rebuildPool(app) {
 function initPoolBlocks() {
   ['TR','DM','TU','TRS'].forEach(app => rebuildPool(app));
 }
-let filterApp = '';
-let filterCat = '';
-let filterAge = '';
+filterApp = '';
+filterCat = '';
+filterAge = '';
 // Multi-select roster
-let rosterSel = new Map(); // key: 'nom|prenom' → {nom,prenom,cat,club,fromBid}
-let highlightedAth = null;
-let editingBlockId = null;
-let selectedBids = new Set(); // multi-select state
+rosterSel = new Map(); // key: 'nom|prenom' → {nom,prenom,cat,club,fromBid}
+highlightedAth = null;
+editingBlockId = null;
+selectedBids = new Set(); // multi-select state
 
-let pendingAths = null; // working copy for modal
+pendingAths = null; // working copy for modal
 
 // ── Utilities ─────────────────────────────────────
-const toT = m => { const h=Math.floor(m/60),mn=m%60; return `${String(h).padStart(2,'0')}:${String(mn).padStart(2,'0')}`; };
-const snap5 = m => Math.round(m/5)*5;
-const yToMin = y => snap5(DAY_START + y / PX_PER_MIN);
-const minToY = m => (m - DAY_START) * PX_PER_MIN;
-const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+toT = m => { const h=Math.floor(m/60),mn=m%60; return `${String(h).padStart(2,'0')}:${String(mn).padStart(2,'0')}`; };
+snap5 = m => Math.round(m/5)*5;
+yToMin = y => snap5(DAY_START + y / PX_PER_MIN);
+minToY = m => (m - DAY_START) * PX_PER_MIN;
+clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
 
 // Athlete index: key → [{app, block_id, wu_start, cp_end}]
 function buildAthIndex() {
@@ -16602,7 +16602,7 @@ function clearLiveConflicts() {
 }
 
 // ── Tooltip ───────────────────────────────────────
-const tooltip = document.getElementById('tooltip');
+tooltip = document.getElementById('tooltip');
 function showTooltip(e, b) {
   const n_passes = b.is_trs ? Math.ceil(b.n/2) : b.n;
   const passLbl = (b.passType === 'FINALE' ? 'Finale ' : 'Prélim ') + (b.passNum || 1);
@@ -17168,15 +17168,15 @@ function populateClubFilters() {
 }
 
 
-const ROSTER_SORT_FIELDS = [
+ROSTER_SORT_FIELDS = [
   { key:'cat',   label:'Catégorie' },
   { key:'sexe',  label:'Sexe' },
   { key:'club',  label:'Club' },
   { key:'nom',   label:'Nom' },
   { key:'prenom', label:'Prénom' },
 ];
-let rosterSortPriority = ['cat','sexe','club','nom','prenom'];
-let rosterSortDir = {cat:1, sexe:1, club:1, nom:1, prenom:1}; // 1=asc, -1=desc
+rosterSortPriority = ['cat','sexe','club','nom','prenom'];
+rosterSortDir = {cat:1, sexe:1, club:1, nom:1, prenom:1}; // 1=asc, -1=desc
 
 // Re-sort athletes inside all blocks based on roster sort priority
 function resortAthletesInBlocks() {
@@ -17285,7 +17285,7 @@ function getAthletesForAward(aw) {
 }
 
 // Mutable award list (times can be dragged)
-const awBlocks = EXTRA.awards.map((aw, i) => ({
+awBlocks = EXTRA.awards.map((aw, i) => ({
   id: 'aw_' + i,
   app: aw.app,
   level: aw.level,
@@ -17296,7 +17296,7 @@ const awBlocks = EXTRA.awards.map((aw, i) => ({
 }));
 
 
-const _SAT_EXTRA = JSON.parse(JSON.stringify({awards:EXTRA.awards,athletes_full:EXTRA.athletes_full}));
+_SAT_EXTRA = JSON.parse(JSON.stringify({awards:EXTRA.awards,athletes_full:EXTRA.athletes_full}));
 updateDayBounds();
 setupGrid();
 populateClubFilters();
@@ -17388,7 +17388,7 @@ setTimeout(() => {
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeModal(); closeAwardPanel(); if(rosterSel.size>0){rosterSel.clear();render();} } });
 
 // ── Tab Switching ─────────────────────────────────────
-const TABS = {
+TABS = {
   'Horaire':   {view:'view-horaire',   btn:0},
   'Athlètes':  {view:'view-athletes',  btn:1},
   'Remises':   {view:'view-remises',   btn:2}};
@@ -17441,8 +17441,8 @@ document.querySelectorAll('.sheet-tab').forEach(btn => {
 });
 
 // ── Athlètes Tab ──────────────────────────────────────
-let athTabSort = [{col:'cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}]; // multi-priority sort
-const ATH_SORT_DEFAULT = [{col:'cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}];
+athTabSort = [{col:'cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}]; // multi-priority sort
+ATH_SORT_DEFAULT = [{col:'cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}];
 
 function sortAthTab(col) {
   const idx = athTabSort.findIndex(s => s.col === col);
@@ -17824,7 +17824,7 @@ function getColWidths() {
   return { timeW, appWs };
 }
 
-const ROSTER_W = 200; // px for each roster column (default)
+ROSTER_W = 200; // px for each roster column (default)
 
 function applyColWidths(timeW, appWs) {
   // appWs: [TR, TR2, DM, TU, TRS]
@@ -18096,7 +18096,7 @@ function initTimeColResize() {
 
 
 // ── Persistence ───────────────────────────────────
-const STORAGE_KEY = _BAKED_AT ? 'horaire_' + _BAKED_AT.replace(/[^0-9]/g,'').slice(0,14) : 'prov_horaire_v3';
+STORAGE_KEY = _BAKED_AT ? 'horaire_' + _BAKED_AT.replace(/[^0-9]/g,'').slice(0,14) : 'prov_horaire_v3';
 
 // Clean up old localStorage keys — baked data is the source of truth
 try {
@@ -18107,7 +18107,7 @@ try {
     }
   }
 } catch(e) {}
-let saveTimer = null;
+saveTimer = null;
 
 function saveState() {
   setSaveStatus('saving', 'sauvegarde…');
@@ -18613,7 +18613,7 @@ function importScheduleFromFile() {
 
 
 // ── Patch render() to auto-save after every change ───
-const _render = render;
+_render = render;
 render = function() {
   // Auto-remove empty blocks (but keep manually created and break blocks)
   blocks = blocks.filter(b => {
@@ -18650,7 +18650,7 @@ render = function() {
 
 
 // ── Block sort priority & re-optimizer ───────────────────
-const BLOCK_SORT_FIELDS = [
+BLOCK_SORT_FIELDS = [
   { key:'level',  label:'Catégorie',  fn: b => b.level || 0 },
   { key:'age',    label:'Âge',     fn: b => {
     const c = (b.cats||[]).join(' ');
@@ -18667,7 +18667,7 @@ const BLOCK_SORT_FIELDS = [
   { key:'nom',    label:'Nom',     fn: b => (b.athletes&&b.athletes[0]?b.athletes[0].nom:'').toLowerCase() },
   { key:'prenom', label:'Prénom',  fn: b => (b.athletes&&b.athletes[0]?b.athletes[0].prenom:'').toLowerCase() },
 ];
-let blockSortPriority = ['age','level','club','nom','prenom'];
+blockSortPriority = ['age','level','club','nom','prenom'];
 
 
 function blockSortKey(b) {
@@ -18895,8 +18895,8 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════════════════
 // SÉLECTEUR DE JOURNÉE — swap blocks + extra + re-render
 // ══════════════════════════════════════════════════════
-let _dimOptimized = false;
-let _samOptimized = true; // Saturday gets optimized during initial load
+_dimOptimized = false;
+_samOptimized = true; // Saturday gets optimized during initial load
 
 function switchDay(day) {
   // Update day-tab active state
@@ -19027,7 +19027,7 @@ function switchDay(day) {
 })();
 
 // ── Init: try to restore from localStorage ────────
-const restored = loadState();
+restored = loadState();
 if (!restored) {
   blocks = JSON.parse(JSON.stringify(RAW.blocks));
 }
@@ -19116,7 +19116,7 @@ updateJudgeConflictBadge();
 setSaveStatus(restored ? 'saved' : 'unsaved', restored ? 'restauré' : 'non sauvegardé');
 
 // Add reset button to topbar (small, tucked)
-const resetBtn = document.createElement('button');
+resetBtn = document.createElement('button');
 resetBtn.className = 'btn-export';
 resetBtn.style.cssText = 'font-size:10px;padding:3px 8px;opacity:0.5;border-color:transparent';
 resetBtn.title = 'Réinitialiser aux données originales';
@@ -19166,7 +19166,7 @@ function switchRibbonTab(name, btn) {
 // COLUMN AUTO-FIT & RESET
 // ══════════════════════════════════════════════════════════
 // Default column widths from reference layout
-const DEFAULT_COL_WIDTHS = { timeW: 52, appWs: [400, 180, 180, 180] };
+DEFAULT_COL_WIDTHS = { timeW: 52, appWs: [400, 180, 180, 180] };
 
 function measureTextPx(text, font) {
   // Measure rendered text width using canvas
@@ -20703,7 +20703,7 @@ document.getElementById('aw-panel-overlay').addEventListener('click', e => {
 // SIDEBAR TOGGLE
 // ════════════════════════════════════════════════════════════
 
-let _sidebarOpen = false;
+_sidebarOpen = false;
 // Start sidebar collapsed on all devices
 (function() {
   var ws = document.getElementById('workspace');
@@ -20835,7 +20835,7 @@ function toggleSidebar(open) {
 // ════════════════════════════════════════════════════════════
 // FIX scrollToAthlete (defer after render repaint)
 // ════════════════════════════════════════════════════════════
-const _origScrollToAthlete = scrollToAthlete;
+_origScrollToAthlete = scrollToAthlete;
 scrollToAthlete = function(k) {
   requestAnimationFrame(() => _origScrollToAthlete(k));
 };
@@ -21546,7 +21546,7 @@ function showAddMenu(btn, app) {
 // ══════════════════════════════════════════════════════
 // ROSTER COLUMN RESIZE
 // ══════════════════════════════════════════════════════
-const rosterWidths = {TR: 160, TR2: 160, DM: 160, TU: 160};
+rosterWidths = {TR: 160, TR2: 160, DM: 160, TU: 160};
 
 
 function measureRosterWidth(app) {
