@@ -762,7 +762,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-056</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1776,7 +1776,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-056<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3922,8 +3922,11 @@ function _gsRebuild(athletes) {
     [['TR',a.tr],['DM',a.dmt],['TU',a.tu],['TRS',a.trs]].forEach(function(pair){
       var app=pair[0], cat=pair[1];
       if (!cat) return;
-      var key = app+'|'+cat;
-      if (!groups[key]) groups[key]={app:app,cat:cat,aths:[]};
+      // Key includes sex: N3 Masculin and N3 Féminin are separate groups
+      // TRS (synchro) can have mixed pairs — don't separate by sex
+      var sexeKey = (app === 'TRS') ? '' : (a.sexe||'').trim();
+      var key = app+'|'+cat+'|'+sexeKey;
+      if (!groups[key]) groups[key]={app:app,cat:cat,aths:[],sexe:sexeKey};
       groups[key].aths.push(a);
     });
   });
@@ -12062,7 +12065,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-056</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13076,7 +13079,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-056<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15160,8 +15163,11 @@ function _gsRebuild(athletes) {
     [['TR',a.tr],['DM',a.dmt],['TU',a.tu],['TRS',a.trs]].forEach(function(pair){
       var app=pair[0], cat=pair[1];
       if (!cat) return;
-      var key = app+'|'+cat;
-      if (!groups[key]) groups[key]={app:app,cat:cat,aths:[]};
+      // Key includes sex: N3 Masculin and N3 Féminin are separate groups
+      // TRS (synchro) can have mixed pairs — don't separate by sex
+      var sexeKey = (app === 'TRS') ? '' : (a.sexe||'').trim();
+      var key = app+'|'+cat+'|'+sexeKey;
+      if (!groups[key]) groups[key]={app:app,cat:cat,aths:[],sexe:sexeKey};
       groups[key].aths.push(a);
     });
   });
