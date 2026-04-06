@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-065</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-065<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -2537,7 +2537,10 @@ function _gsDoFullLoad(sid, gid) {
       SS_DIM.blocks = [];
       SS_DIM.awBlocks = [];
       try { for (var _i = localStorage.length - 1; _i >= 0; _i--) { var _k = localStorage.key(_i); if (_k && (_k.indexOf('str2026') >= 0 || _k.indexOf('horaire') >= 0)) localStorage.removeItem(_k); } } catch(e) {}
-      _gsBuildData(rows);
+      // Guard: s'assurer que _gsBuildData est accessible (peut être masquée par scoping)
+      var _buildFn = (typeof _gsBuildData === 'function') ? _gsBuildData : window._gsBuildData;
+      if (typeof _buildFn !== 'function') throw new Error('Rechargez la page (fonction introuvable)');
+      _buildFn(rows);
     } catch(err) {
       _gsStatus('err', 'Erreur: ' + err.message);
       console.error(err);
@@ -3571,344 +3574,139 @@ function _autoGenerate() {
 // ═══════════════════════════════════════════════════════════════
 
 
-// ── Regional-style parallel lane layout ──────────────────────
-// TR/TR2/TRS already positioned by _smartSplitTR — don't touch them.
-// DM and TU get their own parallel lanes starting at startM.
-// Blocks flagged with _overflow=true if they go past 21h00.
+// ── Conflict-aware layout — scan pour le premier créneau libre ──────────
+// Principe identique aux remises : pour chaque bloc DM/TU,
+// scanner la journée à partir de startM (pas de 5 min) et trouver
+// le PREMIER créneau où :
+//   1. Aucun conflit d'athlètes avec les dépendances (TR/TR2/TRS/DM)
+//   2. Aucun chevauchement avec les blocs déjà placés dans la même colonne
+//
+// TRI : on calcule d'abord l'_earliest de chaque bloc (scan athlètes seulement,
+// sans tenir compte de la colonne), puis on trie par _earliest. Ainsi les blocs
+// qui peuvent aller tôt passent en premier, évitant les grands trous dans l'horaire.
 function _conflictAwareLayout(dayBlks, allAthletes, startM) {
-  // ═══════════════════════════════════════════════════════════
-  // TWO-LEVEL SCHEDULING
-  //
-  // LEVEL 1 — Round-robin rotation between apparatus
-  //   TR order: W → X → Y → Z
-  //   TRS order: W → X → Y → Z  (same as TR, same equipment)
-  //   DMT order: X → Y → Z → W  (offset +1 from TR)
-  //   TU  order: Y → Z → W → X  (offset +2 from TR)
-  //   → When a group competes on TR, a DIFFERENT group is on DMT
-  //   → Minimizes athlete conflicts structurally
-  //
-  // LEVEL 2 — Individual multi-level athlete conflict resolution
-  //   Mathieu: TR=N1 12- M, TRS=N1 M, DMT=N3 M, TU=N2 13- M
-  //   → Even with round-robin, Mathieu might still have a conflict
-  //   → _earliest enforces: Mathieu's DMT/TU starts only when he is free
-  // ═══════════════════════════════════════════════════════════
-
   var GAP = 5;
+  var MAX_T = 1380; // 23h00 — limite de sécurité
+
   function snap5(m) { return Math.ceil(m / 5) * 5; }
 
-  // ── LEVEL 1: Build rotation index from TR competition order ──────────────
-  // Each unique TR category (level+age+sex) gets a rotation index
-  // based on when it competes on TR
-  var trBlksSorted = dayBlks
-    .filter(function(b){ return b.app==='TR'||b.app==='TR2'; })
-    .sort(function(a,b){ return a.cp_start - b.cp_start; });
-
-  var rotationOrder = []; // [{catKey, athKeys, trIdx}]
-  var rotMap = {};        // catKey → rotation entry
-  var athRotMap = {};     // athKey → trIdx (for multi-level athletes)
-
-  trBlksSorted.forEach(function(b) {
-    var sexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe)||'';
-    var cat  = (b.cats&&b.cats[0])||b.cat||'';
-    var catKey = cat + '|' + sexe;
-    if (!rotMap[catKey]) {
-      var entry = {catKey:catKey, athKeys:new Set(), trIdx:rotationOrder.length};
-      rotMap[catKey] = entry;
-      rotationOrder.push(entry);
-    }
-    (b.athletes||[]).forEach(function(a) {
-      var k = a.nom+'|'+a.prenom;
-      rotMap[catKey].athKeys.add(k);
-      if (athRotMap[k] === undefined) athRotMap[k] = rotMap[catKey].trIdx;
-    });
-  });
-
-  var nRot = rotationOrder.length || 1;
-
-  // For a DMT/TU block, find its TR rotation index by athlete overlap
-  // (multi-level: Mathieu in DMT N3 maps to his TR N1 12- M rotation slot)
-  function getRotIdx(b) {
-    var best = -1, bestCount = 0;
-    (b.athletes||[]).forEach(function(a) {
-      var k = a.nom+'|'+a.prenom;
-      var idx = athRotMap[k];
-      if (idx !== undefined) {
-        // Use most common TR index among athletes in this block
-        best = (best === -1) ? idx : best;
-        bestCount++;
-      }
-    });
-    // Fallback: use catOrder if no TR athletes found
-    if (best === -1) return _catOrder((b.cats&&b.cats[0])||b.cat||'') % nRot;
-    return best;
-  }
-
-  // Level 1 rank for sorting: rotate by offset
-  function l1Rank(b, offset) {
-    return (getRotIdx(b) + offset + nRot) % nRot;
-  }
-
-  // ── LEVEL 2: Compute earliest start per block (athlete conflict check) ───
-  function computeEarliest(blks, depApps) {
-    var depBlks = dayBlks.filter(function(b){ return depApps.indexOf(b.app)>=0; });
-    var athDepMap = {};
+  // ── Index athlète → blocs de dépendances ─────────────────────────────
+  function buildAthDepMap(depApps) {
+    var depBlks = dayBlks.filter(function(b){ return depApps.indexOf(b.app) >= 0; });
+    var map = {};
     depBlks.forEach(function(dep) {
       (dep.athletes||[]).forEach(function(a) {
         var k = a.nom+'|'+a.prenom;
-        if (!athDepMap[k]) athDepMap[k]=[];
-        athDepMap[k].push(dep);
+        if (!map[k]) map[k] = [];
+        map[k].push(dep);
       });
     });
+    return map;
+  }
 
+  // ── Blocs dépendants partagés pour un bloc donné ─────────────────────
+  function sharedDeps(b, athDepMap) {
+    var shared = [], seen = {};
+    (b.athletes||[]).forEach(function(a) {
+      var k = a.nom+'|'+a.prenom;
+      (athDepMap[k]||[]).forEach(function(dep) {
+        if (!seen[dep.id]) { seen[dep.id] = true; shared.push(dep); }
+      });
+    });
+    return shared;
+  }
+
+  // ── Vérifier si un créneau t est libre ───────────────────────────────
+  // noAthConflict : la compétition du bloc n'empiète pas sur les deps
+  // noColConflict : le bloc entier (wu+cp) n'empiète pas sur les blocs de colonne
+  function noAthConflict(t, wu_dur, cp_dur, shared) {
+    var cpS = t + wu_dur, cpE = cpS + cp_dur;
+    for (var i = 0; i < shared.length; i++) {
+      var d = shared[i];
+      if (!(cpE <= d.wu_start || cpS >= d.cp_end)) return false;
+    }
+    return true;
+  }
+
+  function noColConflict(t, needed, placedInCol) {
+    for (var j = 0; j < placedInCol.length; j++) {
+      var p = placedInCol[j];
+      if (!(t >= p.end || t + needed <= p.start)) return false;
+    }
+    return true;
+  }
+
+  // ── Premier créneau libre depuis fromT (athlètes seulement, pas colonne)
+  function firstFreeAth(fromT, wu_dur, cp_dur, shared, needed) {
+    var t = snap5(fromT);
+    while (t + needed <= MAX_T) {
+      if (noAthConflict(t, wu_dur, cp_dur, shared)) return t;
+      t += 5;
+    }
+    return snap5(fromT); // fallback
+  }
+
+  // ── Layout d'un appareil ──────────────────────────────────────────────
+  function layoutApp(app, depApps) {
+    var blks = dayBlks.filter(function(b){ return b.app === app; });
+    if (!blks.length) return;
+
+    var athDepMap = buildAthDepMap(depApps);
+
+    // Passe 1 : calculer _earliest pour chaque bloc (athlètes seulement)
     blks.forEach(function(b) {
       var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
+      var cp_dur = b.cp_end   - b.cp_start;
+      var shared = sharedDeps(b, athDepMap);
+      b._earliest = firstFreeAth(startM, wu_dur, cp_dur, shared, wu_dur + cp_dur);
+    });
+
+    // Trier par _earliest (greedy), puis par catOrder en cas d'égalité
+    blks.sort(function(a, b) {
+      if (a._earliest !== b._earliest) return a._earliest - b._earliest;
+      var ao = _catOrder((a.cats&&a.cats[0])||a.cat||'');
+      var bo = _catOrder((b.cats&&b.cats[0])||b.cat||'');
+      return ao - bo;
+    });
+
+    var placedInCol = []; // [{start, end}] — inclut GAP après chaque bloc
+
+    // Passe 2 : placer chaque bloc au premier créneau libre (athlètes + colonne)
+    blks.forEach(function(b) {
+      var wu_dur = b.cp_start - b.wu_start;
+      var cp_dur = b.cp_end   - b.cp_start;
       var needed = wu_dur + cp_dur;
-      var shared = [];
-      var seen = {};
-      (b.athletes||[]).forEach(function(a) {
-        var k = a.nom+'|'+a.prenom;
-        (athDepMap[k]||[]).forEach(function(dep) {
-          if (!seen[dep.id]){ seen[dep.id]=true; shared.push(dep); }
-        });
-      });
-      if (!shared.length) { b._earliest = startM; return; }
+      var shared = sharedDeps(b, athDepMap);
 
-      // Sort deps by start time to find gaps between them
-      var sorted = shared.slice().sort(function(a,b){ return a.wu_start - b.wu_start; });
-
-      // Helper: does a candidate slot [slotStart, slotStart+needed] conflict with any dep?
-      function noConflict(slotStart) {
-        var slotCpStart = slotStart + wu_dur;
-        var slotCpEnd   = slotCpStart + cp_dur;
-        return shared.every(function(d) {
-          return slotCpEnd <= d.wu_start || slotCpStart >= d.cp_end;
-        });
-      }
-
-      // Gap 0: before first dep warmup
-      var before = snap5(sorted[0].wu_start - GAP - needed);
-      if (before >= startM && noConflict(before)) { b._earliest = before; return; }
-
-      // Gaps between consecutive deps — find earliest fitting slot
-      for (var gi = 0; gi < sorted.length; gi++) {
-        var gapStart = snap5((gi === 0 ? startM : sorted[gi-1].cp_end + GAP));
-        // Only use gap AFTER a dep ends
-        if (gi > 0) gapStart = snap5(sorted[gi-1].cp_end + GAP);
-        else gapStart = startM;
-
-        var gapEnd = sorted[gi].wu_start - GAP;
-        if (gapEnd - gapStart >= needed) {
-          var slot = snap5(Math.max(startM, gapStart));
-          if (slot + needed <= gapEnd && noConflict(slot)) {
-            b._earliest = slot; return;
-          }
+      // Scanner depuis startM par pas de 5 min
+      var t = snap5(startM);
+      while (t + needed <= MAX_T) {
+        if (noAthConflict(t, wu_dur, cp_dur, shared) &&
+            noColConflict(t, needed, placedInCol)) {
+          break;
         }
+        t += 5;
       }
 
-      // After last dep
-      b._earliest = snap5(sorted[sorted.length-1].cp_end + GAP);
-    });
-  }
+      b.wu_start = t;
+      b.cp_start = t + wu_dur;
+      b.cp_end   = t + wu_dur + cp_dur;
+      // Inclure le GAP dans la plage occupée pour assurer 5 min entre blocs
+      placedInCol.push({ start: t, end: t + needed + GAP });
 
-  // ── Layout one apparatus column ──────────────────────────────────────────
-  function layoutApp(app, depApps, l1Offset) {
-    var blks = dayBlks.filter(function(b){ return b.app===app; });
-    if (!blks.length) return;
-
-    // Level 2: compute _earliest for each block
-    computeEarliest(blks, depApps);
-
-    // Sort: _earliest PRIMARY (greedy — start as early as possible),
-    // l1Rank SECONDARY (round-robin — fairness when timing is equal)
-    blks.sort(function(a, b) {
-      if (a._earliest !== b._earliest) return a._earliest - b._earliest;
-      var ra = l1Rank(a, l1Offset), rb = l1Rank(b, l1Offset);
-      if (ra !== rb) return ra - rb;
-      var aF=a.passType==='FINALE'?1:0, bF=b.passType==='FINALE'?1:0;
-      if (aF!==bF) return aF-bF;
-      return (a.passNum||1)-(b.passNum||1);
-    });
-
-    // Greedy stack: place at max(cur, _earliest), no overlap within column
-    var cur = startM;
-    blks.forEach(function(b) {
-      var t = snap5(Math.max(cur, b._earliest));
-      var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-      b.wu_start = t; b.cp_start = t+wu_dur; b.cp_end = t+wu_dur+cp_dur;
-      cur = b.cp_end + GAP;
       delete b._earliest;
     });
   }
 
-  // ── Layout TU with extra DM competition window check ────────────────────
-  function layoutTU(depApps) {
-    var blks = dayBlks.filter(function(b){ return b.app==='TU'; });
-    if (!blks.length) return;
-
-    computeEarliest(blks, depApps);
-
-    blks.sort(function(a, b) {
-      var ra = l1Rank(a, 2), rb = l1Rank(b, 2);
-      if (ra !== rb) return ra - rb;
-      if (a._earliest !== b._earliest) return a._earliest - b._earliest;
-      var aF=a.passType==='FINALE'?1:0, bF=b.passType==='FINALE'?1:0;
-      if (aF!==bF) return aF-bF;
-      return (a.passNum||1)-(b.passNum||1);
-    });
-
-    // Build DM competition intervals (only block athletes who also do DM)
-    var dmBlks = dayBlks.filter(function(b){ return b.app==='DM'; });
-    var dmAthSet = {};
-    dmBlks.forEach(function(dm) {
-      (dm.athletes||[]).forEach(function(a){ dmAthSet[a.nom+'|'+a.prenom]=dm; });
-    });
-    var dmIntervals = dmBlks.map(function(b){ return {s:b.cp_start, e:b.cp_end}; });
-
-    var cur = startM;
-    blks.forEach(function(b) {
-      var t = snap5(Math.max(cur, b._earliest));
-      var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-      // Level 2: push past DM competition windows for shared athletes
-      var hasDM = (b.athletes||[]).some(function(a){ return dmAthSet[a.nom+'|'+a.prenom]; });
-      if (hasDM) {
-        var changed = true;
-        while (changed) {
-          changed = false;
-          var cpS=t+wu_dur, cpE=cpS+cp_dur;
-          dmIntervals.forEach(function(iv){
-            if (cpS<iv.e && iv.s<cpE){ t=snap5(iv.e+GAP); changed=true; }
-          });
-        }
-      }
-      b.wu_start=t; b.cp_start=t+wu_dur; b.cp_end=t+wu_dur+cp_dur;
-      cur=b.cp_end+GAP;
-      delete b._earliest;
-    });
-  }
-
-  // ── Execute layout ───────────────────────────────────────────────────────
-  // TRS: offset=0 (same as TR), depends on TR/TR2
-  layoutApp('TRS', ['TR','TR2'], 0);
-  // DMT: offset=1, depends on TR/TR2/TRS
-  layoutApp('DM',  ['TR','TR2','TRS'], 1);
-  // TU: offset=2, depends on TR/TR2/TRS/DM
-  layoutTU(['TR','TR2','TRS','DM']);
+  // TRS : déjà placé par _smartSplitTR (app → TR/TR2), layoutApp no-op
+  layoutApp('TRS', ['TR', 'TR2']);
+  // DM : dépend de TR/TR2 (incl. TRS réassigné)
+  layoutApp('DM',  ['TR', 'TR2', 'TRS']);
+  // TU : dépend de TR/TR2 (incl. TRS), DM
+  layoutApp('TU',  ['TR', 'TR2', 'TRS', 'DM']);
 }
 
 
-function _gsBuildData(rows) {
-  // Find header row — look for Nom + Prenom
-  var headerIdx = -1, headers = [];
-  for (var i = 0; i < Math.min(rows.length, 5); i++) {
-    var row = rows[i].map(_norm);
-    if (row.some(function(c){ return c==='nom'; }) &&
-        row.some(function(c){ return c==='prenom'; })) {
-      headerIdx = i; headers = rows[i].map(function(c){ return (c||'').toString().trim(); });
-      break;
-    }
-  }
-  if (headerIdx === -1) { _gsStatus('err','En-têtes Nom/Prénom introuvables.'); return; }
-
-  // Map columns — ChQc sheet has specific column names
-  var col = {};
-  headers.forEach(function(h, i) {
-    var lc = _norm(h);
-    if (lc === 'nom') col.nom = i;
-    else if (lc === 'prenom') col.prenom = i;
-    else if (lc === 'club') col.club = i;
-    else if (lc === 'no_aff' || lc === 'noaff' || lc === 'no.aff') col.noaff = i;
-    else if (lc === 'sexe') col.sexe = i;
-    else if (lc === 'annee') col.annee = i;
-    // TR
-    else if (lc === 'categorie tr' || lc === 'cat tr' || lc === 'categorie_tr') col.catTR = i;
-    else if (lc === 'inscrit tr' || lc === 'inscrit_tr') col.insTR = i;
-    // DMT
-    else if (lc === 'categorie dm' || lc === 'cat dm' || lc === 'categorie_dm' || lc === 'categorie dmt') col.catDMT = i;
-    else if (lc === 'inscrit dm' || lc === 'inscrit_dm' || lc === 'inscrit dmt') col.insDMT = i;
-    // TU
-    else if (lc === 'categorie tu' || lc === 'cat tu' || lc === 'categorie_tu') col.catTU = i;
-    else if (lc === 'inscrit tu' || lc === 'inscrit_tu') col.insTU = i;
-    // TRS
-    else if (lc === 'synchro' || lc === 'categorie trs' || lc === 'cat trs') col.catTRS = i;
-    else if (lc === 'partenaire' || lc === 'partner' || lc.includes('partenaire')) col.partner = i;
-    // Annulations
-    else if (lc.includes('annulation') && lc.includes('tr') && !lc.includes('dmt') && !lc.includes('tu')) col.annTR = i;
-    else if (lc.includes('annulation') && (lc.includes('dmt') || lc.includes('dm'))) col.annDMT = i;
-    else if (lc.includes('annulation') && lc.includes('tu')) col.annTU = i;
-    else if (lc.includes('annulation') && (lc.includes('synchro') || lc.includes('trs'))) col.annTRS = i;
-    else if (lc.includes('annulation') && lc.includes('etat')) col.annEtat = i;
-  });
-
-  // Parse athletes
-  var athletes = [];
-  for (var i = headerIdx + 1; i < rows.length; i++) {
-    var r = rows[i];
-    var nom = (r[col.nom]||'').toString().trim();
-    var prenom = (r[col.prenom]||'').toString().trim();
-    if (!nom && !prenom) continue;
-
-    // Check inscrit flags — if column exists and value is not "Oui"/"oui"/"1", skip
-    function _inscrit(idx) {
-      if (idx === undefined) return true; // no column = assume inscrit
-      var v = (r[idx]||'').toString().trim().toLowerCase();
-      return v === 'oui' || v === '1' || v === 'true' || v === 'x' || v === 'yes' || v === '';
-    }
-    // Check annulation — if annulation column exists and has a value, skip
-    function _annule(idx) {
-      if (idx === undefined) return false;
-      var v = (r[idx]||'').toString().trim();
-      return v !== '';
-    }
-
-    var catTR  = (!_annule(col.annTR)  && _inscrit(col.insTR))  ? (r[col.catTR] ||'').toString().trim() : '';
-    var catDMT = (!_annule(col.annDMT) && _inscrit(col.insDMT)) ? (r[col.catDMT]||'').toString().trim() : '';
-    var catTU  = (!_annule(col.annTU)  && _inscrit(col.insTU))  ? (r[col.catTU] ||'').toString().trim() : '';
-    var catTRS = (!_annule(col.annTRS)) ? (col.catTRS !== undefined ? (r[col.catTRS]||'').toString().trim() : '') : '';
-
-    if (!catTR && !catDMT && !catTU && !catTRS) continue;
-
-    athletes.push({
-      nom: nom, prenom: prenom,
-      club: col.club !== undefined ? (r[col.club]||'').toString().trim() : '',
-      annee: col.annee !== undefined ? (r[col.annee]||'').toString().trim() : '',
-      sexe: col.sexe !== undefined ? (r[col.sexe]||'').toString().trim() : '',
-      tr:   catTR,
-      dmt:  catDMT,
-      tu:   catTU,
-      trs:  catTRS,
-      partner: col.partner !== undefined ? (r[col.partner]||'').toString().trim() : ''
-    });
-  }
-
-  if (athletes.length === 0) { _gsStatus('err','Aucun athlète inscrit trouvé.'); return; }
-  console.log('Provincial GS: ' + athletes.length + ' athlètes chargés');
-  _gsRebuild(athletes);
-}
-
-// Levenshtein distance for fuzzy name matching
-function _levenshtein(a, b) {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-  var matrix = [];
-  for (var i = 0; i <= b.length; i++) matrix[i] = [i];
-  for (var j = 0; j <= a.length; j++) matrix[0][j] = j;
-  for (var i = 1; i <= b.length; i++) {
-    for (var j = 1; j <= a.length; j++) {
-      matrix[i][j] = b[i-1] === a[j-1]
-        ? matrix[i-1][j-1]
-        : Math.min(matrix[i-1][j-1]+1, matrix[i][j-1]+1, matrix[i-1][j]+1);
-    }
-  }
-  return matrix[b.length][a.length];
-}
-
-
-// ═══════════════════════════════════════════════════════════════
-// _gsRebuild — Build all data from flat athlete list
-// ═══════════════════════════════════════════════════════════════
 function _gsRebuild(athletes) {
   // ── Build PARTNER_MAP ──────────────────────────────────────
   function _normName(s) {
@@ -12204,7 +12002,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-065</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13218,7 +13016,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-065<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15011,21 +14809,17 @@ function _autoGenerate() {
 // DM and TU get their own parallel lanes starting at startM.
 // Blocks flagged with _overflow=true if they go past 21h00.
 function _conflictAwareLayout(dayBlks, allAthletes, startM) {
-  // Bidirectional conflict-aware layout:
-  // For each DM/TU block, we try to place it as early as possible.
-  // A DM block can go BEFORE a TR block if its competition ends
-  // before the TR athletes start warming up — or AFTER TR competition ends.
-  // This allows DM blocks to interleave with TR instead of always waiting.
   var GAP = 5;
+  var MAX_T = 1380;
 
   function snap5(m) { return Math.ceil(m / 5) * 5; }
 
-  // Build athlete→block index for dependency apparatus
-  function buildAthBlockMap(depBlks) {
-    var map = {}; // athKey → [block, ...]
+  function buildAthDepMap(depApps) {
+    var depBlks = dayBlks.filter(function(b){ return depApps.indexOf(b.app) >= 0; });
+    var map = {};
     depBlks.forEach(function(dep) {
-      (dep.athletes || []).forEach(function(a) {
-        var k = a.nom + '|' + a.prenom;
+      (dep.athletes||[]).forEach(function(a) {
+        var k = a.nom+'|'+a.prenom;
         if (!map[k]) map[k] = [];
         map[k].push(dep);
       });
@@ -15033,120 +14827,92 @@ function _conflictAwareLayout(dayBlks, allAthletes, startM) {
     return map;
   }
 
-  function layoutApp(app, dependsOn) {
+  function sharedDeps(b, athDepMap) {
+    var shared = [], seen = {};
+    (b.athletes||[]).forEach(function(a) {
+      var k = a.nom+'|'+a.prenom;
+      (athDepMap[k]||[]).forEach(function(dep) {
+        if (!seen[dep.id]) { seen[dep.id] = true; shared.push(dep); }
+      });
+    });
+    return shared;
+  }
+
+  function noAthConflict(t, wu_dur, cp_dur, shared) {
+    var cpS = t + wu_dur, cpE = cpS + cp_dur;
+    for (var i = 0; i < shared.length; i++) {
+      var d = shared[i];
+      if (!(cpE <= d.wu_start || cpS >= d.cp_end)) return false;
+    }
+    return true;
+  }
+
+  function noColConflict(t, needed, placedInCol) {
+    for (var j = 0; j < placedInCol.length; j++) {
+      var p = placedInCol[j];
+      if (!(t >= p.end || t + needed <= p.start)) return false;
+    }
+    return true;
+  }
+
+  function firstFreeAth(wu_dur, cp_dur, shared) {
+    var needed = wu_dur + cp_dur;
+    var t = snap5(startM);
+    while (t + needed <= MAX_T) {
+      if (noAthConflict(t, wu_dur, cp_dur, shared)) return t;
+      t += 5;
+    }
+    return snap5(startM);
+  }
+
+  function layoutApp(app, depApps) {
     var blks = dayBlks.filter(function(b){ return b.app === app; });
     if (!blks.length) return;
 
-    var depBlks = dayBlks.filter(function(b){ return dependsOn.indexOf(b.app) >= 0; });
-    var athDepMap = buildAthBlockMap(depBlks);
+    var athDepMap = buildAthDepMap(depApps);
 
-    // For each block: find the earliest valid start time (bidirectional)
+    // Passe 1 : calculer _earliest sans conflits de colonne
     blks.forEach(function(b) {
       var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-
-      // Collect all dep blocks sharing athletes with this block
-      var sharedDeps = [];
-      var seen = {};
-      (b.athletes || []).forEach(function(a) {
-        var k = a.nom + '|' + a.prenom;
-        (athDepMap[k] || []).forEach(function(dep) {
-          if (!seen[dep.id]) { seen[dep.id] = true; sharedDeps.push(dep); }
-        });
-      });
-
-      if (!sharedDeps.length) {
-        b._earliest = startM;
-        return;
-      }
-
-      // Try to find a slot: either before earliest dep wu_start, or after latest conflicting dep cp_end
-      // Start by trying startM
-      var candidateStart = startM;
-      var changed = true;
-
-      // Iterate to find a valid slot (max 20 iterations)
-      for (var iter = 0; iter < 20 && changed; iter++) {
-        changed = false;
-        var tCpStart = candidateStart + wu_dur;
-        var tCpEnd = tCpStart + cp_dur;
-
-        for (var i = 0; i < sharedDeps.length; i++) {
-          var dep = sharedDeps[i];
-          // Check if competition times overlap
-          var depCpStart = dep.cp_start;
-          var depCpEnd = dep.cp_end;
-          var overlap = tCpStart < depCpEnd && depCpStart < tCpEnd;
-
-          if (overlap) {
-            // Try option 1: finish before dep warmup starts
-            var earlyEnd = dep.wu_start - GAP;  // must finish cp before dep wu
-            var earlyStart = earlyEnd - cp_dur - wu_dur;
-            earlyStart = snap5(earlyStart);
-
-            if (earlyStart >= startM && earlyStart >= candidateStart - (3 * 60)) {
-              // Early slot possible — but only if we're not already past it
-              // Only use early slot if candidateStart would still work
-              var earlyCpEnd = earlyStart + wu_dur + cp_dur;
-              if (earlyCpEnd <= dep.wu_start) {
-                // Valid early slot — check against all other deps
-                var validEarly = true;
-                for (var j = 0; j < sharedDeps.length; j++) {
-                  if (j === i) continue;
-                  var dep2 = sharedDeps[j];
-                  if ((earlyStart + wu_dur) < dep2.cp_end && dep2.cp_start < earlyCpEnd) {
-                    validEarly = false; break;
-                  }
-                }
-                if (validEarly && earlyStart >= startM) {
-                  candidateStart = earlyStart;
-                  changed = true;
-                  break;
-                }
-              }
-            }
-
-            // Option 2: start after dep competition ends
-            var lateStart = snap5(depCpEnd + GAP);
-            if (lateStart > candidateStart) {
-              candidateStart = lateStart;
-              changed = true;
-              break;
-            }
-          }
-        }
-      }
-
-      b._earliest = Math.max(startM, candidateStart);
+      var cp_dur = b.cp_end   - b.cp_start;
+      var shared = sharedDeps(b, athDepMap);
+      b._earliest = firstFreeAth(wu_dur, cp_dur, shared);
     });
 
-    // Sort: by _earliest first, then by catOrder, then prelim before finale
+    // Trier par _earliest (greedy), puis catOrder en cas d'égalité
     blks.sort(function(a, b) {
       if (a._earliest !== b._earliest) return a._earliest - b._earliest;
-      var ao = _catOrder((a.cats&&a.cats[0])||a.cat||'');
-      var bo = _catOrder((b.cats&&b.cats[0])||b.cat||'');
-      if (ao !== bo) return ao - bo;
-      var aF = a.passType==='FINALE'?1:0, bF = b.passType==='FINALE'?1:0;
-      if (aF !== bF) return aF - bF;
-      return (a.passNum||1) - (b.passNum||1);
+      return _catOrder((a.cats&&a.cats[0])||a.cat||'') - _catOrder((b.cats&&b.cats[0])||b.cat||'');
     });
 
-    // Greedy stack: place each block at max(cur, _earliest)
-    var cur = startM;
+    var placedInCol = [];
+
+    // Passe 2 : placer au premier créneau libre (athlètes + colonne)
     blks.forEach(function(b) {
-      var t = snap5(Math.max(cur, b._earliest));
       var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-      b.wu_start = t; b.cp_start = t + wu_dur; b.cp_end = t + wu_dur + cp_dur;
-      cur = b.cp_end + GAP;
+      var cp_dur = b.cp_end   - b.cp_start;
+      var needed = wu_dur + cp_dur;
+      var shared = sharedDeps(b, athDepMap);
+
+      var t = snap5(startM);
+      while (t + needed <= MAX_T) {
+        if (noAthConflict(t, wu_dur, cp_dur, shared) &&
+            noColConflict(t, needed, placedInCol)) break;
+        t += 5;
+      }
+
+      b.wu_start = t;
+      b.cp_start = t + wu_dur;
+      b.cp_end   = t + wu_dur + cp_dur;
+      placedInCol.push({ start: t, end: t + needed + GAP });
       delete b._earliest;
     });
   }
 
-  // TR/TR2 already positioned by _smartSplitTR
-  layoutApp('DM',  ['TR', 'TR2']);
-  layoutApp('TU',  ['TR', 'TR2', 'DM']);
-  layoutApp('TRS', ['TR', 'TR2', 'DM']);
+  // TRS déjà placé par _smartSplitTR (app → TR/TR2), pas touché
+  layoutApp('TRS', ['TR', 'TR2']);
+  layoutApp('DM',  ['TR', 'TR2', 'TRS']);
+  layoutApp('TU',  ['TR', 'TR2', 'TRS', 'DM']);
 }
 
 
@@ -15238,6 +15004,7 @@ function _gsBuildData(rows) {
   console.log('Provincial GS: ' + athletes.length + ' athlètes chargés');
   _gsRebuild(athletes);
 }
+window._gsBuildData = _gsBuildData; // accessible depuis tous les contextes
 
 // Levenshtein distance for fuzzy name matching
 function _levenshtein(a, b) {
