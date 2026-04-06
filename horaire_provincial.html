@@ -10800,14 +10800,20 @@ if (window.visualViewport) {
 }
 setTimeout(_positionSbFloatBtn, 200);
 
-// ── Pre-fill GS URL for ChQc sheet ──────────────────────────
+// ── Pre-fill GS URL for ChQc sheet + auto-load ─────────────
 (function() {
   try {
     var inp = document.getElementById('gs-sheet-input');
+    var defaultSheet = '1puxZth_dkf7DbpsIlae80DvjJWXcEvF_k60JOS1hzts';
     if (inp && !inp.value) {
-      inp.value = 'https://docs.google.com/spreadsheets/d/1puxZth_dkf7DbpsIlae80DvjJWXcEvF_k60JOS1hzts';
+      inp.value = 'https://docs.google.com/spreadsheets/d/' + defaultSheet;
     }
-  } catch(e) {}
+    // Si aucun sheet n'est déjà chargé, déclencher le chargement auto
+    if (!_GS_SHEET_ID && !_BAKED_AT && (!blocks || blocks.length === 0)) {
+      _GS_SHEET_ID = defaultSheet;
+      setTimeout(function() { _gsDoFullLoad(_GS_SHEET_ID, _GS_GID); }, 800);
+    }
+  } catch(e) { console.error('Pre-fill error:', e); }
 })();
 
 
@@ -21859,14 +21865,20 @@ if (window.visualViewport) {
 }
 setTimeout(_positionSbFloatBtn, 200);
 
-// ── Pre-fill GS URL for ChQc sheet ──────────────────────────
+// ── Pre-fill GS URL for ChQc sheet + auto-load ─────────────
 (function() {
   try {
     var inp = document.getElementById('gs-sheet-input');
+    var defaultSheet = '1puxZth_dkf7DbpsIlae80DvjJWXcEvF_k60JOS1hzts';
     if (inp && !inp.value) {
-      inp.value = 'https://docs.google.com/spreadsheets/d/1puxZth_dkf7DbpsIlae80DvjJWXcEvF_k60JOS1hzts';
+      inp.value = 'https://docs.google.com/spreadsheets/d/' + defaultSheet;
     }
-  } catch(e) {}
+    // Si aucun sheet n'est déjà chargé, déclencher le chargement auto
+    if (!_GS_SHEET_ID && !_BAKED_AT && (!blocks || blocks.length === 0)) {
+      _GS_SHEET_ID = defaultSheet;
+      setTimeout(function() { _gsDoFullLoad(_GS_SHEET_ID, _GS_GID); }, 800);
+    }
+  } catch(e) { console.error('Pre-fill error:', e); }
 })();
 
 
