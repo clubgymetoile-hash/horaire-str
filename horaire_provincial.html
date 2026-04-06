@@ -705,8 +705,15 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
             <label>Niveau</label>
             <select id="cat-filter" onchange="applyFilters()">
               <option value="">Tous</option>
-              <option value="R1">R1</option>
-              <option value="R2">R2</option>
+              <option value="N1">N1</option>
+              <option value="N2">N2</option>
+              <option value="N3">N3</option>
+              <option value="N4">N4</option>
+              <option value="N5">N5</option>
+              <option value="N6">N6</option>
+              <option value="Novice">Novice</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
             </select>
           </div>
           <div class="ribbon-filter">
@@ -762,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1776,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3531,6 +3538,10 @@ function _autoGenerate() {
   _conflictAwareLayout(newSam, allAthsGen, 480);
   _conflictAwareLayout(newDim, allAthsGen, 480);
 
+  // Level 3: redistribute athletes between sibling groups to resolve remaining conflicts
+  _level3Redistribution(newSam);
+  _level3Redistribution(newDim);
+
   // Auto-spillover for _autoGenerate
   (function() {
     var MAX_END = 1260; var GAP = 5; var spilled = [];
@@ -3652,6 +3663,7 @@ function _conflictAwareLayout(dayBlks, allAthletes, startM) {
     blks.forEach(function(b) {
       var wu_dur = b.cp_start - b.wu_start;
       var cp_dur = b.cp_end - b.cp_start;
+      var needed = wu_dur + cp_dur;
       var shared = [];
       var seen = {};
       (b.athletes||[]).forEach(function(a) {
@@ -3662,19 +3674,40 @@ function _conflictAwareLayout(dayBlks, allAthletes, startM) {
       });
       if (!shared.length) { b._earliest = startM; return; }
 
-      // Try BEFORE: block ends before earliest dep wu_start
-      var minDepWu = Math.min.apply(null, shared.map(function(d){ return d.wu_start; }));
-      var earlyStart = snap5(minDepWu - GAP - cp_dur - wu_dur);
-      if (earlyStart >= startM) {
-        var cpEnd = earlyStart + wu_dur + cp_dur;
-        var ok = shared.every(function(d){
-          return cpEnd <= d.wu_start || (earlyStart+wu_dur) >= d.cp_end;
+      // Sort deps by start time to find gaps between them
+      var sorted = shared.slice().sort(function(a,b){ return a.wu_start - b.wu_start; });
+
+      // Helper: does a candidate slot [slotStart, slotStart+needed] conflict with any dep?
+      function noConflict(slotStart) {
+        var slotCpStart = slotStart + wu_dur;
+        var slotCpEnd   = slotCpStart + cp_dur;
+        return shared.every(function(d) {
+          return slotCpEnd <= d.wu_start || slotCpStart >= d.cp_end;
         });
-        if (ok) { b._earliest = earlyStart; return; }
       }
-      // AFTER: start after latest dep cp_end
-      var maxDepEnd = Math.max.apply(null, shared.map(function(d){ return d.cp_end; }));
-      b._earliest = snap5(maxDepEnd + GAP);
+
+      // Gap 0: before first dep warmup
+      var before = snap5(sorted[0].wu_start - GAP - needed);
+      if (before >= startM && noConflict(before)) { b._earliest = before; return; }
+
+      // Gaps between consecutive deps — find earliest fitting slot
+      for (var gi = 0; gi < sorted.length; gi++) {
+        var gapStart = snap5((gi === 0 ? startM : sorted[gi-1].cp_end + GAP));
+        // Only use gap AFTER a dep ends
+        if (gi > 0) gapStart = snap5(sorted[gi-1].cp_end + GAP);
+        else gapStart = startM;
+
+        var gapEnd = sorted[gi].wu_start - GAP;
+        if (gapEnd - gapStart >= needed) {
+          var slot = snap5(Math.max(startM, gapStart));
+          if (slot + needed <= gapEnd && noConflict(slot)) {
+            b._earliest = slot; return;
+          }
+        }
+      }
+
+      // After last dep
+      b._earliest = snap5(sorted[sorted.length-1].cp_end + GAP);
     });
   }
 
@@ -3686,12 +3719,12 @@ function _conflictAwareLayout(dayBlks, allAthletes, startM) {
     // Level 2: compute _earliest for each block
     computeEarliest(blks, depApps);
 
-    // Sort: Level 1 (round-robin rank) as PRIMARY, _earliest as SECONDARY
-    // This ensures the rotation is respected while timing is feasible
+    // Sort: _earliest PRIMARY (greedy — start as early as possible),
+    // l1Rank SECONDARY (round-robin — fairness when timing is equal)
     blks.sort(function(a, b) {
+      if (a._earliest !== b._earliest) return a._earliest - b._earliest;
       var ra = l1Rank(a, l1Offset), rb = l1Rank(b, l1Offset);
       if (ra !== rb) return ra - rb;
-      if (a._earliest !== b._earliest) return a._earliest - b._earliest;
       var aF=a.passType==='FINALE'?1:0, bF=b.passType==='FINALE'?1:0;
       if (aF!==bF) return aF-bF;
       return (a.passNum||1)-(b.passNum||1);
@@ -4689,6 +4722,105 @@ function updateJudgeConflictBadge() {
     badge.style.display = 'inline-flex';
     badge.textContent = '⚖ ' + jConfs.length + ' conflit' + (jConfs.length > 1 ? 's' : '') + ' juges';
   }
+}
+
+
+// ── Level 3: Athlete redistribution between sibling groups ───────────────
+// After scheduling, if an athlete has a competition time conflict AND their
+// category has multiple groups, try moving them to a sibling group whose
+// time slot doesn't conflict. Applies to all 4 apparatus.
+// Iterates until no more conflicts can be resolved by redistribution.
+function _level3Redistribution(dayBlks) {
+  var MAX_BLOCK = 16;
+  var changed = true;
+  var iterations = 0;
+
+  while (changed && iterations < 30) {
+    changed = false;
+    iterations++;
+
+    // Build athlete → blocks map
+    var athMap = {};
+    dayBlks.forEach(function(b) {
+      (b.athletes||[]).forEach(function(a) {
+        var k = a.nom+'|'+a.prenom;
+        if (!athMap[k]) athMap[k] = [];
+        if (!athMap[k].some(function(x){ return x.id === b.id; }))
+          athMap[k].push(b);
+      });
+    });
+
+    // Find one conflict and try to resolve it
+    var resolved = false;
+    var athKeys = Object.keys(athMap);
+    for (var ai = 0; ai < athKeys.length && !resolved; ai++) {
+      var k = athKeys[ai];
+      var bks = athMap[k];
+      for (var i = 0; i < bks.length && !resolved; i++) {
+        for (var j = i+1; j < bks.length && !resolved; j++) {
+          var b1 = bks[i], b2 = bks[j];
+          // Competition time conflict?
+          if (b1.cp_start >= b2.cp_end || b2.cp_start >= b1.cp_end) continue;
+
+          // Try to move athlete from b1 or b2 to a sibling group
+          var pairs = [[b1,b2],[b2,b1]];
+          for (var pi = 0; pi < pairs.length && !resolved; pi++) {
+            var src   = pairs[pi][0];
+            var other = pairs[pi][1];
+            var ath = null;
+            for (var ai2=0; ai2<src.athletes.length; ai2++) {
+              if (src.athletes[ai2].nom+'|'+src.athletes[ai2].prenom === k) {
+                ath = src.athletes[ai2]; break;
+              }
+            }
+            if (!ath) continue;
+
+            var srcSexe = (ath.sexe||'');
+            var srcCat  = (src.cats&&src.cats[0])||src.cat||'';
+
+            // Find sibling blocks: same app+cat+sex, different id, not full, athlete not already there
+            var siblings = dayBlks.filter(function(s) {
+              if (s.id === src.id) return false;
+              var sSexe = (s.athletes&&s.athletes[0]&&s.athletes[0].sexe)||'';
+              var sCat  = (s.cats&&s.cats[0])||s.cat||'';
+              if (s.app !== src.app || sCat !== srcCat || sSexe !== srcSexe) return false;
+              if (s.athletes.length >= MAX_BLOCK) return false;
+              return !s.athletes.some(function(x){ return x.nom+'|'+x.prenom === k; });
+            });
+
+            for (var si = 0; si < siblings.length && !resolved; si++) {
+              var sibling = siblings[si];
+
+              // Sibling time must NOT conflict with the other block
+              if (sibling.cp_start < other.cp_end && other.cp_start < sibling.cp_end) continue;
+
+              // Moving to sibling must not create NEW conflicts with athlete's other blocks
+              var newConflict = false;
+              for (var bi=0; bi<bks.length; bi++) {
+                var bl = bks[bi];
+                if (bl.id === src.id || bl.id === sibling.id) continue;
+                if (sibling.cp_start < bl.cp_end && bl.cp_start < sibling.cp_end) {
+                  newConflict = true; break;
+                }
+              }
+              if (newConflict) continue;
+
+              // ✅ Move athlete from src to sibling
+              src.athletes = src.athletes.filter(function(x){
+                return x.nom+'|'+x.prenom !== k;
+              });
+              src.n = src.athletes.length;
+              sibling.athletes.push(ath);
+              sibling.n = sibling.athletes.length;
+              resolved = true;
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return iterations;
 }
 
 
@@ -9435,8 +9567,8 @@ function updateLevelFilter() {
   const sel = document.getElementById('cat-filter');
   if (!sel) return;
   const cur = sel.value;
-  // Saturday: R1, R2 only — Sunday: R3, R4, R5 only
-  const levels = currentDay === 'sam' ? ['R1','R2'] : ['R3','R4','R5'];
+  // Provincial levels — same for both days
+  const levels = ['N1','N2','N3','N4','N5','N6','Novice','Junior','Senior'];
   // Rebuild options
   sel.innerHTML = '<option value="">Tous</option>';
   levels.forEach(r => {
@@ -12008,8 +12140,15 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
             <label>Niveau</label>
             <select id="cat-filter" onchange="applyFilters()">
               <option value="">Tous</option>
-              <option value="R1">R1</option>
-              <option value="R2">R2</option>
+              <option value="N1">N1</option>
+              <option value="N2">N2</option>
+              <option value="N3">N3</option>
+              <option value="N4">N4</option>
+              <option value="N5">N5</option>
+              <option value="N6">N6</option>
+              <option value="Novice">Novice</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
             </select>
           </div>
           <div class="ribbon-filter">
@@ -12065,7 +12204,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13079,7 +13218,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-057<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-05-061<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14833,6 +14972,10 @@ function _autoGenerate() {
   Object.values(groups).forEach(function(g){ allAthsGen = allAthsGen.concat(g.aths); });
   _conflictAwareLayout(newSam, allAthsGen, 480);
   _conflictAwareLayout(newDim, allAthsGen, 480);
+
+  // Level 3: redistribute athletes between sibling groups to resolve remaining conflicts
+  _level3Redistribution(newSam);
+  _level3Redistribution(newDim);
 
   // Auto-spillover for _autoGenerate
   (function() {
@@ -20514,8 +20657,8 @@ function updateLevelFilter() {
   const sel = document.getElementById('cat-filter');
   if (!sel) return;
   const cur = sel.value;
-  // Saturday: R1, R2 only — Sunday: R3, R4, R5 only
-  const levels = currentDay === 'sam' ? ['R1','R2'] : ['R3','R4','R5'];
+  // Provincial levels — same for both days
+  const levels = ['N1','N2','N3','N4','N5','N6','Novice','Junior','Senior'];
   // Rebuild options
   sel.innerHTML = '<option value="">Tous</option>';
   levels.forEach(r => {
