@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-018</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-018<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3891,49 +3891,82 @@ function _gsRebuild(athletes) {
     var small = appKeys.filter(function(k){ return groups[k].aths.length < MIN_GRP; });
     var ok    = appKeys.filter(function(k){ return groups[k].aths.length >= MIN_GRP; });
 
-    small.forEach(function(sk) {
+    // STRATÉGIE: Les groupes OK (>= 5) restent intacts.
+    // Les petits groupes se mergent ENTRE EUX pour atteindre 5+.
+    // En dernier recours seulement, fusion avec un groupe OK.
+    
+    // Phase 1: merger les petits ensemble (préférer même cat, sinon cat proche)
+    var smallActive = small.slice();
+    var changed = true;
+    while (changed && smallActive.length > 1) {
+      changed = false;
+      // Trier par taille croissante (les plus petits en premier)
+      smallActive.sort(function(a, b) {
+        return groups[a].aths.length - groups[b].aths.length;
+      });
+      
+      for (var si = 0; si < smallActive.length; si++) {
+        var sk = smallActive[si];
+        if (!groups[sk]) continue;
+        var sg = groups[sk];
+        
+        // Chercher un autre petit groupe à merger avec lui
+        var bestKey = null;
+        var bestScore = Infinity; // score = (sameCat ? 0 : 100) + dist
+        for (var sj = 0; sj < smallActive.length; sj++) {
+          if (sj === si) continue;
+          var ok_k = smallActive[sj];
+          if (!groups[ok_k]) continue;
+          var og = groups[ok_k];
+          if (og.aths.length + sg.aths.length > MAX_GRP_SIZE) continue;
+          var sameCat = (og.cat === sg.cat) ? 0 : 100;
+          var dist = Math.abs(_catOrder(og.cat) - _catOrder(sg.cat));
+          var score = sameCat + dist;
+          if (score < bestScore) { bestScore = score; bestKey = ok_k; }
+        }
+        
+        if (bestKey) {
+          var og = groups[bestKey];
+          og.aths = og.aths.concat(sg.aths);
+          og.cats = (og.cats||[og.cat]).concat(sg.cats||[sg.cat]);
+          og.cat = og.cats.join(' + ');
+          delete groups[sk];
+          smallActive.splice(si, 1);
+          // Si bestKey a maintenant >= 5, le retirer aussi de smallActive
+          if (groups[bestKey] && groups[bestKey].aths.length >= MIN_GRP) {
+            var bki = smallActive.indexOf(bestKey);
+            if (bki >= 0) smallActive.splice(bki, 1);
+          }
+          changed = true;
+          break;
+        }
+      }
+    }
+    
+    // Phase 2: pour les petits restants qui n'ont pas pu merger entre eux,
+    // dernier recours: fusion avec un groupe OK (préférer même cat exacte)
+    smallActive.forEach(function(sk) {
+      if (!groups[sk]) return;
       var sg = groups[sk];
-      // Préférence: merger d'abord avec la MÊME catégorie (sexe différent)
-      // ex: TR N3 H (3 ath) + TR N3 F (12 ath) — cat identique, juste sexe différent
-      // Ensuite seulement chercher dans les catégories voisines
       var bestKey = null;
-      var bestDist = 999;
-      // Pass 1: chercher la même cat exacte (différent sexe seulement)
+      var bestScore = Infinity;
       ok.forEach(function(ok_k) {
         var og = groups[ok_k];
-        if (og.cat === sg.cat && og.aths.length + sg.aths.length <= MAX_GRP_SIZE) {
-          bestKey = ok_k; bestDist = 0;
-        }
+        if (!og) return;
+        if (og.aths.length + sg.aths.length > MAX_GRP_SIZE) return;
+        var sameCat = (og.cat === sg.cat) ? 0 : 100;
+        var dist = Math.abs(_catOrder(og.cat) - _catOrder(sg.cat));
+        var score = sameCat + dist;
+        if (score < bestScore) { bestScore = score; bestKey = ok_k; }
       });
-      // Pass 2: si pas trouvé, chercher la cat la plus proche
-      if (!bestKey) {
-        ok.forEach(function(ok_k) {
-          var og = groups[ok_k];
-          if (og.aths.length + sg.aths.length <= MAX_GRP_SIZE) {
-            var dist = Math.abs(_catOrder(og.cat) - _catOrder(sg.cat));
-            if (dist < bestDist) { bestDist = dist; bestKey = ok_k; }
-          }
-        });
-      }
       if (bestKey) {
-        // Merge into OK group
         var og = groups[bestKey];
         og.aths = og.aths.concat(sg.aths);
         og.cats = (og.cats||[og.cat]).concat(sg.cats||[sg.cat]);
         og.cat = og.cats.join(' + ');
         delete groups[sk];
-      } else {
-        // Try merging with another small group
-        var firstSmall = small.filter(function(s){ return s !== sk && groups[s]; })[0];
-        if (firstSmall && groups[firstSmall] && 
-            groups[firstSmall].aths.length + sg.aths.length <= MAX_GRP_SIZE) {
-          groups[firstSmall].aths = groups[firstSmall].aths.concat(sg.aths);
-          groups[firstSmall].cats = (groups[firstSmall].cats||[groups[firstSmall].cat]).concat(sg.cats||[sg.cat]);
-          groups[firstSmall].cat = groups[firstSmall].cats.join(' + ');
-          delete groups[sk];
-        }
-        // If still can't merge, keep as-is
       }
+      // Si toujours pas mergeable, keep as-is (bloc < 5 toléré)
     });
   });
 
@@ -4086,7 +4119,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-018)
+  // NOUVEAU ALGO (v2026-04-06-019)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -12186,7 +12219,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-018</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13200,7 +13233,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-018<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15386,49 +15419,82 @@ function _gsRebuild(athletes) {
     var small = appKeys.filter(function(k){ return groups[k].aths.length < MIN_GRP; });
     var ok    = appKeys.filter(function(k){ return groups[k].aths.length >= MIN_GRP; });
 
-    small.forEach(function(sk) {
+    // STRATÉGIE: Les groupes OK (>= 5) restent intacts.
+    // Les petits groupes se mergent ENTRE EUX pour atteindre 5+.
+    // En dernier recours seulement, fusion avec un groupe OK.
+    
+    // Phase 1: merger les petits ensemble (préférer même cat, sinon cat proche)
+    var smallActive = small.slice();
+    var changed = true;
+    while (changed && smallActive.length > 1) {
+      changed = false;
+      // Trier par taille croissante (les plus petits en premier)
+      smallActive.sort(function(a, b) {
+        return groups[a].aths.length - groups[b].aths.length;
+      });
+      
+      for (var si = 0; si < smallActive.length; si++) {
+        var sk = smallActive[si];
+        if (!groups[sk]) continue;
+        var sg = groups[sk];
+        
+        // Chercher un autre petit groupe à merger avec lui
+        var bestKey = null;
+        var bestScore = Infinity; // score = (sameCat ? 0 : 100) + dist
+        for (var sj = 0; sj < smallActive.length; sj++) {
+          if (sj === si) continue;
+          var ok_k = smallActive[sj];
+          if (!groups[ok_k]) continue;
+          var og = groups[ok_k];
+          if (og.aths.length + sg.aths.length > MAX_GRP_SIZE) continue;
+          var sameCat = (og.cat === sg.cat) ? 0 : 100;
+          var dist = Math.abs(_catOrder(og.cat) - _catOrder(sg.cat));
+          var score = sameCat + dist;
+          if (score < bestScore) { bestScore = score; bestKey = ok_k; }
+        }
+        
+        if (bestKey) {
+          var og = groups[bestKey];
+          og.aths = og.aths.concat(sg.aths);
+          og.cats = (og.cats||[og.cat]).concat(sg.cats||[sg.cat]);
+          og.cat = og.cats.join(' + ');
+          delete groups[sk];
+          smallActive.splice(si, 1);
+          // Si bestKey a maintenant >= 5, le retirer aussi de smallActive
+          if (groups[bestKey] && groups[bestKey].aths.length >= MIN_GRP) {
+            var bki = smallActive.indexOf(bestKey);
+            if (bki >= 0) smallActive.splice(bki, 1);
+          }
+          changed = true;
+          break;
+        }
+      }
+    }
+    
+    // Phase 2: pour les petits restants qui n'ont pas pu merger entre eux,
+    // dernier recours: fusion avec un groupe OK (préférer même cat exacte)
+    smallActive.forEach(function(sk) {
+      if (!groups[sk]) return;
       var sg = groups[sk];
-      // Préférence: merger d'abord avec la MÊME catégorie (sexe différent)
-      // ex: TR N3 H (3 ath) + TR N3 F (12 ath) — cat identique, juste sexe différent
-      // Ensuite seulement chercher dans les catégories voisines
       var bestKey = null;
-      var bestDist = 999;
-      // Pass 1: chercher la même cat exacte (différent sexe seulement)
+      var bestScore = Infinity;
       ok.forEach(function(ok_k) {
         var og = groups[ok_k];
-        if (og.cat === sg.cat && og.aths.length + sg.aths.length <= MAX_GRP_SIZE) {
-          bestKey = ok_k; bestDist = 0;
-        }
+        if (!og) return;
+        if (og.aths.length + sg.aths.length > MAX_GRP_SIZE) return;
+        var sameCat = (og.cat === sg.cat) ? 0 : 100;
+        var dist = Math.abs(_catOrder(og.cat) - _catOrder(sg.cat));
+        var score = sameCat + dist;
+        if (score < bestScore) { bestScore = score; bestKey = ok_k; }
       });
-      // Pass 2: si pas trouvé, chercher la cat la plus proche
-      if (!bestKey) {
-        ok.forEach(function(ok_k) {
-          var og = groups[ok_k];
-          if (og.aths.length + sg.aths.length <= MAX_GRP_SIZE) {
-            var dist = Math.abs(_catOrder(og.cat) - _catOrder(sg.cat));
-            if (dist < bestDist) { bestDist = dist; bestKey = ok_k; }
-          }
-        });
-      }
       if (bestKey) {
-        // Merge into OK group
         var og = groups[bestKey];
         og.aths = og.aths.concat(sg.aths);
         og.cats = (og.cats||[og.cat]).concat(sg.cats||[sg.cat]);
         og.cat = og.cats.join(' + ');
         delete groups[sk];
-      } else {
-        // Try merging with another small group
-        var firstSmall = small.filter(function(s){ return s !== sk && groups[s]; })[0];
-        if (firstSmall && groups[firstSmall] && 
-            groups[firstSmall].aths.length + sg.aths.length <= MAX_GRP_SIZE) {
-          groups[firstSmall].aths = groups[firstSmall].aths.concat(sg.aths);
-          groups[firstSmall].cats = (groups[firstSmall].cats||[groups[firstSmall].cat]).concat(sg.cats||[sg.cat]);
-          groups[firstSmall].cat = groups[firstSmall].cats.join(' + ');
-          delete groups[sk];
-        }
-        // If still can't merge, keep as-is
       }
+      // Si toujours pas mergeable, keep as-is (bloc < 5 toléré)
     });
   });
 
@@ -15581,7 +15647,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-018)
+  // NOUVEAU ALGO (v2026-04-06-019)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
