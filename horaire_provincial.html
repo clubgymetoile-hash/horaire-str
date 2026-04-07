@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-012</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-012<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4067,7 +4067,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-011)
+  // NOUVEAU ALGO (v2026-04-06-012)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -4932,35 +4932,50 @@ function autoAssignJudgePanels() {
   var samBlks = blocks.filter(function(b){ return b.day === 'sam' && b.type !== 'break'; });
   var dimBlks = blocks.filter(function(b){ return b.day === 'dim' && b.type !== 'break'; });
 
-  function assignDay(dayBlks) {
-    // Detect if TR-A and TR-B overlap at any point → need 4 panels
+  function detectMode(dayBlks) {
     var trA = dayBlks.filter(function(b){ return b.app === 'TR'; });
     var trB = dayBlks.filter(function(b){ return b.app === 'TR2'; });
-    var overlap = false;
-    trA.forEach(function(a) {
-      trB.forEach(function(b) {
-        if (a.wu_start < b.cp_end && b.wu_start < a.cp_end) overlap = true;
-      });
-    });
+    var dm  = dayBlks.filter(function(b){ return b.app === 'DM'; });
+    var tu  = dayBlks.filter(function(b){ return b.app === 'TU'; });
 
-    // Assign panels
-    dayBlks.forEach(function(b) {
-      if (overlap) {
-        // 4 panels: TR-A=1, TR-B=2, DM=3, TU=4, TRS=1
-        var map = {TR:1, TR2:2, DM:3, TU:4, TRS:1};
-        b.judgePanel = map[b.app] || 1;
-      } else {
-        // 3 panels: TR-A+TR-B=1 (same panel alternates), DM=3, TU=4
-        var map3 = {TR:1, TR2:1, DM:3, TU:4, TRS:1};
-        b.judgePanel = map3[b.app] || 1;
-      }
-    });
+    // 4 panels nécessaires SEULEMENT si les COMPÉTITIONS TR-A/TR-B chevauchent
+    // (les échauffements peuvent chevaucher, ce sont les coachs qui s'en occupent)
+    var trOverlap = false;
+    trA.forEach(function(a) { trB.forEach(function(b) {
+      if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) trOverlap = true;
+    }); });
+    if (trOverlap) return 4;
 
-    return overlap ? 4 : 3;
+    // 3 panels si DM/TU se chevauchent en compétition
+    var dmtuOverlap = false;
+    dm.forEach(function(a) { tu.forEach(function(b) {
+      if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) dmtuOverlap = true;
+    }); });
+    if (dmtuOverlap) return 3;
+
+    // 2 panels suffisent: 1 pour TR (A+B partagé), 1 pour DM+TU
+    return 2;
   }
 
-  var nSam = samBlks.length ? assignDay(samBlks) : 3;
-  var nDim = dimBlks.length ? assignDay(dimBlks) : 3;
+  function assignDay(dayBlks, nPanels) {
+    dayBlks.forEach(function(b) {
+      if (b._panelManual) return;
+      if (nPanels === 2) {
+        var map2 = {TR:1, TR2:1, DM:2, TU:2, TRS:1};
+        b.judgePanel = map2[b.app] || 1;
+      } else if (nPanels === 3) {
+        var map3 = {TR:1, TR2:1, DM:2, TU:3, TRS:1};
+        b.judgePanel = map3[b.app] || 1;
+      } else {
+        var map4 = {TR:1, TR2:2, DM:3, TU:4, TRS:1};
+        b.judgePanel = map4[b.app] || 1;
+      }
+    });
+  }
+
+  var nSam = 2, nDim = 2;
+  if (samBlks.length) { nSam = detectMode(samBlks); assignDay(samBlks, nSam); }
+  if (dimBlks.length) { nDim = detectMode(dimBlks); assignDay(dimBlks, nDim); }
   _judgeNPanels = Math.max(nSam, nDim);
   return _judgeNPanels;
 }
@@ -12149,7 +12164,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-012</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13163,7 +13178,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-012<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15524,7 +15539,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-011)
+  // NOUVEAU ALGO (v2026-04-06-012)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -16290,35 +16305,50 @@ function autoAssignJudgePanels() {
   var samBlks = blocks.filter(function(b){ return b.day === 'sam' && b.type !== 'break'; });
   var dimBlks = blocks.filter(function(b){ return b.day === 'dim' && b.type !== 'break'; });
 
-  function assignDay(dayBlks) {
-    // Detect if TR-A and TR-B overlap at any point → need 4 panels
+  function detectMode(dayBlks) {
     var trA = dayBlks.filter(function(b){ return b.app === 'TR'; });
     var trB = dayBlks.filter(function(b){ return b.app === 'TR2'; });
-    var overlap = false;
-    trA.forEach(function(a) {
-      trB.forEach(function(b) {
-        if (a.wu_start < b.cp_end && b.wu_start < a.cp_end) overlap = true;
-      });
-    });
+    var dm  = dayBlks.filter(function(b){ return b.app === 'DM'; });
+    var tu  = dayBlks.filter(function(b){ return b.app === 'TU'; });
 
-    // Assign panels
-    dayBlks.forEach(function(b) {
-      if (overlap) {
-        // 4 panels: TR-A=1, TR-B=2, DM=3, TU=4, TRS=1
-        var map = {TR:1, TR2:2, DM:3, TU:4, TRS:1};
-        b.judgePanel = map[b.app] || 1;
-      } else {
-        // 3 panels: TR-A+TR-B=1 (same panel alternates), DM=3, TU=4
-        var map3 = {TR:1, TR2:1, DM:3, TU:4, TRS:1};
-        b.judgePanel = map3[b.app] || 1;
-      }
-    });
+    // 4 panels nécessaires SEULEMENT si les COMPÉTITIONS TR-A/TR-B chevauchent
+    // (les échauffements peuvent chevaucher, ce sont les coachs qui s'en occupent)
+    var trOverlap = false;
+    trA.forEach(function(a) { trB.forEach(function(b) {
+      if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) trOverlap = true;
+    }); });
+    if (trOverlap) return 4;
 
-    return overlap ? 4 : 3;
+    // 3 panels si DM/TU se chevauchent en compétition
+    var dmtuOverlap = false;
+    dm.forEach(function(a) { tu.forEach(function(b) {
+      if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) dmtuOverlap = true;
+    }); });
+    if (dmtuOverlap) return 3;
+
+    // 2 panels suffisent: 1 pour TR (A+B partagé), 1 pour DM+TU
+    return 2;
   }
 
-  var nSam = samBlks.length ? assignDay(samBlks) : 3;
-  var nDim = dimBlks.length ? assignDay(dimBlks) : 3;
+  function assignDay(dayBlks, nPanels) {
+    dayBlks.forEach(function(b) {
+      if (b._panelManual) return;
+      if (nPanels === 2) {
+        var map2 = {TR:1, TR2:1, DM:2, TU:2, TRS:1};
+        b.judgePanel = map2[b.app] || 1;
+      } else if (nPanels === 3) {
+        var map3 = {TR:1, TR2:1, DM:2, TU:3, TRS:1};
+        b.judgePanel = map3[b.app] || 1;
+      } else {
+        var map4 = {TR:1, TR2:2, DM:3, TU:4, TRS:1};
+        b.judgePanel = map4[b.app] || 1;
+      }
+    });
+  }
+
+  var nSam = 2, nDim = 2;
+  if (samBlks.length) { nSam = detectMode(samBlks); assignDay(samBlks, nSam); }
+  if (dimBlks.length) { nDim = detectMode(dimBlks); assignDay(dimBlks, nDim); }
   _judgeNPanels = Math.max(nSam, nDim);
   return _judgeNPanels;
 }
