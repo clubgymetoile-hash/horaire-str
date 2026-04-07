@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-038</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-039</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -770,7 +770,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-038</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-039</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1676,7 +1676,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-038<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-039<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1785,7 +1785,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-038<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-039<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3563,6 +3563,12 @@ function _autoGenerate() {
   // Re-coller les paires que le break aurait pu décaler
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
+  // Optimisation finale: échanger des familles pour donner du répit aux athlètes multi-apparels
+  _swapForRest(newSam);
+  _swapForRest(newDim);
+  // Re-coller au cas où les swaps auraient bougé qq chose (sécurité)
+  _gluePrelimFinale(newSam);
+  _gluePrelimFinale(newDim);
 
   // Replace blocks
   blocks.length = 0;
@@ -3833,6 +3839,162 @@ function _fixOverlaps(dayBlks) {
 // Pour chaque prelim, trouver sa finale dans la colonne et la coller juste après.
 // Si d'autres blocs sont intercalés, on déplace la finale et on laisse 
 // _fixOverlaps puis le re-séquencement TR/TR2 régler les chevauchements créés.
+
+
+// ── Optimisation: échanger des familles pour donner du répit aux athlètes multi-apparels ──
+// Identifie les athlètes qui ont des blocs trop rapprochés sur différents apparels (< 15 min de gap)
+// puis tente d'échanger les positions de 2 familles complètes pour augmenter les gaps.
+function _swapForRest(dayBlks) {
+  var TARGET_GAP = 15;  // minutes minimum souhaitées entre 2 blocs d'un même athlète
+
+  // Helper: trouver la famille (prélim+finale) d'un bloc
+  function getFamily(b, allBlks) {
+    if (b.passType === 'PRELIM') {
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var fin = allBlks.find(function(x) {
+        if (x.passType !== 'FINALE') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== pSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return fin ? [b, fin] : [b];
+    } else if (b.passType === 'FINALE') {
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var pre = allBlks.find(function(x) {
+        if (x.passType !== 'PRELIM') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== fSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return pre ? [pre, b] : [b];
+    }
+    return [b];
+  }
+
+  // Identifier toutes les familles uniques de la journée (groupées par app)
+  function getAllFamilies(allBlks) {
+    var families = [];
+    var seen = {};
+    allBlks.forEach(function(b) {
+      if (b.type === 'break') return;
+      if (seen[b.id]) return;
+      var fam = getFamily(b, allBlks);
+      fam.forEach(function(x) { seen[x.id] = true; });
+      families.push({
+        blocks: fam,
+        app: fam[0].app,
+        wuStart: Math.min.apply(null, fam.map(function(x){ return x.wu_start; })),
+        cpEnd: Math.max.apply(null, fam.map(function(x){ return x.cp_end; })),
+        athleteKeys: (function() {
+          var keys = {};
+          fam.forEach(function(x) {
+            (x.athletes||[]).forEach(function(a) { keys[a.nom+'|'+a.prenom] = true; });
+          });
+          return Object.keys(keys);
+        })()
+      });
+    });
+    return families;
+  }
+
+  // Pour chaque athlète, calculer la liste de ses blocs (familles) chronologiquement
+  function buildAthSchedule(families) {
+    var sched = {};
+    families.forEach(function(fam) {
+      fam.athleteKeys.forEach(function(k) {
+        if (!sched[k]) sched[k] = [];
+        sched[k].push(fam);
+      });
+    });
+    Object.keys(sched).forEach(function(k) {
+      sched[k].sort(function(a, b) { return a.wuStart - b.wuStart; });
+    });
+    return sched;
+  }
+
+  // Compter les gaps OK (>= TARGET_GAP) pour tous les athlètes multi-apparels
+  function countGoodGaps(families) {
+    var sched = buildAthSchedule(families);
+    var goodGaps = 0;
+    var badGaps = 0;
+    Object.keys(sched).forEach(function(k) {
+      var blks = sched[k];
+      if (blks.length < 2) return;
+      for (var i = 1; i < blks.length; i++) {
+        var gap = blks[i].wuStart - blks[i-1].cpEnd;
+        if (gap >= TARGET_GAP) goodGaps++;
+        else badGaps++;
+      }
+    });
+    return {good: goodGaps, bad: badGaps};
+  }
+
+  // Vérifier que 2 familles ont le même format (même nb prélim, finale)
+  function sameFormat(fA, fB) {
+    if (fA.blocks.length !== fB.blocks.length) return false;
+    // Comparer les durées de chaque bloc
+    for (var i = 0; i < fA.blocks.length; i++) {
+      var a = fA.blocks[i], b = fB.blocks[i];
+      if (a.passType !== b.passType) return false;
+    }
+    return true;
+  }
+
+  // Effectuer un swap réel: échanger les positions de 2 familles
+  function applySwap(fA, fB) {
+    // Sauvegarder positions originales
+    var posA = fA.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
+    var posB = fB.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
+    // Échanger
+    fA.blocks.forEach(function(x, i) {
+      x.wu_start = posB[i].wu; x.cp_start = posB[i].cs; x.cp_end = posB[i].ce;
+    });
+    fB.blocks.forEach(function(x, i) {
+      x.wu_start = posA[i].wu; x.cp_start = posA[i].cs; x.cp_end = posA[i].ce;
+    });
+    // Mettre à jour les wuStart/cpEnd des familles
+    var aWu = fA.wuStart, aCe = fA.cpEnd;
+    fA.wuStart = fB.wuStart; fA.cpEnd = fB.cpEnd;
+    fB.wuStart = aWu; fB.cpEnd = aCe;
+  }
+
+  // Algorithme principal: itérer jusqu'à ce qu'aucun swap n'améliore plus
+  var families = getAllFamilies(dayBlks);
+  var maxIterations = 30;
+  var iter = 0;
+  var improved = true;
+
+  while (improved && iter < maxIterations) {
+    improved = false;
+    iter++;
+    var currentScore = countGoodGaps(families);
+
+    // Pour chaque paire de familles du même app, tenter le swap
+    for (var i = 0; i < families.length; i++) {
+      for (var j = i + 1; j < families.length; j++) {
+        var fA = families[i], fB = families[j];
+        if (fA.app !== fB.app) continue;
+        if (!sameFormat(fA, fB)) continue;
+        // Tenter le swap
+        applySwap(fA, fB);
+        var newScore = countGoodGaps(families);
+        if (newScore.good > currentScore.good) {
+          // Améliore: garder
+          currentScore = newScore;
+          improved = true;
+        } else {
+          // Annuler
+          applySwap(fA, fB);
+        }
+      }
+    }
+  }
+}
+
 function _gluePrelimFinale(dayBlks) {
   ['TR','TR2','DM','TU'].forEach(function(app) {
     var col = dayBlks.filter(function(b){ return b.app === app; });
@@ -4488,7 +4650,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-038)
+  // NOUVEAU ALGO (v2026-04-06-039)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -4684,6 +4846,12 @@ function _gsRebuild(athletes) {
   _insertJudgeBreak(satBlocks);
   _insertJudgeBreak(dimBlocks);
   // Re-coller les paires que le break aurait pu décaler
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  // Optimisation finale: échanger des familles pour donner du répit aux athlètes multi-apparels
+  _swapForRest(satBlocks);
+  _swapForRest(dimBlocks);
+  // Re-coller au cas où les swaps auraient bougé qq chose
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
 
@@ -12500,7 +12668,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-038</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-039</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -12640,7 +12808,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-038</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-039</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13546,7 +13714,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-038<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-039<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -13655,7 +13823,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-038<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-039<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15430,6 +15598,12 @@ function _autoGenerate() {
   // Re-coller les paires que le break aurait pu décaler
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
+  // Optimisation finale: échanger des familles pour donner du répit aux athlètes multi-apparels
+  _swapForRest(newSam);
+  _swapForRest(newDim);
+  // Re-coller au cas où les swaps auraient bougé qq chose (sécurité)
+  _gluePrelimFinale(newSam);
+  _gluePrelimFinale(newDim);
 
   // Replace blocks
   blocks.length = 0;
@@ -15757,6 +15931,162 @@ function _fixOverlaps(dayBlks) {
 // Pour chaque prelim, trouver sa finale dans la colonne et la coller juste après.
 // Si d'autres blocs sont intercalés, on déplace la finale et on laisse 
 // _fixOverlaps puis le re-séquencement TR/TR2 régler les chevauchements créés.
+
+
+// ── Optimisation: échanger des familles pour donner du répit aux athlètes multi-apparels ──
+// Identifie les athlètes qui ont des blocs trop rapprochés sur différents apparels (< 15 min de gap)
+// puis tente d'échanger les positions de 2 familles complètes pour augmenter les gaps.
+function _swapForRest(dayBlks) {
+  var TARGET_GAP = 15;  // minutes minimum souhaitées entre 2 blocs d'un même athlète
+
+  // Helper: trouver la famille (prélim+finale) d'un bloc
+  function getFamily(b, allBlks) {
+    if (b.passType === 'PRELIM') {
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var fin = allBlks.find(function(x) {
+        if (x.passType !== 'FINALE') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== pSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return fin ? [b, fin] : [b];
+    } else if (b.passType === 'FINALE') {
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var pre = allBlks.find(function(x) {
+        if (x.passType !== 'PRELIM') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== fSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return pre ? [pre, b] : [b];
+    }
+    return [b];
+  }
+
+  // Identifier toutes les familles uniques de la journée (groupées par app)
+  function getAllFamilies(allBlks) {
+    var families = [];
+    var seen = {};
+    allBlks.forEach(function(b) {
+      if (b.type === 'break') return;
+      if (seen[b.id]) return;
+      var fam = getFamily(b, allBlks);
+      fam.forEach(function(x) { seen[x.id] = true; });
+      families.push({
+        blocks: fam,
+        app: fam[0].app,
+        wuStart: Math.min.apply(null, fam.map(function(x){ return x.wu_start; })),
+        cpEnd: Math.max.apply(null, fam.map(function(x){ return x.cp_end; })),
+        athleteKeys: (function() {
+          var keys = {};
+          fam.forEach(function(x) {
+            (x.athletes||[]).forEach(function(a) { keys[a.nom+'|'+a.prenom] = true; });
+          });
+          return Object.keys(keys);
+        })()
+      });
+    });
+    return families;
+  }
+
+  // Pour chaque athlète, calculer la liste de ses blocs (familles) chronologiquement
+  function buildAthSchedule(families) {
+    var sched = {};
+    families.forEach(function(fam) {
+      fam.athleteKeys.forEach(function(k) {
+        if (!sched[k]) sched[k] = [];
+        sched[k].push(fam);
+      });
+    });
+    Object.keys(sched).forEach(function(k) {
+      sched[k].sort(function(a, b) { return a.wuStart - b.wuStart; });
+    });
+    return sched;
+  }
+
+  // Compter les gaps OK (>= TARGET_GAP) pour tous les athlètes multi-apparels
+  function countGoodGaps(families) {
+    var sched = buildAthSchedule(families);
+    var goodGaps = 0;
+    var badGaps = 0;
+    Object.keys(sched).forEach(function(k) {
+      var blks = sched[k];
+      if (blks.length < 2) return;
+      for (var i = 1; i < blks.length; i++) {
+        var gap = blks[i].wuStart - blks[i-1].cpEnd;
+        if (gap >= TARGET_GAP) goodGaps++;
+        else badGaps++;
+      }
+    });
+    return {good: goodGaps, bad: badGaps};
+  }
+
+  // Vérifier que 2 familles ont le même format (même nb prélim, finale)
+  function sameFormat(fA, fB) {
+    if (fA.blocks.length !== fB.blocks.length) return false;
+    // Comparer les durées de chaque bloc
+    for (var i = 0; i < fA.blocks.length; i++) {
+      var a = fA.blocks[i], b = fB.blocks[i];
+      if (a.passType !== b.passType) return false;
+    }
+    return true;
+  }
+
+  // Effectuer un swap réel: échanger les positions de 2 familles
+  function applySwap(fA, fB) {
+    // Sauvegarder positions originales
+    var posA = fA.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
+    var posB = fB.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
+    // Échanger
+    fA.blocks.forEach(function(x, i) {
+      x.wu_start = posB[i].wu; x.cp_start = posB[i].cs; x.cp_end = posB[i].ce;
+    });
+    fB.blocks.forEach(function(x, i) {
+      x.wu_start = posA[i].wu; x.cp_start = posA[i].cs; x.cp_end = posA[i].ce;
+    });
+    // Mettre à jour les wuStart/cpEnd des familles
+    var aWu = fA.wuStart, aCe = fA.cpEnd;
+    fA.wuStart = fB.wuStart; fA.cpEnd = fB.cpEnd;
+    fB.wuStart = aWu; fB.cpEnd = aCe;
+  }
+
+  // Algorithme principal: itérer jusqu'à ce qu'aucun swap n'améliore plus
+  var families = getAllFamilies(dayBlks);
+  var maxIterations = 30;
+  var iter = 0;
+  var improved = true;
+
+  while (improved && iter < maxIterations) {
+    improved = false;
+    iter++;
+    var currentScore = countGoodGaps(families);
+
+    // Pour chaque paire de familles du même app, tenter le swap
+    for (var i = 0; i < families.length; i++) {
+      for (var j = i + 1; j < families.length; j++) {
+        var fA = families[i], fB = families[j];
+        if (fA.app !== fB.app) continue;
+        if (!sameFormat(fA, fB)) continue;
+        // Tenter le swap
+        applySwap(fA, fB);
+        var newScore = countGoodGaps(families);
+        if (newScore.good > currentScore.good) {
+          // Améliore: garder
+          currentScore = newScore;
+          improved = true;
+        } else {
+          // Annuler
+          applySwap(fA, fB);
+        }
+      }
+    }
+  }
+}
+
 function _gluePrelimFinale(dayBlks) {
   ['TR','TR2','DM','TU'].forEach(function(app) {
     var col = dayBlks.filter(function(b){ return b.app === app; });
@@ -16412,7 +16742,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-038)
+  // NOUVEAU ALGO (v2026-04-06-039)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -16608,6 +16938,12 @@ function _gsRebuild(athletes) {
   _insertJudgeBreak(satBlocks);
   _insertJudgeBreak(dimBlocks);
   // Re-coller les paires que le break aurait pu décaler
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  // Optimisation finale: échanger des familles pour donner du répit aux athlètes multi-apparels
+  _swapForRest(satBlocks);
+  _swapForRest(dimBlocks);
+  // Re-coller au cas où les swaps auraient bougé qq chose
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
 
