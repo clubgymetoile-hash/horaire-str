@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-032</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -770,7 +770,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-032</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1676,7 +1676,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-032<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1785,7 +1785,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-032<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3957,44 +3957,79 @@ function _insertJudgeBreak(dayBlks) {
   
   // Décaler les compétitions qui chevauchent la pause
   // Stratégie: pour chaque colonne, si une compétition chevauche [breakStart, breakEnd],
-  // décaler tous les blocs suivants (incluant celui-là) après breakEnd
+  // Helper: trouver la finale collée à un prélim (même cat, même sexe, gap <= 5)
+  function findFinalePartner(prelim, allBlks) {
+    var prelimSexe = (prelim.athletes&&prelim.athletes[0]&&prelim.athletes[0].sexe) || '';
+    return allBlks.find(function(b) {
+      if (b.passType !== 'FINALE' || b.app !== prelim.app) return false;
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      if (fSexe !== prelimSexe) return false;
+      if (Math.abs(b.wu_start - prelim.cp_end) > 5) return false;
+      return (prelim.cats||[]).some(function(c){ return (b.cats||[]).indexOf(c) >= 0; });
+    });
+  }
+  function findPrelimPartner(finale, allBlks) {
+    var finSexe = (finale.athletes&&finale.athletes[0]&&finale.athletes[0].sexe) || '';
+    return allBlks.find(function(b) {
+      if (b.passType !== 'PRELIM' || b.app !== finale.app) return false;
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      if (pSexe !== finSexe) return false;
+      if (Math.abs(finale.wu_start - b.cp_end) > 5) return false;
+      return (finale.cats||[]).some(function(c){ return (b.cats||[]).indexOf(c) >= 0; });
+    });
+  }
+
+  // Décaler les blocs qui chevauchent la pause
+  // RÈGLE: Si un bloc fait partie d'une famille prelim+finale collée,
+  // considérer la famille entière comme l'unité à décaler
   ['TR','TR2','DM','TU'].forEach(function(app) {
     var col = dayBlks.filter(function(b){ return b.app === app && b.type !== 'break'; });
     col.sort(function(a,b){ return a.cp_start - b.cp_start; });
     
-    // Trouver le premier bloc dont la compétition chevauche le créneau
+    // Calculer pour chaque bloc sa "famille range" (prelim+finale collés)
+    col.forEach(function(b) {
+      var famStart = b.cp_start, famEnd = b.cp_end;
+      if (b.passType === 'PRELIM') {
+        var fin = findFinalePartner(b, col);
+        if (fin) { famEnd = Math.max(famEnd, fin.cp_end); }
+      } else if (b.passType === 'FINALE') {
+        var pre = findPrelimPartner(b, col);
+        if (pre) { famStart = Math.min(famStart, pre.cp_start); }
+      }
+      b._famCpStart = famStart;
+      b._famCpEnd = famEnd;
+    });
+    
+    // Trouver le premier bloc dont la FAMILLE chevauche la pause
     var shiftFromIdx = -1;
     for (var i = 0; i < col.length; i++) {
       var b = col[i];
-      if (b.cp_start < breakEnd && b.cp_end > breakStart) {
+      if (b._famCpStart < breakEnd && b._famCpEnd > breakStart) {
         shiftFromIdx = i;
         break;
       }
     }
     
-    if (shiftFromIdx === -1) return; // aucun chevauchement
+    if (shiftFromIdx === -1) return;
     
-    // Calculer le décalage : le cp_start du premier bloc doit passer après breakEnd
     var firstBlk = col[shiftFromIdx];
+    // Calculer le décalage basé sur le début de la famille
     var newCpStart = breakEnd;
-    var shift = newCpStart - firstBlk.cp_start;
+    var shift = newCpStart - firstBlk._famCpStart;
     if (shift <= 0) return;
     
     // Décaler ce bloc et tous les suivants
-    // RÈGLE: la durée du warmup doit rester identique
-    // Le warmup peut commencer pendant la pause (les juges arrivent progressivement)
-    // mais doit toujours se terminer juste avant cp_start
     for (var i = shiftFromIdx; i < col.length; i++) {
       var b = col[i];
-      var wu_dur = b.cp_start - b.wu_start; // durée originale du warmup
+      var wu_dur = b.cp_start - b.wu_start;
       var cp_dur = b.cp_end - b.cp_start;
-      // Décaler la compétition
       b.cp_start += shift;
       b.cp_end = b.cp_start + cp_dur;
-      // Le warmup recule pour finir pile au début de la nouvelle compétition
-      // (préserve la durée du warmup)
       b.wu_start = b.cp_start - wu_dur;
     }
+    
+    // Cleanup
+    col.forEach(function(b) { delete b._famCpStart; delete b._famCpEnd; });
   });
   
   // ── Re-séquencer TR-A et TR-B après le décalage ──────────
@@ -4378,7 +4413,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-032)
+  // NOUVEAU ALGO (v2026-04-06-036)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -5630,34 +5665,52 @@ function makeDraggable(el, block) {
       return;
     }
 
-    // ── Normal click on an unselected block: clear selection ──
+    // ── Normal click on an unselected block: clear selection silently (no render)
+    // Le render() casserait le drag en cours. On retire juste les classes CSS.
     if (!selectedBids.has(block.id)) {
-      if (selectedBids.size > 0) { selectedBids.clear(); render(); }
+      if (selectedBids.size > 0) {
+        selectedBids.clear();
+        document.querySelectorAll('.block.selected').forEach(function(elx) {
+          elx.classList.remove('selected');
+        });
+      }
     }
 
     // ── Auto-sélection: si le bloc cliqué fait partie d'une paire prélim+finale collée,
     // sélectionner automatiquement les deux pour qu'ils bougent ensemble
     if (selectedBids.size === 0 || (selectedBids.size === 1 && selectedBids.has(block.id))) {
       var pairBlk = null;
+      // Match précis (cat + sexe) pour respecter les paires F/M séparées
       var sameCol = blocks.filter(function(x){ return x.app === block.app && x.day === block.day; });
+      var blockSexe = (block.athletes && block.athletes[0] && block.athletes[0].sexe) || '';
       if (block.passType === 'PRELIM') {
-        // Chercher la finale collée juste après
         pairBlk = sameCol.find(function(x){
-          return x.passType === 'FINALE' && x.wu_start === block.cp_end &&
-                 (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+          if (x.passType !== 'FINALE') return false;
+          var xSexe = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+          if (xSexe !== blockSexe) return false;
+          if (x.wu_start !== block.cp_end) return false;
+          return (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
         });
       } else if (block.passType === 'FINALE') {
-        // Chercher le prélim collé juste avant
         pairBlk = sameCol.find(function(x){
-          return x.passType === 'PRELIM' && x.cp_end === block.wu_start &&
-                 (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+          if (x.passType !== 'PRELIM') return false;
+          var xSexe = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+          if (xSexe !== blockSexe) return false;
+          if (x.cp_end !== block.wu_start) return false;
+          return (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
         });
       }
       if (pairBlk) {
         selectedBids.clear();
         selectedBids.add(block.id);
         selectedBids.add(pairBlk.id);
-        render();
+        // Marquer visuellement les 2 blocs comme sélectionnés sans re-render
+        // (le render() casserait le drag en cours)
+        document.querySelectorAll('.block').forEach(function(elx) {
+          if (elx.dataset.bid === block.id || elx.dataset.bid === pairBlk.id) {
+            elx.classList.add('selected');
+          }
+        });
       }
     }
 
@@ -5793,6 +5846,8 @@ function makeDraggable(el, block) {
       // Sync app change to _blocks_sam/_blocks_dim
       var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).find(function(x){return x.id===block.id;});
       if (_syncB) _syncB.app = block.app;
+      // Vider la sélection après le drop pour que le prochain clic démarre frais
+      selectedBids.clear();
       render();
       // Awards follow blocks after every manual move
       try { autoScheduleAwards(); } catch(e) {}
@@ -12367,7 +12422,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-032</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -12507,7 +12562,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-032</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13413,7 +13468,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-032<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -13522,7 +13577,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-032<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15748,44 +15803,79 @@ function _insertJudgeBreak(dayBlks) {
   
   // Décaler les compétitions qui chevauchent la pause
   // Stratégie: pour chaque colonne, si une compétition chevauche [breakStart, breakEnd],
-  // décaler tous les blocs suivants (incluant celui-là) après breakEnd
+  // Helper: trouver la finale collée à un prélim (même cat, même sexe, gap <= 5)
+  function findFinalePartner(prelim, allBlks) {
+    var prelimSexe = (prelim.athletes&&prelim.athletes[0]&&prelim.athletes[0].sexe) || '';
+    return allBlks.find(function(b) {
+      if (b.passType !== 'FINALE' || b.app !== prelim.app) return false;
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      if (fSexe !== prelimSexe) return false;
+      if (Math.abs(b.wu_start - prelim.cp_end) > 5) return false;
+      return (prelim.cats||[]).some(function(c){ return (b.cats||[]).indexOf(c) >= 0; });
+    });
+  }
+  function findPrelimPartner(finale, allBlks) {
+    var finSexe = (finale.athletes&&finale.athletes[0]&&finale.athletes[0].sexe) || '';
+    return allBlks.find(function(b) {
+      if (b.passType !== 'PRELIM' || b.app !== finale.app) return false;
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      if (pSexe !== finSexe) return false;
+      if (Math.abs(finale.wu_start - b.cp_end) > 5) return false;
+      return (finale.cats||[]).some(function(c){ return (b.cats||[]).indexOf(c) >= 0; });
+    });
+  }
+
+  // Décaler les blocs qui chevauchent la pause
+  // RÈGLE: Si un bloc fait partie d'une famille prelim+finale collée,
+  // considérer la famille entière comme l'unité à décaler
   ['TR','TR2','DM','TU'].forEach(function(app) {
     var col = dayBlks.filter(function(b){ return b.app === app && b.type !== 'break'; });
     col.sort(function(a,b){ return a.cp_start - b.cp_start; });
     
-    // Trouver le premier bloc dont la compétition chevauche le créneau
+    // Calculer pour chaque bloc sa "famille range" (prelim+finale collés)
+    col.forEach(function(b) {
+      var famStart = b.cp_start, famEnd = b.cp_end;
+      if (b.passType === 'PRELIM') {
+        var fin = findFinalePartner(b, col);
+        if (fin) { famEnd = Math.max(famEnd, fin.cp_end); }
+      } else if (b.passType === 'FINALE') {
+        var pre = findPrelimPartner(b, col);
+        if (pre) { famStart = Math.min(famStart, pre.cp_start); }
+      }
+      b._famCpStart = famStart;
+      b._famCpEnd = famEnd;
+    });
+    
+    // Trouver le premier bloc dont la FAMILLE chevauche la pause
     var shiftFromIdx = -1;
     for (var i = 0; i < col.length; i++) {
       var b = col[i];
-      if (b.cp_start < breakEnd && b.cp_end > breakStart) {
+      if (b._famCpStart < breakEnd && b._famCpEnd > breakStart) {
         shiftFromIdx = i;
         break;
       }
     }
     
-    if (shiftFromIdx === -1) return; // aucun chevauchement
+    if (shiftFromIdx === -1) return;
     
-    // Calculer le décalage : le cp_start du premier bloc doit passer après breakEnd
     var firstBlk = col[shiftFromIdx];
+    // Calculer le décalage basé sur le début de la famille
     var newCpStart = breakEnd;
-    var shift = newCpStart - firstBlk.cp_start;
+    var shift = newCpStart - firstBlk._famCpStart;
     if (shift <= 0) return;
     
     // Décaler ce bloc et tous les suivants
-    // RÈGLE: la durée du warmup doit rester identique
-    // Le warmup peut commencer pendant la pause (les juges arrivent progressivement)
-    // mais doit toujours se terminer juste avant cp_start
     for (var i = shiftFromIdx; i < col.length; i++) {
       var b = col[i];
-      var wu_dur = b.cp_start - b.wu_start; // durée originale du warmup
+      var wu_dur = b.cp_start - b.wu_start;
       var cp_dur = b.cp_end - b.cp_start;
-      // Décaler la compétition
       b.cp_start += shift;
       b.cp_end = b.cp_start + cp_dur;
-      // Le warmup recule pour finir pile au début de la nouvelle compétition
-      // (préserve la durée du warmup)
       b.wu_start = b.cp_start - wu_dur;
     }
+    
+    // Cleanup
+    col.forEach(function(b) { delete b._famCpStart; delete b._famCpEnd; });
   });
   
   // ── Re-séquencer TR-A et TR-B après le décalage ──────────
@@ -16169,7 +16259,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-032)
+  // NOUVEAU ALGO (v2026-04-06-036)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -17322,34 +17412,52 @@ function makeDraggable(el, block) {
       return;
     }
 
-    // ── Normal click on an unselected block: clear selection ──
+    // ── Normal click on an unselected block: clear selection silently (no render)
+    // Le render() casserait le drag en cours. On retire juste les classes CSS.
     if (!selectedBids.has(block.id)) {
-      if (selectedBids.size > 0) { selectedBids.clear(); render(); }
+      if (selectedBids.size > 0) {
+        selectedBids.clear();
+        document.querySelectorAll('.block.selected').forEach(function(elx) {
+          elx.classList.remove('selected');
+        });
+      }
     }
 
     // ── Auto-sélection: si le bloc cliqué fait partie d'une paire prélim+finale collée,
     // sélectionner automatiquement les deux pour qu'ils bougent ensemble
     if (selectedBids.size === 0 || (selectedBids.size === 1 && selectedBids.has(block.id))) {
       var pairBlk = null;
+      // Match précis (cat + sexe) pour respecter les paires F/M séparées
       var sameCol = blocks.filter(function(x){ return x.app === block.app && x.day === block.day; });
+      var blockSexe = (block.athletes && block.athletes[0] && block.athletes[0].sexe) || '';
       if (block.passType === 'PRELIM') {
-        // Chercher la finale collée juste après
         pairBlk = sameCol.find(function(x){
-          return x.passType === 'FINALE' && x.wu_start === block.cp_end &&
-                 (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+          if (x.passType !== 'FINALE') return false;
+          var xSexe = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+          if (xSexe !== blockSexe) return false;
+          if (x.wu_start !== block.cp_end) return false;
+          return (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
         });
       } else if (block.passType === 'FINALE') {
-        // Chercher le prélim collé juste avant
         pairBlk = sameCol.find(function(x){
-          return x.passType === 'PRELIM' && x.cp_end === block.wu_start &&
-                 (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+          if (x.passType !== 'PRELIM') return false;
+          var xSexe = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+          if (xSexe !== blockSexe) return false;
+          if (x.cp_end !== block.wu_start) return false;
+          return (block.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
         });
       }
       if (pairBlk) {
         selectedBids.clear();
         selectedBids.add(block.id);
         selectedBids.add(pairBlk.id);
-        render();
+        // Marquer visuellement les 2 blocs comme sélectionnés sans re-render
+        // (le render() casserait le drag en cours)
+        document.querySelectorAll('.block').forEach(function(elx) {
+          if (elx.dataset.bid === block.id || elx.dataset.bid === pairBlk.id) {
+            elx.classList.add('selected');
+          }
+        });
       }
     }
 
@@ -17485,6 +17593,8 @@ function makeDraggable(el, block) {
       // Sync app change to _blocks_sam/_blocks_dim
       var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).find(function(x){return x.id===block.id;});
       if (_syncB) _syncB.app = block.app;
+      // Vider la sélection après le drop pour que le prochain clic démarre frais
+      selectedBids.clear();
       render();
       // Awards follow blocks after every manual move
       try { autoScheduleAwards(); } catch(e) {}
