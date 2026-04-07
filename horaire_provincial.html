@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-013</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-014</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-013<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-014<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3677,38 +3677,8 @@ function _conflictAwareLayout(dayBlks, allAthletes, startM) {
       f.totalDur = f.blocks.reduce(function(s,b){ return s + (b.cp_end - b.wu_start); }, 0);
     });
 
-    // ── P1: Calculer le "centre de masse" temporel des blocs TR de chaque niveau
-    var trBlksByLevel = {};
-    dayBlks.forEach(function(b) {
-      if (b.app === 'TR' || b.app === 'TR2') {
-        var lo = _catOrder((b.cats&&b.cats[0])||b.cat||'');
-        if (!trBlksByLevel[lo]) trBlksByLevel[lo] = [];
-        trBlksByLevel[lo].push((b.wu_start + b.cp_end) / 2);
-      }
-    });
-
-    // Pour chaque famille : score P1 = pousser loin du TR du même niveau
-    families.forEach(function(f) {
-      var trCenters = trBlksByLevel[f.catOrder];
-      if (trCenters && trCenters.length) {
-        var avgTR = trCenters.reduce(function(s,x){return s+x;},0) / trCenters.length;
-        var dayMid = (startM + 1260) / 2;
-        // Si TR est le matin → on veut cette famille l'après-midi (priorité haute = late)
-        // Si TR est l'après-midi → on veut cette famille le matin (priorité basse = early)
-        f.p1Score = (avgTR < dayMid) ? 1 : -1;
-      } else {
-        f.p1Score = 0;
-      }
-    });
-
-    // Tri des familles : d'abord par score P1, puis par catOrder
-    // p1Score=-1 (TR PM → famille AM): en premier
-    // p1Score=0 (pas de TR du même niveau): au milieu
-    // p1Score=1 (TR AM → famille PM): à la fin
-    families.sort(function(a, b) {
-      if (a.p1Score !== b.p1Score) return a.p1Score - b.p1Score;
-      return a.catOrder - b.catOrder;
-    });
+    // Tri simple par catOrder — placement bout à bout, pas de trou artificiel
+    families.sort(function(a, b) { return a.catOrder - b.catOrder; });
 
     var placedInCol = []; // [{start, end}]
 
@@ -4067,7 +4037,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-013)
+  // NOUVEAU ALGO (v2026-04-06-014)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -12166,7 +12136,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-013</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-014</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13180,7 +13150,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-013<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-014<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15057,29 +15027,8 @@ function _conflictAwareLayout(dayBlks, allAthletes, startM) {
       f.totalDur = f.blocks.reduce(function(s,b){ return s + (b.cp_end - b.wu_start); }, 0);
     });
 
-    // P1: scoring loin du TR du même niveau
-    var trBlksByLevel = {};
-    dayBlks.forEach(function(b) {
-      if (b.app === 'TR' || b.app === 'TR2') {
-        var lo = _catOrder((b.cats&&b.cats[0])||b.cat||'');
-        if (!trBlksByLevel[lo]) trBlksByLevel[lo] = [];
-        trBlksByLevel[lo].push((b.wu_start + b.cp_end) / 2);
-      }
-    });
-    families.forEach(function(f) {
-      var trCenters = trBlksByLevel[f.catOrder];
-      if (trCenters && trCenters.length) {
-        var avgTR = trCenters.reduce(function(s,x){return s+x;},0) / trCenters.length;
-        var dayMid = (startM + 1260) / 2;
-        f.p1Score = (avgTR < dayMid) ? 1 : -1;
-      } else {
-        f.p1Score = 0;
-      }
-    });
-    families.sort(function(a, b) {
-      if (a.p1Score !== b.p1Score) return a.p1Score - b.p1Score;
-      return a.catOrder - b.catOrder;
-    });
+    // Tri simple par catOrder — placement bout à bout, pas de trou artificiel
+    families.sort(function(a, b) { return a.catOrder - b.catOrder; });
 
     var placedInCol = [];
     families.forEach(function(f) {
@@ -15541,7 +15490,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-013)
+  // NOUVEAU ALGO (v2026-04-06-014)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
