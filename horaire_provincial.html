@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-045</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-046</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -770,7 +770,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-045</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-046</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1676,7 +1676,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-045<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-046<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1785,7 +1785,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-045<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-046<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3574,6 +3574,11 @@ function _autoGenerate() {
   _resolveCrossAppConflicts(newDim);
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
+  // Compactage final: éliminer les temps morts entre cp TR/TR2 (juges)
+  _compactJudgeCp(newSam);
+  _compactJudgeCp(newDim);
+  _gluePrelimFinale(newSam);
+  _gluePrelimFinale(newDim);
 
   // Replace blocks
   blocks.length = 0;
@@ -4185,6 +4190,176 @@ function _resolveCrossAppConflicts(dayBlks) {
         break;
       }
     }
+    if (!resolved) break;
+  }
+}
+
+
+
+// ── Compactage des cp TR/TR2 pour éliminer les temps morts entre compétitions ──
+// "Les juges ne se tournent pas les pouces" — quand un cp finit sur un plateau,
+// l'autre plateau doit avoir une cp prête à démarrer immédiatement après.
+// Tente de déplacer des familles plus tardives vers les trous, possiblement
+// en changeant leur plateau (TR↔TR2).
+function _compactJudgeCp(dayBlks) {
+  var maxIter = 30;
+  
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  
+  // Trouver la famille (prélim+finale) d'un bloc
+  function getFamily(b, allBlks) {
+    if (b.passType === 'PRELIM') {
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var fin = allBlks.find(function(x) {
+        if (x.passType !== 'FINALE') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== pSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return fin ? [b, fin] : [b];
+    } else if (b.passType === 'FINALE') {
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var pre = allBlks.find(function(x) {
+        if (x.passType !== 'PRELIM') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== fSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return pre ? [pre, b] : [b];
+    }
+    return [b];
+  }
+  
+  // Vérifier qu'un athlète n'est pas occupé pendant une plage donnée
+  function athBusyInRange(ath, start, end, excludeIds) {
+    return dayBlks.some(function(b) {
+      if (b.type === 'break') return false;
+      if (excludeIds && excludeIds.indexOf(b.id) >= 0) return false;
+      if (!(b.athletes||[]).some(function(x){ return x.nom === ath.nom && x.prenom === ath.prenom; })) return false;
+      return !(end <= b.wu_start || start >= b.cp_end);
+    });
+  }
+  
+  // Vérifier qu'une famille peut être placée sur un plateau donné à un cp_start donné
+  // sans créer de conflit (athlètes, colonne, juges)
+  function canPlaceFamilyAt(family, newApp, newCpStart) {
+    var famIds = family.map(function(b){ return b.id; });
+    var firstWuDur = family[0].cp_start - family[0].wu_start;
+    var newWuStart = newCpStart - firstWuDur;
+    var totalDur = family[family.length-1].cp_end - family[0].wu_start;
+    var newEnd = newWuStart + totalDur;
+    if (newWuStart < 480 || newEnd > 1380) return false;
+    
+    // 1. Conflits athlètes (toute la plage wu→cp)
+    var aths = {};
+    family.forEach(function(b) {
+      (b.athletes||[]).forEach(function(a) { aths[a.nom+'|'+a.prenom] = a; });
+    });
+    if (Object.keys(aths).some(function(k) {
+      return athBusyInRange(aths[k], newWuStart, newEnd, famIds);
+    })) return false;
+    
+    // 2. Pas d'overlap avec un autre bloc de la colonne newApp
+    var visualConflict = dayBlks.some(function(b) {
+      if (b.type === 'break') return false;
+      if (famIds.indexOf(b.id) >= 0) return false;
+      if (b.app !== newApp) return false;
+      return !(newEnd <= b.wu_start || newWuStart >= b.cp_end);
+    });
+    if (visualConflict) return false;
+    
+    // 3. Pas d'overlap des cp entre TR et TR2 (juges partagés)
+    // Calculer où serait chaque cp de la famille à la nouvelle position
+    var startOffset = family[0].wu_start;
+    for (var i = 0; i < family.length; i++) {
+      var b = family[i];
+      var bCpOffset = b.cp_start - startOffset;
+      var bCpDur = b.cp_end - b.cp_start;
+      var newCpS = newWuStart + bCpOffset;
+      var newCpE = newCpS + bCpDur;
+      var cpClash = dayBlks.some(function(other) {
+        if (other.type === 'break') return false;
+        if (famIds.indexOf(other.id) >= 0) return false;
+        if (other.app !== 'TR' && other.app !== 'TR2') return false;
+        return !(newCpE <= other.cp_start || newCpS >= other.cp_end);
+      });
+      if (cpClash) return false;
+    }
+    return true;
+  }
+  
+  // Déplacer une famille vers un nouveau plateau et un nouveau cp_start
+  function moveFamilyTo(family, newApp, newCpStart) {
+    var firstWuDur = family[0].cp_start - family[0].wu_start;
+    var newWuStart = newCpStart - firstWuDur;
+    var startOffset = family[0].wu_start;
+    var shift = newWuStart - startOffset;
+    family.forEach(function(b) {
+      b.app = newApp;
+      b.wu_start += shift;
+      b.cp_start += shift;
+      b.cp_end += shift;
+    });
+  }
+  
+  // Boucle principale: trouver les trous et les combler
+  for (var iter = 0; iter < maxIter; iter++) {
+    // Construire la séquence chronologique des cp TR/TR2
+    var trBlks = dayBlks.filter(function(b){
+      return (b.app === 'TR' || b.app === 'TR2') && b.type !== 'break';
+    }).sort(function(a, b) { return a.cp_start - b.cp_start; });
+    
+    if (trBlks.length < 2) break;
+    
+    // Trouver le PREMIER trou significatif (>= 5 min)
+    var holeIdx = -1;
+    var holeStart = -1;
+    var holeSize = 0;
+    for (var i = 0; i < trBlks.length - 1; i++) {
+      var gap = trBlks[i+1].cp_start - trBlks[i].cp_end;
+      if (gap >= 5) {
+        holeIdx = i;
+        holeStart = trBlks[i].cp_end;
+        holeSize = gap;
+        break;
+      }
+    }
+    
+    if (holeIdx === -1) break;  // Pas de trou
+    
+    // Chercher une famille plus tardive qui peut combler ce trou
+    var resolved = false;
+    var seen = {};
+    for (var j = holeIdx + 1; j < trBlks.length; j++) {
+      var candidate = trBlks[j];
+      if (seen[candidate.id]) continue;
+      var fam = getFamily(candidate, trBlks);
+      fam.forEach(function(x) { seen[x.id] = true; });
+      
+      // Vérifier que la cp de la famille fait au moins 5 min (sinon ça ne rentrera pas)
+      var famCpDur = fam[0].cp_end - fam[0].cp_start;
+      if (famCpDur > holeSize + 60) continue; // famille trop longue, on cherche pas
+      
+      // Tester les 2 plateaux
+      var plateaus = ['TR', 'TR2'];
+      for (var p = 0; p < plateaus.length; p++) {
+        var newApp = plateaus[p];
+        // Sauvegarder l'état actuel de la famille
+        var orig = fam.map(function(b){ return {app: b.app, wu: b.wu_start, cs: b.cp_start, ce: b.cp_end}; });
+        // Retirer temporairement la famille des dayBlks pour les checks
+        if (canPlaceFamilyAt(fam, newApp, holeStart)) {
+          moveFamilyTo(fam, newApp, holeStart);
+          resolved = true;
+          break;
+        }
+      }
+      if (resolved) break;
+    }
+    
     if (!resolved) break;
   }
 }
@@ -4856,7 +5031,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-045)
+  // NOUVEAU ALGO (v2026-04-06-046)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -5063,6 +5238,11 @@ function _gsRebuild(athletes) {
   // Résoudre les conflits cross-apparels restants
   _resolveCrossAppConflicts(satBlocks);
   _resolveCrossAppConflicts(dimBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  // Compactage final: éliminer les temps morts entre cp TR/TR2 (juges)
+  _compactJudgeCp(satBlocks);
+  _compactJudgeCp(dimBlocks);
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
 
@@ -12879,7 +13059,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-045</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-046</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13019,7 +13199,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-045</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-046</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13925,7 +14105,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-045<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-046<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -14034,7 +14214,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-045<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-046<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15820,6 +16000,11 @@ function _autoGenerate() {
   _resolveCrossAppConflicts(newDim);
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
+  // Compactage final: éliminer les temps morts entre cp TR/TR2 (juges)
+  _compactJudgeCp(newSam);
+  _compactJudgeCp(newDim);
+  _gluePrelimFinale(newSam);
+  _gluePrelimFinale(newDim);
 
   // Replace blocks
   blocks.length = 0;
@@ -16492,6 +16677,176 @@ function _resolveCrossAppConflicts(dayBlks) {
   }
 }
 
+
+
+// ── Compactage des cp TR/TR2 pour éliminer les temps morts entre compétitions ──
+// "Les juges ne se tournent pas les pouces" — quand un cp finit sur un plateau,
+// l'autre plateau doit avoir une cp prête à démarrer immédiatement après.
+// Tente de déplacer des familles plus tardives vers les trous, possiblement
+// en changeant leur plateau (TR↔TR2).
+function _compactJudgeCp(dayBlks) {
+  var maxIter = 30;
+  
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  
+  // Trouver la famille (prélim+finale) d'un bloc
+  function getFamily(b, allBlks) {
+    if (b.passType === 'PRELIM') {
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var fin = allBlks.find(function(x) {
+        if (x.passType !== 'FINALE') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== pSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return fin ? [b, fin] : [b];
+    } else if (b.passType === 'FINALE') {
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      var pre = allBlks.find(function(x) {
+        if (x.passType !== 'PRELIM') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== fSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      return pre ? [pre, b] : [b];
+    }
+    return [b];
+  }
+  
+  // Vérifier qu'un athlète n'est pas occupé pendant une plage donnée
+  function athBusyInRange(ath, start, end, excludeIds) {
+    return dayBlks.some(function(b) {
+      if (b.type === 'break') return false;
+      if (excludeIds && excludeIds.indexOf(b.id) >= 0) return false;
+      if (!(b.athletes||[]).some(function(x){ return x.nom === ath.nom && x.prenom === ath.prenom; })) return false;
+      return !(end <= b.wu_start || start >= b.cp_end);
+    });
+  }
+  
+  // Vérifier qu'une famille peut être placée sur un plateau donné à un cp_start donné
+  // sans créer de conflit (athlètes, colonne, juges)
+  function canPlaceFamilyAt(family, newApp, newCpStart) {
+    var famIds = family.map(function(b){ return b.id; });
+    var firstWuDur = family[0].cp_start - family[0].wu_start;
+    var newWuStart = newCpStart - firstWuDur;
+    var totalDur = family[family.length-1].cp_end - family[0].wu_start;
+    var newEnd = newWuStart + totalDur;
+    if (newWuStart < 480 || newEnd > 1380) return false;
+    
+    // 1. Conflits athlètes (toute la plage wu→cp)
+    var aths = {};
+    family.forEach(function(b) {
+      (b.athletes||[]).forEach(function(a) { aths[a.nom+'|'+a.prenom] = a; });
+    });
+    if (Object.keys(aths).some(function(k) {
+      return athBusyInRange(aths[k], newWuStart, newEnd, famIds);
+    })) return false;
+    
+    // 2. Pas d'overlap avec un autre bloc de la colonne newApp
+    var visualConflict = dayBlks.some(function(b) {
+      if (b.type === 'break') return false;
+      if (famIds.indexOf(b.id) >= 0) return false;
+      if (b.app !== newApp) return false;
+      return !(newEnd <= b.wu_start || newWuStart >= b.cp_end);
+    });
+    if (visualConflict) return false;
+    
+    // 3. Pas d'overlap des cp entre TR et TR2 (juges partagés)
+    // Calculer où serait chaque cp de la famille à la nouvelle position
+    var startOffset = family[0].wu_start;
+    for (var i = 0; i < family.length; i++) {
+      var b = family[i];
+      var bCpOffset = b.cp_start - startOffset;
+      var bCpDur = b.cp_end - b.cp_start;
+      var newCpS = newWuStart + bCpOffset;
+      var newCpE = newCpS + bCpDur;
+      var cpClash = dayBlks.some(function(other) {
+        if (other.type === 'break') return false;
+        if (famIds.indexOf(other.id) >= 0) return false;
+        if (other.app !== 'TR' && other.app !== 'TR2') return false;
+        return !(newCpE <= other.cp_start || newCpS >= other.cp_end);
+      });
+      if (cpClash) return false;
+    }
+    return true;
+  }
+  
+  // Déplacer une famille vers un nouveau plateau et un nouveau cp_start
+  function moveFamilyTo(family, newApp, newCpStart) {
+    var firstWuDur = family[0].cp_start - family[0].wu_start;
+    var newWuStart = newCpStart - firstWuDur;
+    var startOffset = family[0].wu_start;
+    var shift = newWuStart - startOffset;
+    family.forEach(function(b) {
+      b.app = newApp;
+      b.wu_start += shift;
+      b.cp_start += shift;
+      b.cp_end += shift;
+    });
+  }
+  
+  // Boucle principale: trouver les trous et les combler
+  for (var iter = 0; iter < maxIter; iter++) {
+    // Construire la séquence chronologique des cp TR/TR2
+    var trBlks = dayBlks.filter(function(b){
+      return (b.app === 'TR' || b.app === 'TR2') && b.type !== 'break';
+    }).sort(function(a, b) { return a.cp_start - b.cp_start; });
+    
+    if (trBlks.length < 2) break;
+    
+    // Trouver le PREMIER trou significatif (>= 5 min)
+    var holeIdx = -1;
+    var holeStart = -1;
+    var holeSize = 0;
+    for (var i = 0; i < trBlks.length - 1; i++) {
+      var gap = trBlks[i+1].cp_start - trBlks[i].cp_end;
+      if (gap >= 5) {
+        holeIdx = i;
+        holeStart = trBlks[i].cp_end;
+        holeSize = gap;
+        break;
+      }
+    }
+    
+    if (holeIdx === -1) break;  // Pas de trou
+    
+    // Chercher une famille plus tardive qui peut combler ce trou
+    var resolved = false;
+    var seen = {};
+    for (var j = holeIdx + 1; j < trBlks.length; j++) {
+      var candidate = trBlks[j];
+      if (seen[candidate.id]) continue;
+      var fam = getFamily(candidate, trBlks);
+      fam.forEach(function(x) { seen[x.id] = true; });
+      
+      // Vérifier que la cp de la famille fait au moins 5 min (sinon ça ne rentrera pas)
+      var famCpDur = fam[0].cp_end - fam[0].cp_start;
+      if (famCpDur > holeSize + 60) continue; // famille trop longue, on cherche pas
+      
+      // Tester les 2 plateaux
+      var plateaus = ['TR', 'TR2'];
+      for (var p = 0; p < plateaus.length; p++) {
+        var newApp = plateaus[p];
+        // Sauvegarder l'état actuel de la famille
+        var orig = fam.map(function(b){ return {app: b.app, wu: b.wu_start, cs: b.cp_start, ce: b.cp_end}; });
+        // Retirer temporairement la famille des dayBlks pour les checks
+        if (canPlaceFamilyAt(fam, newApp, holeStart)) {
+          moveFamilyTo(fam, newApp, holeStart);
+          resolved = true;
+          break;
+        }
+      }
+      if (resolved) break;
+    }
+    
+    if (!resolved) break;
+  }
+}
+
 function _gluePrelimFinale(dayBlks) {
   ['TR','TR2','DM','TU'].forEach(function(app) {
     var col = dayBlks.filter(function(b){ return b.app === app; });
@@ -17159,7 +17514,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-045)
+  // NOUVEAU ALGO (v2026-04-06-046)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -17366,6 +17721,11 @@ function _gsRebuild(athletes) {
   // Résoudre les conflits cross-apparels restants
   _resolveCrossAppConflicts(satBlocks);
   _resolveCrossAppConflicts(dimBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  // Compactage final: éliminer les temps morts entre cp TR/TR2 (juges)
+  _compactJudgeCp(satBlocks);
+  _compactJudgeCp(dimBlocks);
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
 
