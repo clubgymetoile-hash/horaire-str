@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-037</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -770,7 +770,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-037</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1676,7 +1676,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-037<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1785,7 +1785,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-037<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3888,40 +3888,112 @@ function _gluePrelimFinale(dayBlks) {
   resequenceCol(dayBlks.filter(function(b){ return b.app === 'DM' && b.type !== 'break'; }));
   resequenceCol(dayBlks.filter(function(b){ return b.app === 'TU' && b.type !== 'break'; }));
 
-  // Aussi: TR-A et TR-B doivent avoir des compétitions séquentielles (mêmes juges)
-  // Si elles se chevauchent après le re-séquencement par colonne, on pousse
-  // RÈGLE: wu_start ne peut PAS chevaucher le cp_end du bloc précédent dans la MÊME colonne
-  var trAll = dayBlks.filter(function(b){ 
+  // RÈGLE: Compétitions TR-A et TR-B séquentielles (juges partagés)
+  // Les paires prélim+finale collées sont traitées comme UNE UNITÉ ATOMIQUE
+  // (si on doit décaler la finale, on décale aussi son prélim — toute la famille bouge)
+  
+  // Helper: trouve la finale collée d'un prélim TR/TR2 (et vice versa)
+  function findGluedPartner(b, allBlks) {
+    if (b.passType === 'PRELIM') {
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      return allBlks.find(function(x) {
+        if (x.passType !== 'FINALE') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== pSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+    } else if (b.passType === 'FINALE') {
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      return allBlks.find(function(x) {
+        if (x.passType !== 'PRELIM') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== fSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+    }
+    return null;
+  }
+  
+  // Construire des "unités atomiques" : soit un seul bloc, soit une paire prélim+finale collée
+  var trBlks = dayBlks.filter(function(b){ 
     return (b.app === 'TR' || b.app === 'TR2') && b.type !== 'break'; 
-  }).sort(function(a,b){ return a.cp_start - b.cp_start; });
-  var lastCpEnd = 0;
-  // Tracker le dernier cp_end par colonne (TR et TR2 séparément)
-  var lastEndByCol = {TR: 0, TR2: 0};
-  trAll.forEach(function(b) {
-    if (b.cp_start < lastCpEnd) {
-      var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-      b.cp_start = lastCpEnd;
-      b.cp_end = b.cp_start + cp_dur;
-      // wu_start = cp_start - wu_dur, MAIS jamais avant le cp_end du bloc précédent dans la même colonne
-      b.wu_start = Math.max(b.cp_start - wu_dur, lastEndByCol[b.app]);
-      // Si wu_start a été poussé en avant, cp_start doit suivre
-      if (b.wu_start + wu_dur > b.cp_start) {
-        b.cp_start = b.wu_start + wu_dur;
-        b.cp_end = b.cp_start + cp_dur;
-      }
+  });
+  
+  var units = [];
+  var seen = {};
+  trBlks.forEach(function(b) {
+    if (seen[b.id]) return;
+    var partner = findGluedPartner(b, trBlks);
+    if (partner) {
+      var prelim = b.passType === 'PRELIM' ? b : partner;
+      var finale = b.passType === 'FINALE' ? b : partner;
+      units.push({
+        prelim: prelim,
+        finale: finale,
+        cpStart: prelim.cp_start,  // début de la compétition de l'unité
+        cpEnd: finale.cp_end,       // fin de la compétition de l'unité
+        wuStart: prelim.wu_start,
+        app: prelim.app
+      });
+      seen[prelim.id] = true;
+      seen[finale.id] = true;
     } else {
-      // Pas de chevauchement compétition, mais vérifier quand même le wu vs colonne
-      var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-      if (b.wu_start < lastEndByCol[b.app]) {
-        b.wu_start = lastEndByCol[b.app];
-        b.cp_start = b.wu_start + wu_dur;
-        b.cp_end = b.cp_start + cp_dur;
+      units.push({
+        prelim: b,
+        finale: null,
+        cpStart: b.cp_start,
+        cpEnd: b.cp_end,
+        wuStart: b.wu_start,
+        app: b.app
+      });
+      seen[b.id] = true;
+    }
+  });
+  
+  // Trier les unités par cpStart
+  units.sort(function(a,b){ return a.cpStart - b.cpStart; });
+  
+  // Re-séquencer : les compétitions des unités ne peuvent pas chevaucher (juges partagés)
+  // Et le wu_start de chaque unité ne peut pas chevaucher le bloc précédent de la même colonne
+  var lastCpEnd = 0;
+  var lastEndByCol = {TR: 0, TR2: 0};
+  
+  units.forEach(function(u) {
+    var unitDur = u.cpEnd - u.wuStart;
+    var prelimWuDur = u.prelim.cp_start - u.prelim.wu_start;
+    var prelimCpDur = u.prelim.cp_end - u.prelim.cp_start;
+    
+    // L'unité doit commencer son cp après lastCpEnd ET son wu après lastEndByCol[u.app]
+    var newPrelimCpStart = Math.max(u.prelim.cp_start, lastCpEnd);
+    var newPrelimWuStart = newPrelimCpStart - prelimWuDur;
+    // Si wu_start chevauche le cp_end du bloc précédent dans la même colonne, pousser
+    if (newPrelimWuStart < lastEndByCol[u.app]) {
+      newPrelimWuStart = lastEndByCol[u.app];
+      newPrelimCpStart = newPrelimWuStart + prelimWuDur;
+    }
+    
+    var shift = newPrelimCpStart - u.prelim.cp_start;
+    if (shift > 0) {
+      // Décaler le prélim
+      u.prelim.wu_start = newPrelimWuStart;
+      u.prelim.cp_start = newPrelimCpStart;
+      u.prelim.cp_end = newPrelimCpStart + prelimCpDur;
+      // Décaler la finale (si présente) en gardant le collage
+      if (u.finale) {
+        var finWuDur = u.finale.cp_start - u.finale.wu_start;
+        var finCpDur = u.finale.cp_end - u.finale.cp_start;
+        u.finale.wu_start = u.prelim.cp_end;
+        u.finale.cp_start = u.finale.wu_start + finWuDur;
+        u.finale.cp_end = u.finale.cp_start + finCpDur;
       }
     }
-    lastCpEnd = b.cp_end;
-    lastEndByCol[b.app] = b.cp_end;
+    
+    lastCpEnd = u.finale ? u.finale.cp_end : u.prelim.cp_end;
+    lastEndByCol[u.app] = lastCpEnd;
   });
 }
 
@@ -4413,7 +4485,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-036)
+  // NOUVEAU ALGO (v2026-04-06-037)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -12422,7 +12494,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-037</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -12562,7 +12634,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-037</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13468,7 +13540,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-036<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-037<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -13577,7 +13649,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-036<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-037<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15734,40 +15806,112 @@ function _gluePrelimFinale(dayBlks) {
   resequenceCol(dayBlks.filter(function(b){ return b.app === 'DM' && b.type !== 'break'; }));
   resequenceCol(dayBlks.filter(function(b){ return b.app === 'TU' && b.type !== 'break'; }));
 
-  // Aussi: TR-A et TR-B doivent avoir des compétitions séquentielles (mêmes juges)
-  // Si elles se chevauchent après le re-séquencement par colonne, on pousse
-  // RÈGLE: wu_start ne peut PAS chevaucher le cp_end du bloc précédent dans la MÊME colonne
-  var trAll = dayBlks.filter(function(b){ 
+  // RÈGLE: Compétitions TR-A et TR-B séquentielles (juges partagés)
+  // Les paires prélim+finale collées sont traitées comme UNE UNITÉ ATOMIQUE
+  // (si on doit décaler la finale, on décale aussi son prélim — toute la famille bouge)
+  
+  // Helper: trouve la finale collée d'un prélim TR/TR2 (et vice versa)
+  function findGluedPartner(b, allBlks) {
+    if (b.passType === 'PRELIM') {
+      var pSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      return allBlks.find(function(x) {
+        if (x.passType !== 'FINALE') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== pSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+    } else if (b.passType === 'FINALE') {
+      var fSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe) || '';
+      return allBlks.find(function(x) {
+        if (x.passType !== 'PRELIM') return false;
+        if (x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xSexe = (x.athletes&&x.athletes[0]&&x.athletes[0].sexe) || '';
+        if (xSexe !== fSexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+    }
+    return null;
+  }
+  
+  // Construire des "unités atomiques" : soit un seul bloc, soit une paire prélim+finale collée
+  var trBlks = dayBlks.filter(function(b){ 
     return (b.app === 'TR' || b.app === 'TR2') && b.type !== 'break'; 
-  }).sort(function(a,b){ return a.cp_start - b.cp_start; });
-  var lastCpEnd = 0;
-  // Tracker le dernier cp_end par colonne (TR et TR2 séparément)
-  var lastEndByCol = {TR: 0, TR2: 0};
-  trAll.forEach(function(b) {
-    if (b.cp_start < lastCpEnd) {
-      var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-      b.cp_start = lastCpEnd;
-      b.cp_end = b.cp_start + cp_dur;
-      // wu_start = cp_start - wu_dur, MAIS jamais avant le cp_end du bloc précédent dans la même colonne
-      b.wu_start = Math.max(b.cp_start - wu_dur, lastEndByCol[b.app]);
-      // Si wu_start a été poussé en avant, cp_start doit suivre
-      if (b.wu_start + wu_dur > b.cp_start) {
-        b.cp_start = b.wu_start + wu_dur;
-        b.cp_end = b.cp_start + cp_dur;
-      }
+  });
+  
+  var units = [];
+  var seen = {};
+  trBlks.forEach(function(b) {
+    if (seen[b.id]) return;
+    var partner = findGluedPartner(b, trBlks);
+    if (partner) {
+      var prelim = b.passType === 'PRELIM' ? b : partner;
+      var finale = b.passType === 'FINALE' ? b : partner;
+      units.push({
+        prelim: prelim,
+        finale: finale,
+        cpStart: prelim.cp_start,  // début de la compétition de l'unité
+        cpEnd: finale.cp_end,       // fin de la compétition de l'unité
+        wuStart: prelim.wu_start,
+        app: prelim.app
+      });
+      seen[prelim.id] = true;
+      seen[finale.id] = true;
     } else {
-      // Pas de chevauchement compétition, mais vérifier quand même le wu vs colonne
-      var wu_dur = b.cp_start - b.wu_start;
-      var cp_dur = b.cp_end - b.cp_start;
-      if (b.wu_start < lastEndByCol[b.app]) {
-        b.wu_start = lastEndByCol[b.app];
-        b.cp_start = b.wu_start + wu_dur;
-        b.cp_end = b.cp_start + cp_dur;
+      units.push({
+        prelim: b,
+        finale: null,
+        cpStart: b.cp_start,
+        cpEnd: b.cp_end,
+        wuStart: b.wu_start,
+        app: b.app
+      });
+      seen[b.id] = true;
+    }
+  });
+  
+  // Trier les unités par cpStart
+  units.sort(function(a,b){ return a.cpStart - b.cpStart; });
+  
+  // Re-séquencer : les compétitions des unités ne peuvent pas chevaucher (juges partagés)
+  // Et le wu_start de chaque unité ne peut pas chevaucher le bloc précédent de la même colonne
+  var lastCpEnd = 0;
+  var lastEndByCol = {TR: 0, TR2: 0};
+  
+  units.forEach(function(u) {
+    var unitDur = u.cpEnd - u.wuStart;
+    var prelimWuDur = u.prelim.cp_start - u.prelim.wu_start;
+    var prelimCpDur = u.prelim.cp_end - u.prelim.cp_start;
+    
+    // L'unité doit commencer son cp après lastCpEnd ET son wu après lastEndByCol[u.app]
+    var newPrelimCpStart = Math.max(u.prelim.cp_start, lastCpEnd);
+    var newPrelimWuStart = newPrelimCpStart - prelimWuDur;
+    // Si wu_start chevauche le cp_end du bloc précédent dans la même colonne, pousser
+    if (newPrelimWuStart < lastEndByCol[u.app]) {
+      newPrelimWuStart = lastEndByCol[u.app];
+      newPrelimCpStart = newPrelimWuStart + prelimWuDur;
+    }
+    
+    var shift = newPrelimCpStart - u.prelim.cp_start;
+    if (shift > 0) {
+      // Décaler le prélim
+      u.prelim.wu_start = newPrelimWuStart;
+      u.prelim.cp_start = newPrelimCpStart;
+      u.prelim.cp_end = newPrelimCpStart + prelimCpDur;
+      // Décaler la finale (si présente) en gardant le collage
+      if (u.finale) {
+        var finWuDur = u.finale.cp_start - u.finale.wu_start;
+        var finCpDur = u.finale.cp_end - u.finale.cp_start;
+        u.finale.wu_start = u.prelim.cp_end;
+        u.finale.cp_start = u.finale.wu_start + finWuDur;
+        u.finale.cp_end = u.finale.cp_start + finCpDur;
       }
     }
-    lastCpEnd = b.cp_end;
-    lastEndByCol[b.app] = b.cp_end;
+    
+    lastCpEnd = u.finale ? u.finale.cp_end : u.prelim.cp_end;
+    lastEndByCol[u.app] = lastCpEnd;
   });
 }
 
@@ -16259,7 +16403,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-036)
+  // NOUVEAU ALGO (v2026-04-06-037)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
