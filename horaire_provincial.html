@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-021</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-021<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3875,26 +3875,20 @@ function _insertJudgeBreak(dayBlks) {
     var shift = newCpStart - firstBlk.cp_start;
     if (shift <= 0) return;
     
-    // Décaler ce bloc et tous les suivants de la même quantité
-    // (le wu_start peut rester si avant breakEnd, sinon décaler aussi)
+    // Décaler ce bloc et tous les suivants
+    // RÈGLE: la durée du warmup doit rester identique
+    // Le warmup peut commencer pendant la pause (les juges arrivent progressivement)
+    // mais doit toujours se terminer juste avant cp_start
     for (var i = shiftFromIdx; i < col.length; i++) {
       var b = col[i];
+      var wu_dur = b.cp_start - b.wu_start; // durée originale du warmup
+      var cp_dur = b.cp_end - b.cp_start;
       // Décaler la compétition
       b.cp_start += shift;
-      b.cp_end += shift;
-      // Le wu peut commencer pendant la pause (juges arrivent)
-      // Mais s'assurer que wu_start + wu_dur <= cp_start
-      var wu_dur = b.cp_start - b.wu_start; // après décalage cp, wu_start pas encore décalé
-      // Le warmup original commence à b.wu_start (avant décalage)
-      // On veut que wu se termine au plus tard à cp_start (nouveau)
-      // Si wu_start + wu_dur > nouveau cp_start, décaler wu aussi
-      // Simplification : on garde wu_start à l'ancienne position si possible
-      var origWuStart = b.wu_start;
-      var maxWuStart = b.cp_start - wu_dur;
-      if (origWuStart > maxWuStart) {
-        b.wu_start = maxWuStart;
-      }
-      // Sinon laisser le wu_start où il était (peut chevaucher la pause)
+      b.cp_end = b.cp_start + cp_dur;
+      // Le warmup recule pour finir pile au début de la nouvelle compétition
+      // (préserve la durée du warmup)
+      b.wu_start = b.cp_start - wu_dur;
     }
   });
   
@@ -4225,7 +4219,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-020)
+  // NOUVEAU ALGO (v2026-04-06-021)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -12327,7 +12321,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-021</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13341,7 +13335,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-021<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15511,26 +15505,20 @@ function _insertJudgeBreak(dayBlks) {
     var shift = newCpStart - firstBlk.cp_start;
     if (shift <= 0) return;
     
-    // Décaler ce bloc et tous les suivants de la même quantité
-    // (le wu_start peut rester si avant breakEnd, sinon décaler aussi)
+    // Décaler ce bloc et tous les suivants
+    // RÈGLE: la durée du warmup doit rester identique
+    // Le warmup peut commencer pendant la pause (les juges arrivent progressivement)
+    // mais doit toujours se terminer juste avant cp_start
     for (var i = shiftFromIdx; i < col.length; i++) {
       var b = col[i];
+      var wu_dur = b.cp_start - b.wu_start; // durée originale du warmup
+      var cp_dur = b.cp_end - b.cp_start;
       // Décaler la compétition
       b.cp_start += shift;
-      b.cp_end += shift;
-      // Le wu peut commencer pendant la pause (juges arrivent)
-      // Mais s'assurer que wu_start + wu_dur <= cp_start
-      var wu_dur = b.cp_start - b.wu_start; // après décalage cp, wu_start pas encore décalé
-      // Le warmup original commence à b.wu_start (avant décalage)
-      // On veut que wu se termine au plus tard à cp_start (nouveau)
-      // Si wu_start + wu_dur > nouveau cp_start, décaler wu aussi
-      // Simplification : on garde wu_start à l'ancienne position si possible
-      var origWuStart = b.wu_start;
-      var maxWuStart = b.cp_start - wu_dur;
-      if (origWuStart > maxWuStart) {
-        b.wu_start = maxWuStart;
-      }
-      // Sinon laisser le wu_start où il était (peut chevaucher la pause)
+      b.cp_end = b.cp_start + cp_dur;
+      // Le warmup recule pour finir pile au début de la nouvelle compétition
+      // (préserve la durée du warmup)
+      b.wu_start = b.cp_start - wu_dur;
     }
   });
   
@@ -15861,7 +15849,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-020)
+  // NOUVEAU ALGO (v2026-04-06-021)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
