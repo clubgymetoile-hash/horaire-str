@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3556,6 +3556,8 @@ function _autoGenerate() {
   _fixOverlaps(newDim);
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
+  _insertJudgeBreak(newSam);
+  _insertJudgeBreak(newDim);
 
   // Replace blocks
   blocks.length = 0;
@@ -3817,6 +3819,110 @@ function _gluePrelimFinale(dayBlks) {
     }
   });
 }
+
+// ── Pause dîner des juges ──────────────────────────────────────
+// Trouve le meilleur créneau de 60 min entre 11h30 et 13h00 où le moins
+// de compétitions tournent, puis décale les compétitions qui chevauchent.
+// Les warmups peuvent commencer avant la fin de la pause (juges arrivent).
+function _insertJudgeBreak(dayBlks) {
+  var BREAK_DUR = 60;
+  var WIN_START = 690;  // 11h30
+  var WIN_END   = 780;  // 13h00
+  
+  // Pour chaque créneau possible (par pas de 5 min), compter les compétitions actives
+  var bestStart = WIN_START;
+  var bestScore = Infinity;
+  for (var t = WIN_START; t + BREAK_DUR <= WIN_END + BREAK_DUR; t += 5) {
+    var breakEnd = t + BREAK_DUR;
+    var score = 0;
+    dayBlks.forEach(function(b) {
+      if (b.type === 'break') return;
+      // Compétition (cp_start → cp_end) qui chevauche le créneau de pause
+      if (b.cp_start < breakEnd && b.cp_end > t) {
+        // Pondérer : plus le chevauchement est grand, plus le score augmente
+        var overlap = Math.min(b.cp_end, breakEnd) - Math.max(b.cp_start, t);
+        score += overlap;
+      }
+    });
+    if (score < bestScore) { bestScore = score; bestStart = t; }
+  }
+  
+  var breakStart = bestStart;
+  var breakEnd = breakStart + BREAK_DUR;
+  
+  // Décaler les compétitions qui chevauchent la pause
+  // Stratégie: pour chaque colonne, si une compétition chevauche [breakStart, breakEnd],
+  // décaler tous les blocs suivants (incluant celui-là) après breakEnd
+  ['TR','TR2','DM','TU'].forEach(function(app) {
+    var col = dayBlks.filter(function(b){ return b.app === app && b.type !== 'break'; });
+    col.sort(function(a,b){ return a.cp_start - b.cp_start; });
+    
+    // Trouver le premier bloc dont la compétition chevauche le créneau
+    var shiftFromIdx = -1;
+    for (var i = 0; i < col.length; i++) {
+      var b = col[i];
+      if (b.cp_start < breakEnd && b.cp_end > breakStart) {
+        shiftFromIdx = i;
+        break;
+      }
+    }
+    
+    if (shiftFromIdx === -1) return; // aucun chevauchement
+    
+    // Calculer le décalage : le cp_start du premier bloc doit passer après breakEnd
+    var firstBlk = col[shiftFromIdx];
+    var newCpStart = breakEnd;
+    var shift = newCpStart - firstBlk.cp_start;
+    if (shift <= 0) return;
+    
+    // Décaler ce bloc et tous les suivants de la même quantité
+    // (le wu_start peut rester si avant breakEnd, sinon décaler aussi)
+    for (var i = shiftFromIdx; i < col.length; i++) {
+      var b = col[i];
+      // Décaler la compétition
+      b.cp_start += shift;
+      b.cp_end += shift;
+      // Le wu peut commencer pendant la pause (juges arrivent)
+      // Mais s'assurer que wu_start + wu_dur <= cp_start
+      var wu_dur = b.cp_start - b.wu_start; // après décalage cp, wu_start pas encore décalé
+      // Le warmup original commence à b.wu_start (avant décalage)
+      // On veut que wu se termine au plus tard à cp_start (nouveau)
+      // Si wu_start + wu_dur > nouveau cp_start, décaler wu aussi
+      // Simplification : on garde wu_start à l'ancienne position si possible
+      var origWuStart = b.wu_start;
+      var maxWuStart = b.cp_start - wu_dur;
+      if (origWuStart > maxWuStart) {
+        b.wu_start = maxWuStart;
+      }
+      // Sinon laisser le wu_start où il était (peut chevaucher la pause)
+    }
+  });
+  
+  // Créer un bloc visuel "Dîner des officiels"
+  var existing = dayBlks.find(function(b){ return b.type === 'break' && b.label === 'Dîner des officiels'; });
+  if (existing) {
+    existing.wu_start = breakStart;
+    existing.cp_start = breakStart;
+    existing.cp_end = breakEnd;
+  } else {
+    var day = (dayBlks[0] && dayBlks[0].day) || 'sam';
+    dayBlks.push({
+      id: 'break_lunch_' + day,
+      type: 'break',
+      app: 'BREAK',
+      label: 'Dîner des officiels',
+      cats: [],
+      athletes: [],
+      n: 0,
+      wu_start: breakStart,
+      cp_start: breakStart,
+      cp_end: breakEnd,
+      day: day,
+      passType: 'BREAK'
+    });
+  }
+}
+
 
 
 function _gsRebuild(athletes) {
@@ -4119,7 +4225,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-019)
+  // NOUVEAU ALGO (v2026-04-06-020)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -4312,6 +4418,8 @@ function _gsRebuild(athletes) {
   _fixOverlaps(dimBlocks);
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
+  _insertJudgeBreak(satBlocks);
+  _insertJudgeBreak(dimBlocks);
 
   // Auto-spillover désactivé — tout reste sur la même journée
 
@@ -12219,7 +12327,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13233,7 +13341,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-019<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-020<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15003,6 +15111,8 @@ function _autoGenerate() {
   _fixOverlaps(newDim);
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
+  _insertJudgeBreak(newSam);
+  _insertJudgeBreak(newDim);
 
   // Replace blocks
   blocks.length = 0;
@@ -15346,6 +15456,110 @@ function _gluePrelimFinale(dayBlks) {
   });
 }
 
+// ── Pause dîner des juges ──────────────────────────────────────
+// Trouve le meilleur créneau de 60 min entre 11h30 et 13h00 où le moins
+// de compétitions tournent, puis décale les compétitions qui chevauchent.
+// Les warmups peuvent commencer avant la fin de la pause (juges arrivent).
+function _insertJudgeBreak(dayBlks) {
+  var BREAK_DUR = 60;
+  var WIN_START = 690;  // 11h30
+  var WIN_END   = 780;  // 13h00
+  
+  // Pour chaque créneau possible (par pas de 5 min), compter les compétitions actives
+  var bestStart = WIN_START;
+  var bestScore = Infinity;
+  for (var t = WIN_START; t + BREAK_DUR <= WIN_END + BREAK_DUR; t += 5) {
+    var breakEnd = t + BREAK_DUR;
+    var score = 0;
+    dayBlks.forEach(function(b) {
+      if (b.type === 'break') return;
+      // Compétition (cp_start → cp_end) qui chevauche le créneau de pause
+      if (b.cp_start < breakEnd && b.cp_end > t) {
+        // Pondérer : plus le chevauchement est grand, plus le score augmente
+        var overlap = Math.min(b.cp_end, breakEnd) - Math.max(b.cp_start, t);
+        score += overlap;
+      }
+    });
+    if (score < bestScore) { bestScore = score; bestStart = t; }
+  }
+  
+  var breakStart = bestStart;
+  var breakEnd = breakStart + BREAK_DUR;
+  
+  // Décaler les compétitions qui chevauchent la pause
+  // Stratégie: pour chaque colonne, si une compétition chevauche [breakStart, breakEnd],
+  // décaler tous les blocs suivants (incluant celui-là) après breakEnd
+  ['TR','TR2','DM','TU'].forEach(function(app) {
+    var col = dayBlks.filter(function(b){ return b.app === app && b.type !== 'break'; });
+    col.sort(function(a,b){ return a.cp_start - b.cp_start; });
+    
+    // Trouver le premier bloc dont la compétition chevauche le créneau
+    var shiftFromIdx = -1;
+    for (var i = 0; i < col.length; i++) {
+      var b = col[i];
+      if (b.cp_start < breakEnd && b.cp_end > breakStart) {
+        shiftFromIdx = i;
+        break;
+      }
+    }
+    
+    if (shiftFromIdx === -1) return; // aucun chevauchement
+    
+    // Calculer le décalage : le cp_start du premier bloc doit passer après breakEnd
+    var firstBlk = col[shiftFromIdx];
+    var newCpStart = breakEnd;
+    var shift = newCpStart - firstBlk.cp_start;
+    if (shift <= 0) return;
+    
+    // Décaler ce bloc et tous les suivants de la même quantité
+    // (le wu_start peut rester si avant breakEnd, sinon décaler aussi)
+    for (var i = shiftFromIdx; i < col.length; i++) {
+      var b = col[i];
+      // Décaler la compétition
+      b.cp_start += shift;
+      b.cp_end += shift;
+      // Le wu peut commencer pendant la pause (juges arrivent)
+      // Mais s'assurer que wu_start + wu_dur <= cp_start
+      var wu_dur = b.cp_start - b.wu_start; // après décalage cp, wu_start pas encore décalé
+      // Le warmup original commence à b.wu_start (avant décalage)
+      // On veut que wu se termine au plus tard à cp_start (nouveau)
+      // Si wu_start + wu_dur > nouveau cp_start, décaler wu aussi
+      // Simplification : on garde wu_start à l'ancienne position si possible
+      var origWuStart = b.wu_start;
+      var maxWuStart = b.cp_start - wu_dur;
+      if (origWuStart > maxWuStart) {
+        b.wu_start = maxWuStart;
+      }
+      // Sinon laisser le wu_start où il était (peut chevaucher la pause)
+    }
+  });
+  
+  // Créer un bloc visuel "Dîner des officiels"
+  var existing = dayBlks.find(function(b){ return b.type === 'break' && b.label === 'Dîner des officiels'; });
+  if (existing) {
+    existing.wu_start = breakStart;
+    existing.cp_start = breakStart;
+    existing.cp_end = breakEnd;
+  } else {
+    var day = (dayBlks[0] && dayBlks[0].day) || 'sam';
+    dayBlks.push({
+      id: 'break_lunch_' + day,
+      type: 'break',
+      app: 'BREAK',
+      label: 'Dîner des officiels',
+      cats: [],
+      athletes: [],
+      n: 0,
+      wu_start: breakStart,
+      cp_start: breakStart,
+      cp_end: breakEnd,
+      day: day,
+      passType: 'BREAK'
+    });
+  }
+}
+
+
 
 function _gsRebuild(athletes) {
   // ── Build PARTNER_MAP ──────────────────────────────────────
@@ -15647,7 +15861,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-019)
+  // NOUVEAU ALGO (v2026-04-06-020)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -15840,6 +16054,8 @@ function _gsRebuild(athletes) {
   _fixOverlaps(dimBlocks);
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
+  _insertJudgeBreak(satBlocks);
+  _insertJudgeBreak(dimBlocks);
 
   // Auto-spillover désactivé — tout reste sur la même journée
 
