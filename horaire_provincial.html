@@ -769,7 +769,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-010</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1783,7 +1783,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-010<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4067,7 +4067,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-010)
+  // NOUVEAU ALGO (v2026-04-06-011)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -4190,26 +4190,61 @@ function _gsRebuild(athletes) {
   var familiesA = orderFamiliesOnPlateau('TR');
   var familiesB = orderFamiliesOnPlateau('TR2');
 
-  // ── Étape 5 : Placement temporel ──────────────────────────────
-  function placeFamilies(fams, app) {
-    var cur = startM;
-    fams.forEach(function(f) {
-      f.blocks.forEach(function(b) {
-        var wu_dur = b.cp_start - b.wu_start;
-        var cp_dur = b.cp_end - b.cp_start;
-        var t = snap5(cur);
-        b.app = app;
-        b.wu_start = t;
-        b.cp_start = t + wu_dur;
-        b.cp_end = t + wu_dur + cp_dur;
-        cur = b.cp_end + GAP;
-      });
-    });
-    return cur;
-  }
+  // ── Étape 5 : Placement temporel séquentiel TR-A ↔ TR-B ──────
+  // RÈGLE: Les COMPÉTITIONS de TR-A et TR-B ne peuvent PAS se chevaucher
+  // (mêmes juges qui passent d'un plateau à l'autre).
+  // Les ÉCHAUFFEMENTS peuvent chevaucher (plateaux physiques différents).
+  //
+  // Algorithme : on construit une séquence interleaved A → B → A → B...
+  // En traitant chaque famille comme un bloc atomique (toute la famille
+  // reste sur le même plateau, d'affilée).
+  
+  // D'abord, marquer les blocs avec leur plateau et calculer durées
+  familiesA.forEach(function(f) { f.blocks.forEach(function(b) { b.app = 'TR'; }); });
+  familiesB.forEach(function(f) { f.blocks.forEach(function(b) { b.app = 'TR2'; }); });
 
-  placeFamilies(familiesA, 'TR');
-  placeFamilies(familiesB, 'TR2');
+  // Ordre d'exécution : familles dans l'ordre catOrder, alternant A ↔ B
+  // Pour respecter P3 (juges passent A→B sans temps mort), on construit la séquence
+  // chronologique en interleavant les familles des deux plateaux
+  var queueA = familiesA.slice();
+  var queueB = familiesB.slice();
+  var lastCpEnd = startM;
+  var platLastEnd = {TR: startM, TR2: startM};
+  
+  // On alterne en commençant par celui qui a le catOrder le plus bas
+  while (queueA.length > 0 || queueB.length > 0) {
+    var nextFam, nextPlat;
+    if (queueA.length === 0) { nextFam = queueB.shift(); nextPlat = 'TR2'; }
+    else if (queueB.length === 0) { nextFam = queueA.shift(); nextPlat = 'TR'; }
+    else {
+      // Prendre celui dont le plateau est libre en premier
+      // Si égalité, prendre celui avec catOrder le plus bas
+      if (platLastEnd.TR < platLastEnd.TR2) { nextFam = queueA.shift(); nextPlat = 'TR'; }
+      else if (platLastEnd.TR2 < platLastEnd.TR) { nextFam = queueB.shift(); nextPlat = 'TR2'; }
+      else if (queueA[0].catOrder <= queueB[0].catOrder) { nextFam = queueA.shift(); nextPlat = 'TR'; }
+      else { nextFam = queueB.shift(); nextPlat = 'TR2'; }
+    }
+    
+    // Placer la famille : compétition séquentielle après lastCpEnd
+    nextFam.blocks.forEach(function(b) {
+      var wu_dur = b.cp_start - b.wu_start;
+      var cp_dur = b.cp_end - b.cp_start;
+      // CP doit commencer après lastCpEnd (juges sont occupés avant)
+      var cpStart = snap5(Math.max(lastCpEnd, platLastEnd[nextPlat]));
+      // WU peut commencer plus tôt sur ce plateau si libre
+      var wuStart = snap5(Math.max(startM, cpStart - wu_dur, platLastEnd[nextPlat]));
+      // Re-vérifier que cpStart est bien après wuStart + wu_dur
+      cpStart = snap5(Math.max(cpStart, wuStart + wu_dur));
+      
+      b.app = nextPlat;
+      b.wu_start = wuStart;
+      b.cp_start = cpStart;
+      b.cp_end = cpStart + cp_dur;
+      
+      lastCpEnd = b.cp_end;
+      platLastEnd[nextPlat] = b.cp_end;
+    });
+  }
 }
   console.log('[Prov] Before split: satBlocks=', satBlocks.length, 'dimBlocks=', dimBlocks.length);
   _smartSplitTR(satBlocks, 480);
@@ -12114,7 +12149,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-010</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -13128,7 +13163,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-010<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-011<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15489,7 +15524,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-010)
+  // NOUVEAU ALGO (v2026-04-06-011)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -15612,26 +15647,61 @@ function _gsRebuild(athletes) {
   var familiesA = orderFamiliesOnPlateau('TR');
   var familiesB = orderFamiliesOnPlateau('TR2');
 
-  // ── Étape 5 : Placement temporel ──────────────────────────────
-  function placeFamilies(fams, app) {
-    var cur = startM;
-    fams.forEach(function(f) {
-      f.blocks.forEach(function(b) {
-        var wu_dur = b.cp_start - b.wu_start;
-        var cp_dur = b.cp_end - b.cp_start;
-        var t = snap5(cur);
-        b.app = app;
-        b.wu_start = t;
-        b.cp_start = t + wu_dur;
-        b.cp_end = t + wu_dur + cp_dur;
-        cur = b.cp_end + GAP;
-      });
-    });
-    return cur;
-  }
+  // ── Étape 5 : Placement temporel séquentiel TR-A ↔ TR-B ──────
+  // RÈGLE: Les COMPÉTITIONS de TR-A et TR-B ne peuvent PAS se chevaucher
+  // (mêmes juges qui passent d'un plateau à l'autre).
+  // Les ÉCHAUFFEMENTS peuvent chevaucher (plateaux physiques différents).
+  //
+  // Algorithme : on construit une séquence interleaved A → B → A → B...
+  // En traitant chaque famille comme un bloc atomique (toute la famille
+  // reste sur le même plateau, d'affilée).
+  
+  // D'abord, marquer les blocs avec leur plateau et calculer durées
+  familiesA.forEach(function(f) { f.blocks.forEach(function(b) { b.app = 'TR'; }); });
+  familiesB.forEach(function(f) { f.blocks.forEach(function(b) { b.app = 'TR2'; }); });
 
-  placeFamilies(familiesA, 'TR');
-  placeFamilies(familiesB, 'TR2');
+  // Ordre d'exécution : familles dans l'ordre catOrder, alternant A ↔ B
+  // Pour respecter P3 (juges passent A→B sans temps mort), on construit la séquence
+  // chronologique en interleavant les familles des deux plateaux
+  var queueA = familiesA.slice();
+  var queueB = familiesB.slice();
+  var lastCpEnd = startM;
+  var platLastEnd = {TR: startM, TR2: startM};
+  
+  // On alterne en commençant par celui qui a le catOrder le plus bas
+  while (queueA.length > 0 || queueB.length > 0) {
+    var nextFam, nextPlat;
+    if (queueA.length === 0) { nextFam = queueB.shift(); nextPlat = 'TR2'; }
+    else if (queueB.length === 0) { nextFam = queueA.shift(); nextPlat = 'TR'; }
+    else {
+      // Prendre celui dont le plateau est libre en premier
+      // Si égalité, prendre celui avec catOrder le plus bas
+      if (platLastEnd.TR < platLastEnd.TR2) { nextFam = queueA.shift(); nextPlat = 'TR'; }
+      else if (platLastEnd.TR2 < platLastEnd.TR) { nextFam = queueB.shift(); nextPlat = 'TR2'; }
+      else if (queueA[0].catOrder <= queueB[0].catOrder) { nextFam = queueA.shift(); nextPlat = 'TR'; }
+      else { nextFam = queueB.shift(); nextPlat = 'TR2'; }
+    }
+    
+    // Placer la famille : compétition séquentielle après lastCpEnd
+    nextFam.blocks.forEach(function(b) {
+      var wu_dur = b.cp_start - b.wu_start;
+      var cp_dur = b.cp_end - b.cp_start;
+      // CP doit commencer après lastCpEnd (juges sont occupés avant)
+      var cpStart = snap5(Math.max(lastCpEnd, platLastEnd[nextPlat]));
+      // WU peut commencer plus tôt sur ce plateau si libre
+      var wuStart = snap5(Math.max(startM, cpStart - wu_dur, platLastEnd[nextPlat]));
+      // Re-vérifier que cpStart est bien après wuStart + wu_dur
+      cpStart = snap5(Math.max(cpStart, wuStart + wu_dur));
+      
+      b.app = nextPlat;
+      b.wu_start = wuStart;
+      b.cp_start = cpStart;
+      b.cp_end = cpStart + cp_dur;
+      
+      lastCpEnd = b.cp_end;
+      platLastEnd[nextPlat] = b.cp_end;
+    });
+  }
 }
   console.log('[Prov] Before split: satBlocks=', satBlocks.length, 'dimBlocks=', dimBlocks.length);
   _smartSplitTR(satBlocks, 480);
