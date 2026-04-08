@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-068</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-071</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -771,7 +771,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-068</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-071</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1082,7 +1082,7 @@ var LEVEL_COLORS = {
 // Panel 4: Vert (TU)
 var JUDGE_COLORS=[null,
   {pale:'#dbeafe', bright:'#2563eb', text:'#1e3a8a', comp_text:'#eff6ff', divider:'#93c5fd'}, // J1 bleu (TR-A)
-  {pale:'#e0f2fe', bright:'#0284c7', text:'#0c4a6e', comp_text:'#f0f9ff', divider:'#7dd3fc'}, // J2 bleu ciel (TR-B)
+  {pale:'#ede9fe', bright:'#7c3aed', text:'#2e1065', comp_text:'#f5f3ff', divider:'#c4b5fd'}, // J2 violet (DM+TU en chQc / TR-B en non-chQc)
   {pale:'#fef3c7', bright:'#b45309', text:'#451a03', comp_text:'#fffbeb', divider:'#fcd34d'}, // J3 beige (DMT)
   {pale:'#dcfce7', bright:'#15803d', text:'#14532d', comp_text:'#f0fdf4', divider:'#86efac'}, // J4 vert (TU)
   {pale:'#fce7f3', bright:'#be185d', text:'#831843', comp_text:'#fdf2f8', divider:'#f9a8d4'}, // J5 rose (extra)
@@ -1677,7 +1677,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-068<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-071<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1787,7 +1787,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-068<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-071<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4246,7 +4246,76 @@ function _resolveCrossAppConflicts(dayBlks) {
   }
 }
 
+// ── v069: surgical micro-shift pass for small cross-app conflicts ──
+// _resolveCrossAppConflicts uses findFreeSlot which requires a fully-free
+// window — too strict on dense days (vendredi PM). This lighter pass shifts
+// the LATER block's family forward by the exact minimum (snapped to 5 min)
+// needed to resolve each small overlap, then lets _fixOverlaps/_gluePrelimFinale
+// cascade the shift through the column.
+function _tightenCrossAppConflicts(dayBlks) {
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  var MAX_ITER = 15;
 
+  function findConflicts() {
+    var athBlks = {};
+    dayBlks.filter(function(b){ return b.type !== 'break'; }).forEach(function(b) {
+      (b.athletes||[]).forEach(function(a) {
+        var k = a.nom+'|'+a.prenom;
+        if (!athBlks[k]) athBlks[k] = [];
+        athBlks[k].push(b);
+      });
+    });
+    var confs = [];
+    Object.keys(athBlks).forEach(function(k) {
+      var blks = athBlks[k].slice().sort(function(a,b){ return a.wu_start - b.wu_start; });
+      for (var i = 0; i < blks.length - 1; i++) {
+        if (blks[i].app === blks[i+1].app) continue;
+        if (blks[i+1].wu_start < blks[i].cp_end) {
+          confs.push({a: blks[i], b: blks[i+1], overlap: blks[i].cp_end - blks[i+1].wu_start});
+        }
+      }
+    });
+    return confs;
+  }
+
+  // Family of block b: if b is a PRELIM, include its glued FINALE partner
+  // (must move together). For FINALE, just the finale itself (prelim stays put).
+  function getFamily(b) {
+    var fam = [b];
+    if (b.passType === 'PRELIM') {
+      var sexe = (b.athletes && b.athletes[0] && b.athletes[0].sexe) || '';
+      var fin = dayBlks.find(function(x) {
+        if (x.passType !== 'FINALE' || x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+        if (xSexe !== sexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      if (fin) fam.push(fin);
+    }
+    return fam;
+  }
+
+  for (var iter = 0; iter < MAX_ITER; iter++) {
+    var confs = findConflicts();
+    if (confs.length === 0) return;
+
+    // Sort by overlap descending — tackle biggest conflicts first
+    confs.sort(function(a, b){ return b.overlap - a.overlap; });
+
+    var conf = confs[0];
+    // Shift the LATER block's family forward by the minimum amount to clear
+    var shift = snap5(conf.overlap);
+    if (shift < 5) shift = 5;
+    var fam = getFamily(conf.b);
+    fam.forEach(function(b) {
+      b.wu_start += shift;
+      b.cp_start += shift;
+      b.cp_end += shift;
+    });
+    // Continue loop: re-find conflicts (new cascades may have emerged)
+  }
+}
 
 // ── DM+TU shared judge panel: enforce non-overlap of CP times (v061, chQc) ──
 // In ChQc mode, DM and TU share one panel of judges. Their cp times cannot overlap.
@@ -5333,7 +5402,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-068)
+  // NOUVEAU ALGO (v2026-04-08-071)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -5622,6 +5691,18 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
 
+  // v069: tighten pass for small cross-app conflicts (< 30 min overlaps)
+  // that _resolveCrossAppConflicts couldn't handle with findFreeSlot
+  _tightenCrossAppConflicts(satBlocks);
+  _tightenCrossAppConflicts(dimBlocks);
+  _tightenCrossAppConflicts(venBlocks);
+  _fixOverlaps(satBlocks);
+  _fixOverlaps(dimBlocks);
+  _fixOverlaps(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
+
   // ────────────────────────────────────────────────────────────
   // v065: Overflow samedi → dimanche
   // Si une colonne samedi (TR/TR2 groupés, DM, TU) dépasse 21h00,
@@ -5663,43 +5744,76 @@ function _gsRebuild(athletes) {
         _gluePrelimFinale(dimBlks);
       }
     }
+    // v069: tighten pass after re-layout
+    _tightenCrossAppConflicts(satBlks);
+    _tightenCrossAppConflicts(dimBlks);
+    _fixOverlaps(satBlks);
+    _fixOverlaps(dimBlks);
+    _gluePrelimFinale(satBlks);
+    _gluePrelimFinale(dimBlks);
   }
 
-  for (var _ovPass = 0; _ovPass < 10; _ovPass++) {
-    var maxBy = _maxEndByAppGroup(satBlocks);
-    // Trouver l'appareil le plus en dépassement
-    var target = null, targetEnd = MAX_SAM_END;
-    ['TR','DM','TU'].forEach(function(app) {
-      if (maxBy[app] > targetEnd) { targetEnd = maxBy[app]; target = app; }
+  // v071: tri de priorité pour choisir quelle finale déplacer vers dimanche.
+  // Ordre: N1 12- > N1 13+ > N5/N6/N7 > JR/SR. À égalité, la plus tardive.
+  function _pickFinaleToMove(candidates) {
+    candidates.sort(function(a, b) {
+      var catA = (a.cats && a.cats[0]) || a.cat || '';
+      var catB = (b.cats && b.cats[0]) || b.cat || '';
+      var coA = _catOrder(catA);
+      var coB = _catOrder(catB);
+      if (coA !== coB) return coA - coB; // niveau croissant (N1 avant N5)
+      // À niveau égal (ex. N1), préférer 12- avant 13+
+      var is12A = /12-/.test(catA), is12B = /12-/.test(catB);
+      if (is12A !== is12B) return is12A ? -1 : 1;
+      return b.cp_end - a.cp_end; // à égalité finale: la plus tardive
     });
+    return candidates[0];
+  }
+
+  for (var _ovPass = 0; _ovPass < 15; _ovPass++) {
+    var maxBy = _maxEndByAppGroup(satBlocks);
+    var target = null;
+    var reason = '';
+    var targetEnd = 0;
+
+    // Règle 1 (v065): Colonne samedi > 21h00 → overflow hard
+    ['TR','DM','TU'].forEach(function(app) {
+      if (maxBy[app] > MAX_SAM_END && (!target || maxBy[app] > maxBy[target])) {
+        target = app;
+        reason = '> 21h00';
+        targetEnd = maxBy[app];
+      }
+    });
+
+    // Règle 2 (v071): DM finit après TR samedi → DM est le goulot (panel DM+TU partagé)
+    // Déplacer une finale DM vers dimanche pour soulager
+    if (!target && (maxBy.DM || 0) > (maxBy.TR || 0)) {
+      target = 'DM';
+      reason = 'DM > TR (' + Math.floor(maxBy.DM/60)+'h'+(maxBy.DM%60).toString().padStart(2,'0') +
+               ' > ' + Math.floor((maxBy.TR||0)/60)+'h'+((maxBy.TR||0)%60).toString().padStart(2,'0') + ')';
+      targetEnd = maxBy.DM;
+    }
+
     if (!target) {
-      if (_ovPass > 0) console.log('[Prov] v065 overflow: stabilized after ' + _ovPass + ' pass(es)');
+      if (_ovPass > 0) console.log('[Prov] v071 overflow: stabilized after ' + _ovPass + ' pass(es)');
       break;
     }
 
-    // Chercher une finale à déplacer SUR cet appareil (TR = TR+TR2 groupés)
+    // Chercher une finale déplaçable sur l'appareil en cause
+    // (TR = TR+TR2 groupés pour règle 1 ; DM/TU = ce seul appareil)
     var candidates = satBlocks.filter(function(b) {
       if (b.passType !== 'FINALE' || b.type === 'break') return false;
       if (target === 'TR') return (b.app === 'TR' || b.app === 'TR2');
       return b.app === target;
     });
     if (candidates.length === 0) {
-      console.warn('[Prov] v065 overflow: ' + target + ' dépasse 21h (' +
-        Math.floor(targetEnd/60) + 'h' + (targetEnd%60) + ') mais aucune finale déplaçable');
+      console.warn('[Prov] v071 overflow: ' + target + ' ' + reason + ' mais aucune finale déplaçable');
       break;
     }
 
-    // Niveau le plus BAS d'abord (N1 avant N5 avant JR/SR)
-    candidates.sort(function(a, b) {
-      var coA = _catOrder((a.cats && a.cats[0]) || a.cat || '');
-      var coB = _catOrder((b.cats && b.cats[0]) || b.cat || '');
-      if (coA !== coB) return coA - coB;
-      return b.cp_end - a.cp_end; // à égalité, la plus tardive
-    });
-    var toMove = candidates[0];
+    var toMove = _pickFinaleToMove(candidates);
     var moveLabel = toMove.label || (toMove.app + ' ' + ((toMove.cats && toMove.cats[0]) || ''));
-    console.log('[Prov] v065 overflow pass ' + (_ovPass+1) + ': ' + target +
-      ' finit à ' + Math.floor(targetEnd/60) + 'h' + (targetEnd%60).toString().padStart(2,'0') +
+    console.log('[Prov] v071 overflow pass ' + (_ovPass+1) + ': ' + target + ' ' + reason +
       ' — déplace "' + moveLabel + '" vers dimanche');
 
     toMove.day = 'dim';
@@ -6261,6 +6375,11 @@ function autoAssignJudgePanels() {
       if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) trOverlap = true;
     }); });
     if (trOverlap) return 4;
+
+    // v069: en chQc, DM+TU partagent obligatoirement UN panel (règlement).
+    // _enforceDmTuPanel garantit déjà qu'ils ne se chevauchent pas en cp.
+    // On force 2 panels (TR+TR2=J1, DM+TU=J2) sans checker les chevauchements.
+    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') return 2;
 
     // Check if DM and TU COMPETITION times overlap → need at least 3 panels
     var dmtuOverlap = false;
@@ -13573,7 +13692,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-068</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-071</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13714,7 +13833,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-068</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-071</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14025,7 +14144,7 @@ LEVEL_COLORS = {
 // Panel 4: Vert (TU)
 var JUDGE_COLORS=[null,
   {pale:'#dbeafe', bright:'#2563eb', text:'#1e3a8a', comp_text:'#eff6ff', divider:'#93c5fd'}, // J1 bleu (TR-A)
-  {pale:'#e0f2fe', bright:'#0284c7', text:'#0c4a6e', comp_text:'#f0f9ff', divider:'#7dd3fc'}, // J2 bleu ciel (TR-B)
+  {pale:'#ede9fe', bright:'#7c3aed', text:'#2e1065', comp_text:'#f5f3ff', divider:'#c4b5fd'}, // J2 violet (DM+TU en chQc / TR-B en non-chQc)
   {pale:'#fef3c7', bright:'#b45309', text:'#451a03', comp_text:'#fffbeb', divider:'#fcd34d'}, // J3 beige (DMT)
   {pale:'#dcfce7', bright:'#15803d', text:'#14532d', comp_text:'#f0fdf4', divider:'#86efac'}, // J4 vert (TU)
   {pale:'#fce7f3', bright:'#be185d', text:'#831843', comp_text:'#fdf2f8', divider:'#f9a8d4'}, // J5 rose (extra)
@@ -14620,7 +14739,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-068<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-071<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -14730,7 +14849,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-068<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-071<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -17243,7 +17362,76 @@ function _resolveCrossAppConflicts(dayBlks) {
   }
 }
 
+// ── v069: surgical micro-shift pass for small cross-app conflicts ──
+// _resolveCrossAppConflicts uses findFreeSlot which requires a fully-free
+// window — too strict on dense days (vendredi PM). This lighter pass shifts
+// the LATER block's family forward by the exact minimum (snapped to 5 min)
+// needed to resolve each small overlap, then lets _fixOverlaps/_gluePrelimFinale
+// cascade the shift through the column.
+function _tightenCrossAppConflicts(dayBlks) {
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  var MAX_ITER = 15;
 
+  function findConflicts() {
+    var athBlks = {};
+    dayBlks.filter(function(b){ return b.type !== 'break'; }).forEach(function(b) {
+      (b.athletes||[]).forEach(function(a) {
+        var k = a.nom+'|'+a.prenom;
+        if (!athBlks[k]) athBlks[k] = [];
+        athBlks[k].push(b);
+      });
+    });
+    var confs = [];
+    Object.keys(athBlks).forEach(function(k) {
+      var blks = athBlks[k].slice().sort(function(a,b){ return a.wu_start - b.wu_start; });
+      for (var i = 0; i < blks.length - 1; i++) {
+        if (blks[i].app === blks[i+1].app) continue;
+        if (blks[i+1].wu_start < blks[i].cp_end) {
+          confs.push({a: blks[i], b: blks[i+1], overlap: blks[i].cp_end - blks[i+1].wu_start});
+        }
+      }
+    });
+    return confs;
+  }
+
+  // Family of block b: if b is a PRELIM, include its glued FINALE partner
+  // (must move together). For FINALE, just the finale itself (prelim stays put).
+  function getFamily(b) {
+    var fam = [b];
+    if (b.passType === 'PRELIM') {
+      var sexe = (b.athletes && b.athletes[0] && b.athletes[0].sexe) || '';
+      var fin = dayBlks.find(function(x) {
+        if (x.passType !== 'FINALE' || x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xSexe = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+        if (xSexe !== sexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      if (fin) fam.push(fin);
+    }
+    return fam;
+  }
+
+  for (var iter = 0; iter < MAX_ITER; iter++) {
+    var confs = findConflicts();
+    if (confs.length === 0) return;
+
+    // Sort by overlap descending — tackle biggest conflicts first
+    confs.sort(function(a, b){ return b.overlap - a.overlap; });
+
+    var conf = confs[0];
+    // Shift the LATER block's family forward by the minimum amount to clear
+    var shift = snap5(conf.overlap);
+    if (shift < 5) shift = 5;
+    var fam = getFamily(conf.b);
+    fam.forEach(function(b) {
+      b.wu_start += shift;
+      b.cp_start += shift;
+      b.cp_end += shift;
+    });
+    // Continue loop: re-find conflicts (new cascades may have emerged)
+  }
+}
 
 // ── DM+TU shared judge panel: enforce non-overlap of CP times (v061, chQc) ──
 // In ChQc mode, DM and TU share one panel of judges. Their cp times cannot overlap.
@@ -18330,7 +18518,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-068)
+  // NOUVEAU ALGO (v2026-04-08-071)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -18619,6 +18807,18 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
 
+  // v069: tighten pass for small cross-app conflicts (< 30 min overlaps)
+  // that _resolveCrossAppConflicts couldn't handle with findFreeSlot
+  _tightenCrossAppConflicts(satBlocks);
+  _tightenCrossAppConflicts(dimBlocks);
+  _tightenCrossAppConflicts(venBlocks);
+  _fixOverlaps(satBlocks);
+  _fixOverlaps(dimBlocks);
+  _fixOverlaps(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
+
   // ────────────────────────────────────────────────────────────
   // v065: Overflow samedi → dimanche
   // Si une colonne samedi (TR/TR2 groupés, DM, TU) dépasse 21h00,
@@ -18660,43 +18860,76 @@ function _gsRebuild(athletes) {
         _gluePrelimFinale(dimBlks);
       }
     }
+    // v069: tighten pass after re-layout
+    _tightenCrossAppConflicts(satBlks);
+    _tightenCrossAppConflicts(dimBlks);
+    _fixOverlaps(satBlks);
+    _fixOverlaps(dimBlks);
+    _gluePrelimFinale(satBlks);
+    _gluePrelimFinale(dimBlks);
   }
 
-  for (var _ovPass = 0; _ovPass < 10; _ovPass++) {
-    var maxBy = _maxEndByAppGroup(satBlocks);
-    // Trouver l'appareil le plus en dépassement
-    var target = null, targetEnd = MAX_SAM_END;
-    ['TR','DM','TU'].forEach(function(app) {
-      if (maxBy[app] > targetEnd) { targetEnd = maxBy[app]; target = app; }
+  // v071: tri de priorité pour choisir quelle finale déplacer vers dimanche.
+  // Ordre: N1 12- > N1 13+ > N5/N6/N7 > JR/SR. À égalité, la plus tardive.
+  function _pickFinaleToMove(candidates) {
+    candidates.sort(function(a, b) {
+      var catA = (a.cats && a.cats[0]) || a.cat || '';
+      var catB = (b.cats && b.cats[0]) || b.cat || '';
+      var coA = _catOrder(catA);
+      var coB = _catOrder(catB);
+      if (coA !== coB) return coA - coB; // niveau croissant (N1 avant N5)
+      // À niveau égal (ex. N1), préférer 12- avant 13+
+      var is12A = /12-/.test(catA), is12B = /12-/.test(catB);
+      if (is12A !== is12B) return is12A ? -1 : 1;
+      return b.cp_end - a.cp_end; // à égalité finale: la plus tardive
     });
+    return candidates[0];
+  }
+
+  for (var _ovPass = 0; _ovPass < 15; _ovPass++) {
+    var maxBy = _maxEndByAppGroup(satBlocks);
+    var target = null;
+    var reason = '';
+    var targetEnd = 0;
+
+    // Règle 1 (v065): Colonne samedi > 21h00 → overflow hard
+    ['TR','DM','TU'].forEach(function(app) {
+      if (maxBy[app] > MAX_SAM_END && (!target || maxBy[app] > maxBy[target])) {
+        target = app;
+        reason = '> 21h00';
+        targetEnd = maxBy[app];
+      }
+    });
+
+    // Règle 2 (v071): DM finit après TR samedi → DM est le goulot (panel DM+TU partagé)
+    // Déplacer une finale DM vers dimanche pour soulager
+    if (!target && (maxBy.DM || 0) > (maxBy.TR || 0)) {
+      target = 'DM';
+      reason = 'DM > TR (' + Math.floor(maxBy.DM/60)+'h'+(maxBy.DM%60).toString().padStart(2,'0') +
+               ' > ' + Math.floor((maxBy.TR||0)/60)+'h'+((maxBy.TR||0)%60).toString().padStart(2,'0') + ')';
+      targetEnd = maxBy.DM;
+    }
+
     if (!target) {
-      if (_ovPass > 0) console.log('[Prov] v065 overflow: stabilized after ' + _ovPass + ' pass(es)');
+      if (_ovPass > 0) console.log('[Prov] v071 overflow: stabilized after ' + _ovPass + ' pass(es)');
       break;
     }
 
-    // Chercher une finale à déplacer SUR cet appareil (TR = TR+TR2 groupés)
+    // Chercher une finale déplaçable sur l'appareil en cause
+    // (TR = TR+TR2 groupés pour règle 1 ; DM/TU = ce seul appareil)
     var candidates = satBlocks.filter(function(b) {
       if (b.passType !== 'FINALE' || b.type === 'break') return false;
       if (target === 'TR') return (b.app === 'TR' || b.app === 'TR2');
       return b.app === target;
     });
     if (candidates.length === 0) {
-      console.warn('[Prov] v065 overflow: ' + target + ' dépasse 21h (' +
-        Math.floor(targetEnd/60) + 'h' + (targetEnd%60) + ') mais aucune finale déplaçable');
+      console.warn('[Prov] v071 overflow: ' + target + ' ' + reason + ' mais aucune finale déplaçable');
       break;
     }
 
-    // Niveau le plus BAS d'abord (N1 avant N5 avant JR/SR)
-    candidates.sort(function(a, b) {
-      var coA = _catOrder((a.cats && a.cats[0]) || a.cat || '');
-      var coB = _catOrder((b.cats && b.cats[0]) || b.cat || '');
-      if (coA !== coB) return coA - coB;
-      return b.cp_end - a.cp_end; // à égalité, la plus tardive
-    });
-    var toMove = candidates[0];
+    var toMove = _pickFinaleToMove(candidates);
     var moveLabel = toMove.label || (toMove.app + ' ' + ((toMove.cats && toMove.cats[0]) || ''));
-    console.log('[Prov] v065 overflow pass ' + (_ovPass+1) + ': ' + target +
-      ' finit à ' + Math.floor(targetEnd/60) + 'h' + (targetEnd%60).toString().padStart(2,'0') +
+    console.log('[Prov] v071 overflow pass ' + (_ovPass+1) + ': ' + target + ' ' + reason +
       ' — déplace "' + moveLabel + '" vers dimanche');
 
     toMove.day = 'dim';
@@ -19159,6 +19392,11 @@ function autoAssignJudgePanels() {
       if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) trOverlap = true;
     }); });
     if (trOverlap) return 4;
+
+    // v069: en chQc, DM+TU partagent obligatoirement UN panel (règlement).
+    // _enforceDmTuPanel garantit déjà qu'ils ne se chevauchent pas en cp.
+    // On force 2 panels (TR+TR2=J1, DM+TU=J2) sans checker les chevauchements.
+    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') return 2;
 
     // Check if DM and TU COMPETITION times overlap → need at least 3 panels
     var dmtuOverlap = false;
