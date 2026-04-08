@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-062</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -771,7 +771,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-062</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1677,7 +1677,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-062<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1787,7 +1787,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-062<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3615,6 +3615,18 @@ function _autoGenerate() {
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
 
+  // v061: DM+TU partagent un panel de juges en chQc — 3 passes pour stabilité
+  if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
+    for (var _dmtuPass = 0; _dmtuPass < 3; _dmtuPass++) {
+      _enforceDmTuPanel(newSam);
+      _enforceDmTuPanel(newDim);
+      _fixOverlaps(newSam);
+      _fixOverlaps(newDim);
+      _gluePrelimFinale(newSam);
+      _gluePrelimFinale(newDim);
+    }
+  }
+
   // Replace blocks
   blocks.length = 0;
   newSam.concat(newDim).forEach(function(b){ blocks.push(b); });
@@ -4230,6 +4242,30 @@ function _resolveCrossAppConflicts(dayBlks) {
 }
 
 
+
+// ── DM+TU shared judge panel: enforce non-overlap of CP times (v061, chQc) ──
+// In ChQc mode, DM and TU share one panel of judges. Their cp times cannot overlap.
+// This function sorts DM+TU blocks by cp_start and pushes any overlapping block forward.
+// Warmups can still overlap (judges only matter for cp). Snap to 5 min.
+function _enforceDmTuPanel(dayBlks) {
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  var dmtu = dayBlks.filter(function(b){
+    return b && b.type !== 'break' && (b.app === 'DM' || b.app === 'TU');
+  }).sort(function(a, b){ return a.cp_start - b.cp_start; });
+  var lastCpEnd = -Infinity;
+  for (var i = 0; i < dmtu.length; i++) {
+    var b = dmtu[i];
+    if (b.cp_start < lastCpEnd) {
+      var newCpStart = snap5(lastCpEnd);
+      var delta = newCpStart - b.cp_start;
+      b.cp_start += delta;
+      b.cp_end += delta;
+      if (typeof b.wu_start === 'number') b.wu_start += delta;
+      if (typeof b.wu_end === 'number') b.wu_end += delta;
+    }
+    if (b.cp_end > lastCpEnd) lastCpEnd = b.cp_end;
+  }
+}
 
 // ── Compactage des cp TR/TR2 pour éliminer les temps morts entre compétitions ──
 // "Les juges ne se tournent pas les pouces" — quand un cp finit sur un plateau,
@@ -5255,7 +5291,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-059)
+  // NOUVEAU ALGO (v2026-04-08-062)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -5482,6 +5518,21 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
 
+  // v061: DM+TU partagent un panel de juges en chQc — 3 passes pour stabilité
+  if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
+    for (var _dmtuPass = 0; _dmtuPass < 3; _dmtuPass++) {
+      _enforceDmTuPanel(satBlocks);
+      _enforceDmTuPanel(dimBlocks);
+      _enforceDmTuPanel(venBlocks);
+      _fixOverlaps(satBlocks);
+      _fixOverlaps(dimBlocks);
+      _fixOverlaps(venBlocks);
+      _gluePrelimFinale(satBlocks);
+      _gluePrelimFinale(dimBlocks);
+      _gluePrelimFinale(venBlocks);
+    }
+  }
+
   // Auto-spillover désactivé — tout reste sur la même journée
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
@@ -5507,14 +5558,24 @@ function _gsRebuild(athletes) {
   try {
     try { localStorage.removeItem('prov_horaire_v3'); } catch(e) {}
 
-    currentDay = 'sam';
+    // v060: préserver le jour courant pour éviter la désynchro UI après rebuild
+    var _prevDay = (typeof currentDay !== 'undefined' && ['sam','dim','ven'].indexOf(currentDay) >= 0) ? currentDay : 'sam';
+    currentDay = _prevDay;
     _blocks_sam = JSON.parse(JSON.stringify(satBlocks));
     _blocks_dim = JSON.parse(JSON.stringify(dimBlocks));
     _blocks_ven = JSON.parse(JSON.stringify(venBlocks)); // v054
-    blocks = JSON.parse(JSON.stringify(satBlocks)); // blocks = current day only
+    // Charger les blocs du jour préservé
+    var _startBks = _prevDay === 'dim' ? dimBlocks : (_prevDay === 'ven' ? venBlocks : satBlocks);
+    blocks = JSON.parse(JSON.stringify(_startBks));
     _awBlocks_sam = null;
     _awBlocks_dim = null;
     _awBlocks_ven = null;
+    // Mettre à jour visuellement l'onglet actif
+    try {
+      document.querySelectorAll('.day-tab').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.day === _prevDay);
+      });
+    } catch(e) {}
     _dimOptimized = false;
     _samOptimized = false;
 
@@ -8493,17 +8554,21 @@ var saveTimer = null;
 function saveState() {
   setSaveStatus('saving', 'sauvegarde…');
   try {
-    // Always snapshot current day first
-    if (currentDay === 'sam') _blocks_sam = JSON.parse(JSON.stringify(blocks));
-    else                      _blocks_dim = JSON.parse(JSON.stringify(blocks));
+    // Always snapshot current day first (v062: handle ven separately)
+    if (currentDay === 'sam')      _blocks_sam = JSON.parse(JSON.stringify(blocks));
+    else if (currentDay === 'ven') _blocks_ven = JSON.parse(JSON.stringify(blocks));
+    else                           _blocks_dim = JSON.parse(JSON.stringify(blocks));
     // Snapshot current day awards too
-    if (currentDay === 'sam') _awBlocks_sam = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
-    else                      _awBlocks_dim = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
+    if (currentDay === 'sam')      _awBlocks_sam = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
+    else if (currentDay === 'ven') _awBlocks_ven = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
+    else                           _awBlocks_dim = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
     const payload = JSON.stringify({
       blocks_sam:    _blocks_sam,
       blocks_dim:    _blocks_dim,
+      blocks_ven:    _blocks_ven,
       awBlocks_sam:  _awBlocks_sam,
       awBlocks_dim:  _awBlocks_dim,
+      awBlocks_ven:  _awBlocks_ven,
       awBlocks: typeof awBlocks !== 'undefined' ? awBlocks : [],
       poolBlocks:    poolBlocks,
       version: RAW.version,
@@ -8547,8 +8612,10 @@ function loadState() {
         } else if (payload.blocks_sam && payload.blocks_dim) {
           _blocks_sam   = payload.blocks_sam;
           _blocks_dim   = payload.blocks_dim;
+          _blocks_ven   = payload.blocks_ven || null;
           _awBlocks_sam = payload.awBlocks_sam || null;
           _awBlocks_dim = payload.awBlocks_dim || null;
+          _awBlocks_ven = payload.awBlocks_ven || null;
           if (payload.poolBlocks) poolBlocks = payload.poolBlocks;
           blocks = _blocks_sam;
           _samOptimized = true;
@@ -8569,8 +8636,10 @@ function loadState() {
         // No baked timestamp — use localStorage as before
         _blocks_sam   = payload.blocks_sam;
         _blocks_dim   = payload.blocks_dim;
+        _blocks_ven   = payload.blocks_ven || null;
         _awBlocks_sam = payload.awBlocks_sam || null;
         _awBlocks_dim = payload.awBlocks_dim || null;
+        _awBlocks_ven = payload.awBlocks_ven || null;
         if (payload.poolBlocks) poolBlocks = payload.poolBlocks;
         blocks = _blocks_sam;
         _samOptimized = true;
@@ -13323,7 +13392,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-062</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13464,7 +13533,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-062</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14370,7 +14439,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-062<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -14480,7 +14549,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-062<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -16305,6 +16374,18 @@ function _autoGenerate() {
   _gluePrelimFinale(newSam);
   _gluePrelimFinale(newDim);
 
+  // v061: DM+TU partagent un panel de juges en chQc — 3 passes pour stabilité
+  if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
+    for (var _dmtuPass = 0; _dmtuPass < 3; _dmtuPass++) {
+      _enforceDmTuPanel(newSam);
+      _enforceDmTuPanel(newDim);
+      _fixOverlaps(newSam);
+      _fixOverlaps(newDim);
+      _gluePrelimFinale(newSam);
+      _gluePrelimFinale(newDim);
+    }
+  }
+
   // Replace blocks
   blocks.length = 0;
   newSam.concat(newDim).forEach(function(b){ blocks.push(b); });
@@ -16977,6 +17058,30 @@ function _resolveCrossAppConflicts(dayBlks) {
 }
 
 
+
+// ── DM+TU shared judge panel: enforce non-overlap of CP times (v061, chQc) ──
+// In ChQc mode, DM and TU share one panel of judges. Their cp times cannot overlap.
+// This function sorts DM+TU blocks by cp_start and pushes any overlapping block forward.
+// Warmups can still overlap (judges only matter for cp). Snap to 5 min.
+function _enforceDmTuPanel(dayBlks) {
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  var dmtu = dayBlks.filter(function(b){
+    return b && b.type !== 'break' && (b.app === 'DM' || b.app === 'TU');
+  }).sort(function(a, b){ return a.cp_start - b.cp_start; });
+  var lastCpEnd = -Infinity;
+  for (var i = 0; i < dmtu.length; i++) {
+    var b = dmtu[i];
+    if (b.cp_start < lastCpEnd) {
+      var newCpStart = snap5(lastCpEnd);
+      var delta = newCpStart - b.cp_start;
+      b.cp_start += delta;
+      b.cp_end += delta;
+      if (typeof b.wu_start === 'number') b.wu_start += delta;
+      if (typeof b.wu_end === 'number') b.wu_end += delta;
+    }
+    if (b.cp_end > lastCpEnd) lastCpEnd = b.cp_end;
+  }
+}
 
 // ── Compactage des cp TR/TR2 pour éliminer les temps morts entre compétitions ──
 // "Les juges ne se tournent pas les pouces" — quand un cp finit sur un plateau,
@@ -18002,7 +18107,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-059)
+  // NOUVEAU ALGO (v2026-04-08-062)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -18229,6 +18334,21 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
 
+  // v061: DM+TU partagent un panel de juges en chQc — 3 passes pour stabilité
+  if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
+    for (var _dmtuPass = 0; _dmtuPass < 3; _dmtuPass++) {
+      _enforceDmTuPanel(satBlocks);
+      _enforceDmTuPanel(dimBlocks);
+      _enforceDmTuPanel(venBlocks);
+      _fixOverlaps(satBlocks);
+      _fixOverlaps(dimBlocks);
+      _fixOverlaps(venBlocks);
+      _gluePrelimFinale(satBlocks);
+      _gluePrelimFinale(dimBlocks);
+      _gluePrelimFinale(venBlocks);
+    }
+  }
+
   // Auto-spillover désactivé — tout reste sur la même journée
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
@@ -18254,14 +18374,24 @@ function _gsRebuild(athletes) {
   try {
     try { localStorage.removeItem('prov_horaire_v3'); } catch(e) {}
 
-    currentDay = 'sam';
+    // v060: préserver le jour courant pour éviter la désynchro UI après rebuild
+    var _prevDay = (typeof currentDay !== 'undefined' && ['sam','dim','ven'].indexOf(currentDay) >= 0) ? currentDay : 'sam';
+    currentDay = _prevDay;
     _blocks_sam = JSON.parse(JSON.stringify(satBlocks));
     _blocks_dim = JSON.parse(JSON.stringify(dimBlocks));
     _blocks_ven = JSON.parse(JSON.stringify(venBlocks)); // v054
-    blocks = JSON.parse(JSON.stringify(satBlocks)); // blocks = current day only
+    // Charger les blocs du jour préservé
+    var _startBks = _prevDay === 'dim' ? dimBlocks : (_prevDay === 'ven' ? venBlocks : satBlocks);
+    blocks = JSON.parse(JSON.stringify(_startBks));
     _awBlocks_sam = null;
     _awBlocks_dim = null;
     _awBlocks_ven = null;
+    // Mettre à jour visuellement l'onglet actif
+    try {
+      document.querySelectorAll('.day-tab').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.day === _prevDay);
+      });
+    } catch(e) {}
     _dimOptimized = false;
     _samOptimized = false;
 
@@ -21141,17 +21271,21 @@ saveTimer = null;
 function saveState() {
   setSaveStatus('saving', 'sauvegarde…');
   try {
-    // Always snapshot current day first
-    if (currentDay === 'sam') _blocks_sam = JSON.parse(JSON.stringify(blocks));
-    else                      _blocks_dim = JSON.parse(JSON.stringify(blocks));
+    // Always snapshot current day first (v062: handle ven separately)
+    if (currentDay === 'sam')      _blocks_sam = JSON.parse(JSON.stringify(blocks));
+    else if (currentDay === 'ven') _blocks_ven = JSON.parse(JSON.stringify(blocks));
+    else                           _blocks_dim = JSON.parse(JSON.stringify(blocks));
     // Snapshot current day awards too
-    if (currentDay === 'sam') _awBlocks_sam = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
-    else                      _awBlocks_dim = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
+    if (currentDay === 'sam')      _awBlocks_sam = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
+    else if (currentDay === 'ven') _awBlocks_ven = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
+    else                           _awBlocks_dim = awBlocks.map(aw=>({id:aw.id,start_m:aw.start_m,end_m:aw.end_m}));
     const payload = JSON.stringify({
       blocks_sam:    _blocks_sam,
       blocks_dim:    _blocks_dim,
+      blocks_ven:    _blocks_ven,
       awBlocks_sam:  _awBlocks_sam,
       awBlocks_dim:  _awBlocks_dim,
+      awBlocks_ven:  _awBlocks_ven,
       awBlocks: typeof awBlocks !== 'undefined' ? awBlocks : [],
       poolBlocks:    poolBlocks,
       version: RAW.version,
@@ -21195,8 +21329,10 @@ function loadState() {
         } else if (payload.blocks_sam && payload.blocks_dim) {
           _blocks_sam   = payload.blocks_sam;
           _blocks_dim   = payload.blocks_dim;
+          _blocks_ven   = payload.blocks_ven || null;
           _awBlocks_sam = payload.awBlocks_sam || null;
           _awBlocks_dim = payload.awBlocks_dim || null;
+          _awBlocks_ven = payload.awBlocks_ven || null;
           if (payload.poolBlocks) poolBlocks = payload.poolBlocks;
           blocks = _blocks_sam;
           _samOptimized = true;
@@ -21217,8 +21353,10 @@ function loadState() {
         // No baked timestamp — use localStorage as before
         _blocks_sam   = payload.blocks_sam;
         _blocks_dim   = payload.blocks_dim;
+        _blocks_ven   = payload.blocks_ven || null;
         _awBlocks_sam = payload.awBlocks_sam || null;
         _awBlocks_dim = payload.awBlocks_dim || null;
+        _awBlocks_ven = payload.awBlocks_ven || null;
         if (payload.poolBlocks) poolBlocks = payload.poolBlocks;
         blocks = _blocks_sam;
         _samOptimized = true;
