@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-057</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -771,7 +771,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-057</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1677,7 +1677,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-057<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1787,7 +1787,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-057<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3389,23 +3389,20 @@ var FMT = {
       'Senior':   {prelim:2,finale:2,finN:8,finDay:'dim'},
     },
     TRS: {
-      // PR 8.2.5: N1-N4 = 0 prelim + 1 finale (compétition unique)
+      // v059: Club pratique: toutes les synchros en chQc = FINALE SEULEMENT sur dimanche
+      // (pas de prélims, même si PR 8.2.5 en mentionne pour N5+)
       'N1':       {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N2':       {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N3':       {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N4':       {prelim:0,finale:1,finN:8,finDay:'dim'},
-      // N5 / Novice / N6 / National Mixte = 1 prelim + 1 finale
-      'N5':       {prelim:1,finale:1,finN:8,finDay:'dim'},
-      'Novice':   {prelim:1,finale:1,finN:8,finDay:'dim'},
-      'N6':       {prelim:1,finale:1,finN:8,finDay:'dim'},
-      'National Mixte': {prelim:1,finale:1,finN:8,finDay:'dim'},
-      // N7 / Junior: pas de TRS
+      'N5':       {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'Novice':   {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'N6':       {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'National Mixte': {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N7':       {na:true},
       'Junior':   {na:true},
-      // Senior / Senior Mixte = 2 prelims + 1 finale
-      'Senior':   {prelim:2,finale:1,finN:8,finDay:'dim'},
-      'Mixte Senior':{prelim:2,finale:1,finN:8,finDay:'dim'},
-      // Mixte N3 / N4 suivent leur niveau (0 prelim + 1 finale)
+      'Senior':   {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'Mixte Senior':{prelim:0,finale:1,finN:8,finDay:'dim'},
       'Mixte N3': {prelim:0,finale:1,finN:8,finDay:'dim'},
       'Mixte N4': {prelim:0,finale:1,finN:8,finDay:'dim'},
     },
@@ -5091,17 +5088,7 @@ function _gsRebuild(athletes) {
   var satBlocks=[], dimBlocks=[], venBlocks=[];
   var bid = 1;
 
-  // v056: Pre-analyze which N1 cats qualify for ven routing
-  // (must have athletes on TR AND DM AND TU)
-  var _n1CatsToVen = {};
-  if (_COMP_TYPE === 'chQc') {
-    ['N1 13+'].forEach(function(level) {
-      var hasTR = athletes.some(function(a) { return a.tr && a.tr.indexOf(level) >= 0; });
-      var hasDM = athletes.some(function(a) { return a.dmt && a.dmt.indexOf(level) >= 0; });
-      var hasTU = athletes.some(function(a) { return a.tu && a.tu.indexOf(level) >= 0; });
-      if (hasTR && hasDM && hasTU) _n1CatsToVen[level] = true;
-    });
-  }
+
 
   Object.values(groups).forEach(function(g) {
     var appRules = rules[g.app]||{};
@@ -5155,17 +5142,13 @@ function _gsRebuild(athletes) {
       // 1 prélim block with timing for rule.prelim passes (NOT multiple blocks)
       var nPasses = rule.prelim || 1;
       var dur = _calcDur(g.app, aths.length, nPasses);
-      // v056: en chQc, router N1 12- et N1 13+ vers vendredi PM
-      // SEULEMENT si la catégorie a des athletes sur TR + DM + TU
+      // v058: en chQc, router petits groupes N3-N5 NON splittés vers vendredi PM
+      // (catégories complètes, pas de split Gr.1 ven / Gr.2 sam)
       // TRS exclu (synchros restent dim)
-      // Catégorie complète (Gr.1 + Gr.2 ensemble si splittés)
       var blkDay = prelimDay;
-      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS') {
-        var matchedLevel = null;
-        Object.keys(_n1CatsToVen || {}).forEach(function(level) {
-          if (g.cat.indexOf(level) >= 0) matchedLevel = level;
-        });
-        if (matchedLevel) blkDay = 'ven';
+      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS' && grpAths.length === 1) {
+        var catLevel = (g.cat.match(/N[345]/) || [''])[0];
+        if (catLevel) blkDay = 'ven';
       }
       var blk = {
         id: 'prov_'+(bid++),
@@ -5272,7 +5255,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-057)
+  // NOUVEAU ALGO (v2026-04-08-059)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -13340,7 +13323,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-057</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13481,7 +13464,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-057</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14387,7 +14370,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-057<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-059<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -14497,7 +14480,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-057<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-059<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -16096,23 +16079,20 @@ FMT = {
       'Senior':   {prelim:2,finale:2,finN:8,finDay:'dim'},
     },
     TRS: {
-      // PR 8.2.5: N1-N4 = 0 prelim + 1 finale (compétition unique)
+      // v059: Club pratique: toutes les synchros en chQc = FINALE SEULEMENT sur dimanche
+      // (pas de prélims, même si PR 8.2.5 en mentionne pour N5+)
       'N1':       {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N2':       {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N3':       {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N4':       {prelim:0,finale:1,finN:8,finDay:'dim'},
-      // N5 / Novice / N6 / National Mixte = 1 prelim + 1 finale
-      'N5':       {prelim:1,finale:1,finN:8,finDay:'dim'},
-      'Novice':   {prelim:1,finale:1,finN:8,finDay:'dim'},
-      'N6':       {prelim:1,finale:1,finN:8,finDay:'dim'},
-      'National Mixte': {prelim:1,finale:1,finN:8,finDay:'dim'},
-      // N7 / Junior: pas de TRS
+      'N5':       {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'Novice':   {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'N6':       {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'National Mixte': {prelim:0,finale:1,finN:8,finDay:'dim'},
       'N7':       {na:true},
       'Junior':   {na:true},
-      // Senior / Senior Mixte = 2 prelims + 1 finale
-      'Senior':   {prelim:2,finale:1,finN:8,finDay:'dim'},
-      'Mixte Senior':{prelim:2,finale:1,finN:8,finDay:'dim'},
-      // Mixte N3 / N4 suivent leur niveau (0 prelim + 1 finale)
+      'Senior':   {prelim:0,finale:1,finN:8,finDay:'dim'},
+      'Mixte Senior':{prelim:0,finale:1,finN:8,finDay:'dim'},
       'Mixte N3': {prelim:0,finale:1,finN:8,finDay:'dim'},
       'Mixte N4': {prelim:0,finale:1,finN:8,finDay:'dim'},
     },
@@ -17855,17 +17835,7 @@ function _gsRebuild(athletes) {
   var satBlocks=[], dimBlocks=[], venBlocks=[];
   var bid = 1;
 
-  // v056: Pre-analyze which N1 cats qualify for ven routing
-  // (must have athletes on TR AND DM AND TU)
-  var _n1CatsToVen = {};
-  if (_COMP_TYPE === 'chQc') {
-    ['N1 13+'].forEach(function(level) {
-      var hasTR = athletes.some(function(a) { return a.tr && a.tr.indexOf(level) >= 0; });
-      var hasDM = athletes.some(function(a) { return a.dmt && a.dmt.indexOf(level) >= 0; });
-      var hasTU = athletes.some(function(a) { return a.tu && a.tu.indexOf(level) >= 0; });
-      if (hasTR && hasDM && hasTU) _n1CatsToVen[level] = true;
-    });
-  }
+
 
   Object.values(groups).forEach(function(g) {
     var appRules = rules[g.app]||{};
@@ -17919,17 +17889,13 @@ function _gsRebuild(athletes) {
       // 1 prélim block with timing for rule.prelim passes (NOT multiple blocks)
       var nPasses = rule.prelim || 1;
       var dur = _calcDur(g.app, aths.length, nPasses);
-      // v056: en chQc, router N1 12- et N1 13+ vers vendredi PM
-      // SEULEMENT si la catégorie a des athletes sur TR + DM + TU
+      // v058: en chQc, router petits groupes N3-N5 NON splittés vers vendredi PM
+      // (catégories complètes, pas de split Gr.1 ven / Gr.2 sam)
       // TRS exclu (synchros restent dim)
-      // Catégorie complète (Gr.1 + Gr.2 ensemble si splittés)
       var blkDay = prelimDay;
-      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS') {
-        var matchedLevel = null;
-        Object.keys(_n1CatsToVen || {}).forEach(function(level) {
-          if (g.cat.indexOf(level) >= 0) matchedLevel = level;
-        });
-        if (matchedLevel) blkDay = 'ven';
+      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS' && grpAths.length === 1) {
+        var catLevel = (g.cat.match(/N[345]/) || [''])[0];
+        if (catLevel) blkDay = 'ven';
       }
       var blk = {
         id: 'prov_'+(bid++),
@@ -18036,7 +18002,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-057)
+  // NOUVEAU ALGO (v2026-04-08-059)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
