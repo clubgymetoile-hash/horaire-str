@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-048</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-049</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -651,6 +651,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 <div id="ribbon">
     <div id="ribbon-tabs">
       <span class="rtab-group-label">Journée</span>
+      <button class="day-tab" data-day="ven" id="day-tab-ven" onclick="switchDay('ven')" style="display:none">Vendredi</button>
       <button class="day-tab active" data-day="sam" onclick="switchDay('sam')">Samedi</button>
       <button class="day-tab" data-day="dim" onclick="switchDay('dim')">Dimanche</button>
       <span class="rtab-divider"></span>
@@ -770,7 +771,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-048</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-049</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1676,7 +1677,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-048<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-049<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1684,6 +1685,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <div id="ribbon">
     <div id="ribbon-tabs">
       <span class="rtab-group-label">Journée<${'/'}span>
+      <button class="day-tab" data-day="ven" id="day-tab-ven" onclick="switchDay('ven')" style="display:none">Vendredi<${'/'}button>
       <button class="day-tab active" data-day="sam" onclick="switchDay('sam')">Samedi<${'/'}button>
       <button class="day-tab" data-day="dim" onclick="switchDay('dim')">Dimanche<${'/'}button>
       <span class="rtab-divider"><${'/'}span>
@@ -1785,7 +1787,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-048<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-049<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -2338,6 +2340,8 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;padding:1px 5p
 var SAVED_STATE = {"blocks":[],"awBlocks":[]};
 var SS_DIM    = {"blocks":[],"awBlocks":[]};
 var EXTRA_DIM = {"athletes_full":[],"awards":[]};
+var EXTRA_VEN = {"athletes_full":[],"awards":[]};
+var SS_VEN = {"blocks":[],"awBlocks":[]};
 var _BAKED_AT = '';
 
 // ═══════════════════════════════════════════════════════════════
@@ -3243,6 +3247,13 @@ function onCompType(val) {
   _COMP_TYPE = val;
   var badge = document.getElementById('comp-type-badge');
   if (badge) badge.textContent = val === 'chQc' ? 'Champ. QC' : 'Coupe QC';
+  // v049: Show/hide Vendredi tab based on competition type
+  var venTab = document.getElementById('day-tab-ven');
+  if (venTab) venTab.style.display = (val === 'chQc') ? '' : 'none';
+  // If switching away from chQc while on ven, force back to sam
+  if (val !== 'chQc' && typeof currentDay !== 'undefined' && currentDay === 'ven') {
+    if (typeof switchDay === 'function') switchDay('sam');
+  }
 }
 
 // ── FMT Rules ───────────────────────────────────────────────────
@@ -5177,7 +5188,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-048)
+  // NOUVEAU ALGO (v2026-04-08-049)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -5479,8 +5490,10 @@ function _gsRebuild(athletes) {
 var currentDay = 'sam';
 var _blocks_sam = null;
 var _blocks_dim = JSON.parse(JSON.stringify(SS_DIM.blocks));
+var _blocks_ven = null;
 var _awBlocks_sam = null;
 var _awBlocks_dim = null;
+var _awBlocks_ven = null;
 var blocks = JSON.parse(JSON.stringify(RAW.blocks));
 // Expose state getter for console/copy
 window._getHoraireState = function() {
@@ -9207,6 +9220,9 @@ function switchDay(day) {
   if (currentDay === 'sam') {
     _blocks_sam   = JSON.parse(JSON.stringify(blocks));
     _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+  } else if (currentDay === 'ven') {
+    _blocks_ven   = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   } else {
     _blocks_dim   = JSON.parse(JSON.stringify(blocks));
     _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
@@ -9217,6 +9233,12 @@ function switchDay(day) {
     Object.assign(EXTRA, JSON.parse(JSON.stringify(
       {awards: _SAT_EXTRA.awards, athletes_full: _SAT_EXTRA.athletes_full}
     )));
+  } else if (day === 'ven') {
+    // v049: Vendredi day — use shared athletes (Saturday's), separate blocks
+    blocks = _blocks_ven ? JSON.parse(JSON.stringify(_blocks_ven)) : [];
+    Object.assign(EXTRA, JSON.parse(JSON.stringify(
+      {awards: _SAT_EXTRA.awards, athletes_full: _SAT_EXTRA.athletes_full}
+    )));
   } else {
     blocks = JSON.parse(JSON.stringify(_blocks_dim));
     Object.assign(EXTRA, JSON.parse(JSON.stringify(
@@ -9224,7 +9246,7 @@ function switchDay(day) {
     )));
   }
   // Rebuild awBlocks from EXTRA.awards, then restore saved positions
-  const savedAw = day === 'sam' ? _awBlocks_sam : _awBlocks_dim;
+  const savedAw = day === 'sam' ? _awBlocks_sam : (day === 'ven' ? _awBlocks_ven : _awBlocks_dim);
   awBlocks.length = 0;
   EXTRA.awards.forEach((aw,i) => {
     const saved = savedAw && savedAw.find(s => s.id === 'aw_'+i);
@@ -9238,7 +9260,7 @@ function switchDay(day) {
   // Update status date
   const cfg = EXTRA.competition || {};
   const dateEl = document.querySelector('#status-bar .status-item');
-  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||_gsCompMeta.date||'Samedi') : (cfg.date_dim||_gsCompMeta.date||'Dimanche');
+  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||_gsCompMeta.date||'Samedi') : (day==='ven' ? (cfg.date_ven||'Vendredi') : (cfg.date_dim||_gsCompMeta.date||'Dimanche'));
   // Update age filter
   const ageSel = document.getElementById('age-filter');
   if (ageSel) {
@@ -9286,6 +9308,8 @@ function switchDay(day) {
   autoScheduleAwards();
   if (day === 'dim') {
     _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+  } else if (day === 'ven') {
+    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   } else {
     _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   }
@@ -13217,7 +13241,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-048</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-049</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13238,6 +13262,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 <div id="ribbon">
     <div id="ribbon-tabs">
       <span class="rtab-group-label">Journée</span>
+      <button class="day-tab" data-day="ven" id="day-tab-ven" onclick="switchDay('ven')" style="display:none">Vendredi</button>
       <button class="day-tab active" data-day="sam" onclick="switchDay('sam')">Samedi</button>
       <button class="day-tab" data-day="dim" onclick="switchDay('dim')">Dimanche</button>
       <span class="rtab-divider"></span>
@@ -13357,7 +13382,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-048</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-049</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14263,7 +14288,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-06-048<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-049<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -14271,6 +14296,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <div id="ribbon">
     <div id="ribbon-tabs">
       <span class="rtab-group-label">Journée<${'/'}span>
+      <button class="day-tab" data-day="ven" id="day-tab-ven" onclick="switchDay('ven')" style="display:none">Vendredi<${'/'}button>
       <button class="day-tab active" data-day="sam" onclick="switchDay('sam')">Samedi<${'/'}button>
       <button class="day-tab" data-day="dim" onclick="switchDay('dim')">Dimanche<${'/'}button>
       <span class="rtab-divider"><${'/'}span>
@@ -14372,7 +14398,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-06-048<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-049<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14925,6 +14951,8 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;padding:1px 5p
 SAVED_STATE = {"blocks":[],"awBlocks":[]};
 SS_DIM    = {"blocks":[],"awBlocks":[]};
 EXTRA_DIM = {"athletes_full":[],"awards":[]};
+EXTRA_VEN = {"athletes_full":[],"awards":[]};
+SS_VEN = {"blocks":[],"awBlocks":[]};
 _BAKED_AT = '';
 
 // ═══════════════════════════════════════════════════════════════
@@ -15827,6 +15855,13 @@ function onCompType(val) {
   _COMP_TYPE = val;
   var badge = document.getElementById('comp-type-badge');
   if (badge) badge.textContent = val === 'chQc' ? 'Champ. QC' : 'Coupe QC';
+  // v049: Show/hide Vendredi tab based on competition type
+  var venTab = document.getElementById('day-tab-ven');
+  if (venTab) venTab.style.display = (val === 'chQc') ? '' : 'none';
+  // If switching away from chQc while on ven, force back to sam
+  if (val !== 'chQc' && typeof currentDay !== 'undefined' && currentDay === 'ven') {
+    if (typeof switchDay === 'function') switchDay('sam');
+  }
 }
 
 // ── FMT Rules ───────────────────────────────────────────────────
@@ -17818,7 +17853,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-06-048)
+  // NOUVEAU ALGO (v2026-04-08-049)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -18120,8 +18155,10 @@ function _gsRebuild(athletes) {
 currentDay = 'sam';
 _blocks_sam = null;
 _blocks_dim = JSON.parse(JSON.stringify(SS_DIM.blocks));
+_blocks_ven = null;
 _awBlocks_sam = null;
 _awBlocks_dim = null;
+_awBlocks_ven = null;
 blocks = JSON.parse(JSON.stringify(RAW.blocks));
 // Expose state getter for console/copy
 window._getHoraireState = function() {
@@ -21749,6 +21786,9 @@ function switchDay(day) {
   if (currentDay === 'sam') {
     _blocks_sam   = JSON.parse(JSON.stringify(blocks));
     _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+  } else if (currentDay === 'ven') {
+    _blocks_ven   = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   } else {
     _blocks_dim   = JSON.parse(JSON.stringify(blocks));
     _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
@@ -21759,6 +21799,12 @@ function switchDay(day) {
     Object.assign(EXTRA, JSON.parse(JSON.stringify(
       {awards: _SAT_EXTRA.awards, athletes_full: _SAT_EXTRA.athletes_full}
     )));
+  } else if (day === 'ven') {
+    // v049: Vendredi day — use shared athletes (Saturday's), separate blocks
+    blocks = _blocks_ven ? JSON.parse(JSON.stringify(_blocks_ven)) : [];
+    Object.assign(EXTRA, JSON.parse(JSON.stringify(
+      {awards: _SAT_EXTRA.awards, athletes_full: _SAT_EXTRA.athletes_full}
+    )));
   } else {
     blocks = JSON.parse(JSON.stringify(_blocks_dim));
     Object.assign(EXTRA, JSON.parse(JSON.stringify(
@@ -21766,7 +21812,7 @@ function switchDay(day) {
     )));
   }
   // Rebuild awBlocks from EXTRA.awards, then restore saved positions
-  const savedAw = day === 'sam' ? _awBlocks_sam : _awBlocks_dim;
+  const savedAw = day === 'sam' ? _awBlocks_sam : (day === 'ven' ? _awBlocks_ven : _awBlocks_dim);
   awBlocks.length = 0;
   EXTRA.awards.forEach((aw,i) => {
     const saved = savedAw && savedAw.find(s => s.id === 'aw_'+i);
@@ -21780,7 +21826,7 @@ function switchDay(day) {
   // Update status date
   const cfg = EXTRA.competition || {};
   const dateEl = document.querySelector('#status-bar .status-item');
-  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||_gsCompMeta.date||'Samedi') : (cfg.date_dim||_gsCompMeta.date||'Dimanche');
+  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||_gsCompMeta.date||'Samedi') : (day==='ven' ? (cfg.date_ven||'Vendredi') : (cfg.date_dim||_gsCompMeta.date||'Dimanche'));
   // Update age filter
   const ageSel = document.getElementById('age-filter');
   if (ageSel) {
@@ -21828,6 +21874,8 @@ function switchDay(day) {
   autoScheduleAwards();
   if (day === 'dim') {
     _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+  } else if (day === 'ven') {
+    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   } else {
     _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   }
