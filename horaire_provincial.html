@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-050</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-052</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -771,7 +771,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-050</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-052</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1677,7 +1677,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-050<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-052<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1787,7 +1787,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-050<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-052<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3244,6 +3244,19 @@ function _gsRebuildPartnerMap(athletes) {
 var _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
 
 function onCompType(val) {
+  var prev = _COMP_TYPE;
+  // v051: If athletes already loaded, ask before rebuilding
+  var hasAthletes = (typeof EXTRA !== 'undefined' && EXTRA.athletes_full && EXTRA.athletes_full.length > 0);
+  if (hasAthletes && val !== prev) {
+    var newLabel = val === 'chQc' ? 'Champ. QC' : 'Coupe QC';
+    var ok = confirm('Recharger les données et appliquer les regles ' + newLabel + ' ?\n\nLes blocs actuels seront remplaces par un nouveau placement automatique.');
+    if (!ok) {
+      // Revert the selector to previous value
+      var sel = document.getElementById('comp-type-sel');
+      if (sel) sel.value = prev;
+      return;
+    }
+  }
   _COMP_TYPE = val;
   var badge = document.getElementById('comp-type-badge');
   if (badge) badge.textContent = val === 'chQc' ? 'Champ. QC' : 'Coupe QC';
@@ -3253,6 +3266,12 @@ function onCompType(val) {
   // If switching away from chQc while on ven, force back to sam
   if (val !== 'chQc' && typeof currentDay !== 'undefined' && currentDay === 'ven') {
     if (typeof switchDay === 'function') switchDay('sam');
+  }
+  // v051: Trigger rebuild with new rules
+  if (hasAthletes && val !== prev) {
+    if (typeof _gsRebuild === 'function') {
+      try { _gsRebuild(EXTRA.athletes_full); } catch(e) { console.error('Rebuild failed:', e); }
+    }
   }
 }
 
@@ -5146,8 +5165,10 @@ function _gsRebuild(athletes) {
         athsByCat[origCat].push(a);
       });
 
-      // Pour chaque catégorie, prendre les top finN selon SA propre règle
+      // Pour chaque catégorie, prendre les top finN (pour timing/durée)
+      // + tous les athlètes (pour roster complet & détection conflits) — v052
       var allFinAths = [];
+      var allFullAths = [];
       catOrder.forEach(function(origCat) {
         var catAths = athsByCat[origCat];
         var catKey = origCat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '');
@@ -5165,6 +5186,7 @@ function _gsRebuild(athletes) {
         var finNAths = (g.app === 'TRS') ? (catRule.finN || 8) * 2 : (catRule.finN || 8);
         var catFinN = Math.min(finNAths, catAths.length);
         allFinAths = allFinAths.concat(catAths.slice(0, catFinN));
+        allFullAths = allFullAths.concat(catAths); // v052: tous les athletes
       });
 
       if (allFinAths.length > 0) {
@@ -5179,7 +5201,10 @@ function _gsRebuild(athletes) {
           label: g.app+' - '+g.cat+' Finale'+(g.sexe?' '+(g.sexe==='Féminin'?'F':'M'):''),
           type: 'finale', passType: 'FINALE', passNum: 1, nPasses: rule.finale, day: finDay,
           wu_start:480, cp_start:480+FINALE_WU, cp_end:480+FINALE_WU+finCp,
-          n: totalFinN, athletes: allFinAths.map(function(a){
+          n: totalFinN,
+          // v052: roster complet (tous inscrits) pour détection conflits
+          // mais n=totalFinN pour que la durée/taille corresponde aux 8 finalistes
+          athletes: allFullAths.map(function(a){
             return Object.assign({cat: a[_origCatField] || g.cat}, a);
           })
         };
@@ -5210,7 +5235,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-050)
+  // NOUVEAU ALGO (v2026-04-08-052)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -13263,7 +13288,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-050</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-052</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13404,7 +13429,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-050</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-052</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14310,7 +14335,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-050<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-052<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -14420,7 +14445,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-050<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-052<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15874,6 +15899,19 @@ function _gsRebuildPartnerMap(athletes) {
 _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
 
 function onCompType(val) {
+  var prev = _COMP_TYPE;
+  // v051: If athletes already loaded, ask before rebuilding
+  var hasAthletes = (typeof EXTRA !== 'undefined' && EXTRA.athletes_full && EXTRA.athletes_full.length > 0);
+  if (hasAthletes && val !== prev) {
+    var newLabel = val === 'chQc' ? 'Champ. QC' : 'Coupe QC';
+    var ok = confirm('Recharger les données et appliquer les regles ' + newLabel + ' ?\n\nLes blocs actuels seront remplaces par un nouveau placement automatique.');
+    if (!ok) {
+      // Revert the selector to previous value
+      var sel = document.getElementById('comp-type-sel');
+      if (sel) sel.value = prev;
+      return;
+    }
+  }
   _COMP_TYPE = val;
   var badge = document.getElementById('comp-type-badge');
   if (badge) badge.textContent = val === 'chQc' ? 'Champ. QC' : 'Coupe QC';
@@ -15883,6 +15921,12 @@ function onCompType(val) {
   // If switching away from chQc while on ven, force back to sam
   if (val !== 'chQc' && typeof currentDay !== 'undefined' && currentDay === 'ven') {
     if (typeof switchDay === 'function') switchDay('sam');
+  }
+  // v051: Trigger rebuild with new rules
+  if (hasAthletes && val !== prev) {
+    if (typeof _gsRebuild === 'function') {
+      try { _gsRebuild(EXTRA.athletes_full); } catch(e) { console.error('Rebuild failed:', e); }
+    }
   }
 }
 
@@ -17833,8 +17877,10 @@ function _gsRebuild(athletes) {
         athsByCat[origCat].push(a);
       });
 
-      // Pour chaque catégorie, prendre les top finN selon SA propre règle
+      // Pour chaque catégorie, prendre les top finN (pour timing/durée)
+      // + tous les athlètes (pour roster complet & détection conflits) — v052
       var allFinAths = [];
+      var allFullAths = [];
       catOrder.forEach(function(origCat) {
         var catAths = athsByCat[origCat];
         var catKey = origCat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '');
@@ -17852,6 +17898,7 @@ function _gsRebuild(athletes) {
         var finNAths = (g.app === 'TRS') ? (catRule.finN || 8) * 2 : (catRule.finN || 8);
         var catFinN = Math.min(finNAths, catAths.length);
         allFinAths = allFinAths.concat(catAths.slice(0, catFinN));
+        allFullAths = allFullAths.concat(catAths); // v052: tous les athletes
       });
 
       if (allFinAths.length > 0) {
@@ -17866,7 +17913,10 @@ function _gsRebuild(athletes) {
           label: g.app+' - '+g.cat+' Finale'+(g.sexe?' '+(g.sexe==='Féminin'?'F':'M'):''),
           type: 'finale', passType: 'FINALE', passNum: 1, nPasses: rule.finale, day: finDay,
           wu_start:480, cp_start:480+FINALE_WU, cp_end:480+FINALE_WU+finCp,
-          n: totalFinN, athletes: allFinAths.map(function(a){
+          n: totalFinN,
+          // v052: roster complet (tous inscrits) pour détection conflits
+          // mais n=totalFinN pour que la durée/taille corresponde aux 8 finalistes
+          athletes: allFullAths.map(function(a){
             return Object.assign({cat: a[_origCatField] || g.cat}, a);
           })
         };
@@ -17897,7 +17947,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-050)
+  // NOUVEAU ALGO (v2026-04-08-052)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
