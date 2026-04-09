@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-072</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -771,7 +771,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-072</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1677,7 +1677,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-072<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1787,7 +1787,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-072<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4655,6 +4655,53 @@ function _compactJudgeCp(dayBlks) {
   }
 }
 
+// v073: after gluing, finales NOT immediately following their prelim need a
+// proper warmup time (not the short 5 min used for glued finales). Athletes
+// arriving cold (start of day, day change, or big gap) need full wu_per × n.
+function _adjustUngluedFinaleWarmup(dayBlks) {
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  var rules = (typeof FMT !== 'undefined' && FMT[_COMP_TYPE]) ? FMT[_COMP_TYPE] : (FMT && FMT.coupeQc) || {};
+  var DUR = {
+    TR:  { wu_per: 1.5,  cp_per: 2.0  },
+    TR2: { wu_per: 1.5,  cp_per: 2.0  },
+    DM:  { wu_per: 1.75, cp_per: 2.25 },
+    TU:  { wu_per: 1.75, cp_per: 2.25 },
+    TRS: { wu_per: 1.5,  cp_per: 2.0  }
+  };
+
+  // Find each finale and check if it's glued to a matching prelim
+  dayBlks.forEach(function(fin) {
+    if (!fin || fin.type === 'break' || fin.passType !== 'FINALE') return;
+    var finSexe = (fin.athletes && fin.athletes[0] && fin.athletes[0].sexe) || '';
+
+    // Is there a PRELIM in the same day, same app, same sexe, matching cat,
+    // ending exactly at fin.wu_start ?
+    var glued = dayBlks.some(function(p) {
+      if (p.passType !== 'PRELIM' || p.type === 'break') return false;
+      if (p.app !== fin.app) return false;
+      if (Math.abs(p.cp_end - fin.wu_start) > 1) return false;
+      var pSexe = (p.athletes && p.athletes[0] && p.athletes[0].sexe) || '';
+      if (pSexe !== finSexe) return false;
+      return (p.cats || []).some(function(c){ return (fin.cats || []).indexOf(c) >= 0; });
+    });
+
+    if (glued) return; // short warmup OK
+
+    // Compute full warmup for this finale
+    var d = DUR[fin.app] || DUR.TR;
+    var n = (fin.athletes && fin.athletes.length) || fin.n || 0;
+    if (!n) return;
+    var fullWu = snap5(Math.ceil(n * d.wu_per));
+    var currentWu = fin.cp_start - fin.wu_start;
+    if (fullWu <= currentWu) return; // already long enough
+
+    // Extend warmup backwards: keep cp_start and cp_end, push wu_start earlier
+    var delta = fullWu - currentWu;
+    fin.wu_start -= delta;
+    // Note: we let _fixOverlaps handle any resulting column overlap
+  });
+}
+
 function _gluePrelimFinale(dayBlks) {
   ['TR','TR2','DM','TU'].forEach(function(app) {
     var col = dayBlks.filter(function(b){ return b.app === app; });
@@ -5402,7 +5449,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-072)
+  // NOUVEAU ALGO (v2026-04-08-079)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -5703,6 +5750,17 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
 
+  // v073: extend warmup for finales NOT glued to their prelim
+  _adjustUngluedFinaleWarmup(satBlocks);
+  _adjustUngluedFinaleWarmup(dimBlocks);
+  _adjustUngluedFinaleWarmup(venBlocks);
+  _fixOverlaps(satBlocks);
+  _fixOverlaps(dimBlocks);
+  _fixOverlaps(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
+
   // ────────────────────────────────────────────────────────────
   // v065: Overflow samedi → dimanche
   // Si une colonne samedi (TR/TR2 groupés, DM, TU) dépasse 21h00,
@@ -5747,6 +5805,13 @@ function _gsRebuild(athletes) {
     // v069: tighten pass after re-layout
     _tightenCrossAppConflicts(satBlks);
     _tightenCrossAppConflicts(dimBlks);
+    _fixOverlaps(satBlks);
+    _fixOverlaps(dimBlks);
+    _gluePrelimFinale(satBlks);
+    _gluePrelimFinale(dimBlks);
+    // v073: extend warmup for finales not glued to their prelim
+    _adjustUngluedFinaleWarmup(satBlks);
+    _adjustUngluedFinaleWarmup(dimBlks);
     _fixOverlaps(satBlks);
     _fixOverlaps(dimBlks);
     _gluePrelimFinale(satBlks);
@@ -6960,10 +7025,14 @@ function makeDraggable(el, block) {
     // ── Drag: move selected group or single block ──
     const isDragGroup = selectedBids.size > 1 && selectedBids.has(block.id);
 
+    // v077: mutable refs so cross-day drag can swap to the new day's element
+    let dragBlock = block;
+    let dragEl = el;
+
     startY = e.clientY;
     window._dragStartX = e.clientX;
-    startTop = parseFloat(el.style.top);
-    const scroller = document.getElementById('sheet-scroll');
+    startTop = parseFloat(dragEl.style.top);
+    let scroller = document.getElementById('sheet-scroll');
     let startScrollTop = scroller ? scroller.scrollTop : 0;
 
     // For group drag: gather all selected block elements and their start offsets
@@ -7010,6 +7079,40 @@ function makeDraggable(el, block) {
     const onMove = (e) => {
       if (e.pointerType === 'touch') return;
       lastClientY = e.clientY;
+
+      // v077: Cross-day drag — detect hover over a day tab (only for single-block drag).
+      // When detected, swap the internal state to the new day and re-acquire the
+      // dragged element. The pointer keeps "holding" the block.
+      if (!isDragGroup) {
+        var dayTabs = document.querySelectorAll('.day-tab');
+        for (var ti = 0; ti < dayTabs.length; ti++) {
+          var tab = dayTabs[ti];
+          if (tab.style.display === 'none') continue;
+          var tabRect = tab.getBoundingClientRect();
+          if (e.clientX >= tabRect.left && e.clientX <= tabRect.right &&
+              e.clientY >= tabRect.top  && e.clientY <= tabRect.bottom) {
+            var newDay = tab.dataset.day;
+            if (newDay && newDay !== dragBlock.day) {
+              try {
+                var swap = _crossDayDragSwitch(dragBlock, newDay);
+                if (swap && swap.el && swap.block) {
+                  dragBlock = swap.block;
+                  dragEl = swap.el;
+                  scroller = document.getElementById('sheet-scroll');
+                  // Re-anchor so further movement is relative to current pointer
+                  startY = e.clientY;
+                  startTop = parseFloat(dragEl.style.top);
+                  startScrollTop = scroller ? scroller.scrollTop : 0;
+                  // Re-capture pointer on new element
+                  try { dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId); } catch(_){}
+                }
+              } catch(err) { console.warn('[v077] cross-day drag failed:', err); }
+            }
+            break;
+          }
+        }
+      }
+
       if (rafId) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
@@ -7019,7 +7122,7 @@ function makeDraggable(el, block) {
 
         // ── Detect column change for TR ↔ TR2 ──────────────
         // Fonctionne aussi pour les drag groups (paires prélim+finale collées)
-        if (block.app === 'TR' || block.app === 'TR2') {
+        if (dragBlock.app === 'TR' || dragBlock.app === 'TR2') {
           var colTR  = document.getElementById('col-TR');
           var colTR2 = document.getElementById('col-TR2');
           if (colTR && colTR2) {
@@ -7028,7 +7131,7 @@ function makeDraggable(el, block) {
             var mx = e.clientX;
             var midPoint = (rectTR.right + rectTR2.left) / 2;
             var newApp = mx >= midPoint ? 'TR2' : 'TR';
-            if (newApp !== block.app) {
+            if (newApp !== dragBlock.app) {
               var targetCol = document.getElementById('col-' + newApp);
               if (targetCol) {
                 if (isDragGroup) {
@@ -7041,11 +7144,11 @@ function makeDraggable(el, block) {
                       gd.bEl.querySelector('.block-ech') && (gd.bEl.querySelector('.block-ech').style.background = nc2.pale);
                     }
                   }
-                } else if (el.parentElement !== targetCol) {
-                  targetCol.appendChild(el);
-                  block.app = newApp;
-                  var nc = getBlockColor(block);
-                  el.querySelector('.block-ech') && (el.querySelector('.block-ech').style.background = nc.pale);
+                } else if (dragEl.parentElement !== targetCol) {
+                  targetCol.appendChild(dragEl);
+                  dragBlock.app = newApp;
+                  var nc = getBlockColor(dragBlock);
+                  dragEl.querySelector('.block-ech') && (dragEl.querySelector('.block-ech').style.background = nc.pale);
                 }
               }
             }
@@ -7067,14 +7170,14 @@ function makeDraggable(el, block) {
           }
         } else {
           const newMin = clamp(snap5(yToMin(startTop + dy)), DAY_START, DAY_END - duration);
-          el.style.top = minToY(newMin) + 'px';
-          block.wu_start = newMin;
-          block.wu_end   = newMin + echDur;
-          block.cp_start = newMin + echDur;
-          block.cp_end   = newMin + duration;
+          dragEl.style.top = minToY(newMin) + 'px';
+          dragBlock.wu_start = newMin;
+          dragBlock.wu_end   = newMin + echDur;
+          dragBlock.cp_start = newMin + echDur;
+          dragBlock.cp_end   = newMin + duration;
           // Live time update in block
-          const times = el.querySelectorAll('.block-time');
-          if (block.type === 'break') {
+          const times = dragEl.querySelectorAll('.block-time');
+          if (dragBlock.type === 'break') {
             if (times[0]) times[0].textContent = toT(newMin) + '→' + toT(newMin + duration);
           } else {
             if (times[0]) times[0].textContent = toT(newMin) + '→' + toT(newMin + echDur);
@@ -7082,7 +7185,7 @@ function makeDraggable(el, block) {
           }
         }
         // Just update conflict highlights during drag — no pushing
-        liveConflictHighlight(block.id);
+        liveConflictHighlight(dragBlock.id);
       });
     };
 
@@ -7092,26 +7195,26 @@ function makeDraggable(el, block) {
       if (isDragGroup) {
         groupData.forEach(gd => gd.bEl.classList.remove('dragging'));
       } else {
-        el.classList.remove('dragging');
+        dragEl.classList.remove('dragging');
       }
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       // Resolve overlaps after release, pushing to later time
-      resolveOverlapsOnDrop(block.app, isDragGroup ? [...selectedBids] : [block.id]);
-      // Sync app change to _blocks_sam/_blocks_dim
-      var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).find(function(x){return x.id===block.id;});
-      if (_syncB) _syncB.app = block.app;
+      resolveOverlapsOnDrop(dragBlock.app, isDragGroup ? [...selectedBids] : [dragBlock.id]);
+      // Sync app change to _blocks_sam/_blocks_dim/_blocks_ven
+      var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]).find(function(x){return x.id===dragBlock.id;});
+      if (_syncB) _syncB.app = dragBlock.app;
       // Vider la sélection après le drop pour que le prochain clic démarre frais
       selectedBids.clear();
       render();
       // Awards follow blocks after every manual move
       try { autoScheduleAwards(); } catch(e) {}
       requestAnimationFrame(function() { try { autoFitCols(); } catch(e) {} });
-      liveConflictHighlight(block.id);
+      liveConflictHighlight(dragBlock.id);
     };
 
     scrollRafId = requestAnimationFrame(autoScroll);
-    el.setPointerCapture && el.setPointerCapture(e.pointerId);
+    dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId);
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
   });
@@ -7134,6 +7237,28 @@ function resolveOverlapsOnDrop(app, draggedBids) {
     b.cp_end   = t + dur;
   }
 
+  // v076: breaks are judges' lunches — athletes can still warm up during them.
+  // Only the block's CP time conflicts with a break. For non-break vs non-break,
+  // the normal wu+cp span is used.
+  function conflictsWith(a, b) {
+    var aIsBreak = a.type === 'break';
+    var bIsBreak = b.type === 'break';
+    if (aIsBreak && bIsBreak) {
+      // Two breaks: normal span overlap
+      return a.wu_start < b.cp_end && b.wu_start < a.cp_end;
+    }
+    if (aIsBreak) {
+      // a is break, b is block — only b's cp matters
+      return b.cp_start < a.cp_end && a.wu_start < b.cp_end;
+    }
+    if (bIsBreak) {
+      // b is break, a is block — only a's cp matters
+      return a.cp_start < b.cp_end && b.wu_start < a.cp_end;
+    }
+    // Normal case: full span overlap
+    return a.wu_start < b.cp_end && b.wu_start < a.cp_end;
+  }
+
   // Check if the dragged block(s) actually overlap with any other block
   const dragged = appBlocks.filter(b => dragSet.has(b.id));
   const others  = appBlocks.filter(b => !dragSet.has(b.id));
@@ -7141,7 +7266,7 @@ function resolveOverlapsOnDrop(app, draggedBids) {
   let hasOverlap = false;
   for (const d of dragged) {
     for (const o of others) {
-      if (d.wu_start < o.cp_end && o.wu_start < d.cp_end) {
+      if (conflictsWith(d, o)) {
         hasOverlap = true;
         break;
       }
@@ -7152,22 +7277,19 @@ function resolveOverlapsOnDrop(app, draggedBids) {
   // No overlap — don't touch anything
   if (!hasOverlap) return;
 
-  // There IS overlap — push only the overlapping blocks away
-  const all = [...appBlocks].sort((a, b) => a.wu_start - b.wu_start);
+  // There IS overlap — push only the overlapping blocks away.
+  // v076: skip breaks in the cascade (they stay put, and wu-only overlap is OK).
+  const nonBreak = appBlocks.filter(b => b.type !== 'break');
+  const all = [...nonBreak].sort((a, b) => a.wu_start - b.wu_start);
   for (let i = 1; i < all.length; i++) {
     if (all[i].wu_start < all[i-1].cp_end) {
-      // Only move the non-dragged block
-      if (dragSet.has(all[i].id)) {
-        // The dragged block overlaps with the one before — push the one before earlier
-        // Actually just push the later one forward
-        continue;
-      }
+      if (dragSet.has(all[i].id)) continue;
       setStart(all[i], all[i-1].cp_end);
     }
   }
 
-  // Final safety pass
-  const reSorted = [...appBlocks].sort((a, b) => a.wu_start - b.wu_start);
+  // Final safety pass (non-break only)
+  const reSorted = [...nonBreak].sort((a, b) => a.wu_start - b.wu_start);
   for (let i = 1; i < reSorted.length; i++) {
     if (reSorted[i].wu_start < reSorted[i-1].cp_end) {
       setStart(reSorted[i], reSorted[i-1].cp_end);
@@ -9646,6 +9768,33 @@ document.addEventListener('keydown', e => {
     selectedBids.clear();
     render();
   }
+
+  // v078: Raccourcis clavier
+  //   1 → Tout reconstruire (wipe + recharge complet depuis Sheet)
+  //   2 → Rafraîchir données (préserve les blocs existants)
+  // Ignore si l'utilisateur tape dans un input/textarea ou si une modale est ouverte
+  var tgt = e.target;
+  var tag = tgt && tgt.tagName;
+  var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tgt && tgt.isContentEditable);
+  if (isTyping) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+  // Skip if modal is open
+  var modalOpen = document.querySelector('.modal-overlay.open, #modal-overlay.open');
+  if (modalOpen) return;
+
+  if (e.key === '1') {
+    e.preventDefault();
+    if (typeof _GS_SHEET_ID !== 'undefined' && _GS_SHEET_ID) {
+      if (confirm('Tout reconstruire ?\n\nCeci va effacer tous les blocs actuels et recharger depuis le Google Sheet.')) {
+        try { _gsDoFullLoad(_GS_SHEET_ID, _GS_GID); } catch(err) { console.warn(err); }
+      }
+    } else {
+      alert('Aucun Google Sheet connecté.');
+    }
+  } else if (e.key === '2') {
+    e.preventDefault();
+    try { _gsRefreshData(); } catch(err) { console.warn(err); }
+  }
 });
 
 
@@ -9654,6 +9803,57 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════════════════
 var _dimOptimized = false;
 var _samOptimized = true; // Saturday gets optimized during initial load
+
+// v077: Helper to switch day during an active drag session — preserves the
+// dragged block as "still held" by the pointer and swaps the internal state.
+// Returns the new DOM element for the dragged block on the new day.
+function _crossDayDragSwitch(dragBlock, newDay) {
+  if (dragBlock.day === newDay) return null;
+
+  // Save current day state EXCLUDING the dragged block so it doesn't duplicate
+  var currentSave = JSON.parse(JSON.stringify(blocks.filter(function(x){ return x.id !== dragBlock.id; })));
+  if (currentDay === 'sam')      _blocks_sam = currentSave;
+  else if (currentDay === 'ven') _blocks_ven = currentSave;
+  else                           _blocks_dim = currentSave;
+
+  // Snapshot the block's current drag position
+  var blockSnap = JSON.parse(JSON.stringify(dragBlock));
+  blockSnap.day = newDay;
+
+  // Switch to new day — load target day's saved blocks
+  currentDay = newDay;
+  if (newDay === 'sam')      blocks = _blocks_sam ? JSON.parse(JSON.stringify(_blocks_sam)) : [];
+  else if (newDay === 'ven') blocks = _blocks_ven ? JSON.parse(JSON.stringify(_blocks_ven)) : [];
+  else                       blocks = _blocks_dim ? JSON.parse(JSON.stringify(_blocks_dim)) : [];
+
+  // Insert our block (with its current position) into the new day's blocks
+  blocks.push(blockSnap);
+
+  // Update day-tab active state visually
+  document.querySelectorAll('.day-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.day === newDay);
+  });
+
+  // Update status date
+  var cfg = (typeof EXTRA !== 'undefined' && EXTRA.competition) || {};
+  var dateEl = document.querySelector('#status-bar .status-item');
+  if (dateEl) {
+    dateEl.textContent = newDay==='sam' ? (cfg.date_sam||'Samedi')
+                        : newDay==='ven' ? (cfg.date_ven||'Vendredi')
+                        : (cfg.date_dim||'Dimanche');
+  }
+
+  // Re-render to show new day's blocks + our dragged block
+  try { render(); } catch(e) {}
+
+  // Re-acquire the DOM element for our block on the new day
+  var newEl = document.querySelector('.block[data-bid="' + dragBlock.id + '"]');
+  if (newEl) newEl.classList.add('dragging');
+
+  // Return the NEW live block reference from the `blocks` array + new element
+  var liveBlock = blocks.find(function(x){ return x.id === dragBlock.id; });
+  return { block: liveBlock, el: newEl };
+}
 
 function switchDay(day) {
   // Update day-tab active state
@@ -11730,7 +11930,7 @@ function renderRosterCols() {
         section.style.background = '#fff';
         section.style.outline = '';
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-        const toBlock = blocks.find(x => x.id === parseInt(section.dataset.bid));
+        const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
         if (!toBlock) return;
         const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
         const affectedBlocks = new Set();
@@ -11739,7 +11939,7 @@ function renderRosterCols() {
           // Multi-select transfer
           for (const item of data.multi) {
             if (toBlock.athletes.length >= blockMax) break;
-            const fromBlock = blocks.find(x => x.id === +item.fromBid);
+            const fromBlock = blocks.find(x => String(x.id) === String(item.fromBid));
             if (!fromBlock || fromBlock.id === toBlock.id) continue;
             const idx2 = fromBlock.athletes.findIndex(a => a.nom===item.nom && a.prenom===item.prenom);
             if (idx2 === -1) continue;
@@ -11752,7 +11952,7 @@ function renderRosterCols() {
           rosterSel.clear();
         } else {
           // Single athlete
-          const fromBlock = blocks.find(x => x.id === +data.fromBid);
+          const fromBlock = blocks.find(x => String(x.id) === String(data.fromBid));
           if (!fromBlock || fromBlock.id === toBlock.id) return;
           if (toBlock.athletes.length >= blockMax) return;
           const athIdx2 = fromBlock.athletes.findIndex(a => a.nom===data.nom && a.prenom===data.prenom);
@@ -11780,18 +11980,20 @@ function renderRosterCols() {
       // Sticky header
       const hdr = document.createElement('div');
       hdr.style.cssText = [
-        'flex-shrink:0','padding:2px 5px 1px 5px',
-        'background:'+clr.pale,'font-size:8px','font-weight:700',
-        'color:'+clr.text,'white-space:nowrap','overflow:hidden',
-        'text-overflow:ellipsis','letter-spacing:0.2px',
+        'flex-shrink:0','padding:4px 6px 3px 6px',
+        'background:'+clr.pale,
+        'color:'+clr.text,'overflow:hidden',
         'font-family:Calibri,sans-serif',
-        'border-bottom:1px solid rgba(0,0,0,0.08)',
+        'border-bottom:1px solid rgba(0,0,0,0.12)',
         'position:sticky','top:0','z-index:1',
       ].join(';');
       const passLabel = (b.passType === 'FINALE' ? 'Fin.' : 'Prél.') + (b.passNum || 1);
       const _blkSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe)||'';
       const _blkSexeShort = _blkSexe==='Féminin'?'F':_blkSexe==='Masculin'?'M':'';
-      const shortLabel = passLabel + ' ' + b.label.replace(/(^|\+\s*)(TR|DMT|TU|TRS)\s*-\s*/g,'$1').trim() + (_blkSexeShort?' '+_blkSexeShort:'');
+      var _cleanedLabel = b.label.replace(/(^|\+\s*)(TR|DMT|TU|TRS)\s*-\s*/g,'$1').trim();
+      // Don't append sexe if label already ends with ' F' or ' M' (would give 'N1 12- F F')
+      var _needsSexe = _blkSexeShort && !/\s[FM]$/.test(_cleanedLabel);
+      const shortLabel = passLabel + ' ' + _cleanedLabel + (_needsSexe ? ' '+_blkSexeShort : '');
       const displayCount = b.app === 'TRS'
         ? (function() {
             // Count only complete pairs using PARTNER_MAP
@@ -11820,7 +12022,14 @@ function renderRosterCols() {
         const sexeStr = (nF>0&&nM>0) ? ' ('+nF+'F/'+nM+'M)' : nF>0?' F':nM>0?' M':'';
         return short + sexeStr + ': ' + display;
       }).join(' | ');
-      hdr.textContent = catBreakdown + '  ('+countLabel+')';
+      // v073: 2-line header — shortLabel prominent (title), catBreakdown smaller below
+      hdr.innerHTML =
+        '<div style="font-size:13px;font-weight:800;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15">' +
+          shortLabel.replace(/</g,'&lt;') +
+        '</div>' +
+        '<div style="font-size:9px;font-weight:600;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px">' +
+          catBreakdown + '  (' + countLabel + ')' +
+        '</div>';
       section.appendChild(hdr);
 
       // Athlete rows — draggable
@@ -12483,7 +12692,7 @@ function rebuildBlockMeta(bl) {
   }
 
   function _applyDrop(section, payload) {
-    const toBlock = blocks.find(x => x.id === parseInt(section.dataset.bid));
+    const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
     if (!toBlock) return;
     const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
     const affectedBlocks = new Set();
@@ -12491,7 +12700,7 @@ function rebuildBlockMeta(bl) {
     if (payload.multi && Array.isArray(payload.multi)) {
       for (const item of payload.multi) {
         if (toBlock.athletes.length >= blockMax) break;
-        const fromBlock = blocks.find(x => x.id === +item.fromBid);
+        const fromBlock = blocks.find(x => String(x.id) === String(item.fromBid));
         if (!fromBlock || fromBlock.id === toBlock.id) continue;
         const idx2 = fromBlock.athletes.findIndex(a => a.nom===item.nom && a.prenom===item.prenom);
         if (idx2 === -1) continue;
@@ -12502,7 +12711,7 @@ function rebuildBlockMeta(bl) {
       }
       rosterSel.clear();
     } else {
-      const fromBlock = blocks.find(x => x.id === +payload.fromBid);
+      const fromBlock = blocks.find(x => String(x.id) === String(payload.fromBid));
       if (!fromBlock || fromBlock.id === toBlock.id) return;
       if (toBlock.athletes.length >= blockMax) return;
       const ai = fromBlock.athletes.findIndex(a => a.nom===payload.nom && a.prenom===payload.prenom);
@@ -13696,7 +13905,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-072</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13837,7 +14046,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-072</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14743,7 +14952,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-072<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -14853,7 +15062,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-072<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -17775,6 +17984,53 @@ function _compactJudgeCp(dayBlks) {
   }
 }
 
+// v073: after gluing, finales NOT immediately following their prelim need a
+// proper warmup time (not the short 5 min used for glued finales). Athletes
+// arriving cold (start of day, day change, or big gap) need full wu_per × n.
+function _adjustUngluedFinaleWarmup(dayBlks) {
+  function snap5(m) { return Math.ceil(m / 5) * 5; }
+  var rules = (typeof FMT !== 'undefined' && FMT[_COMP_TYPE]) ? FMT[_COMP_TYPE] : (FMT && FMT.coupeQc) || {};
+  var DUR = {
+    TR:  { wu_per: 1.5,  cp_per: 2.0  },
+    TR2: { wu_per: 1.5,  cp_per: 2.0  },
+    DM:  { wu_per: 1.75, cp_per: 2.25 },
+    TU:  { wu_per: 1.75, cp_per: 2.25 },
+    TRS: { wu_per: 1.5,  cp_per: 2.0  }
+  };
+
+  // Find each finale and check if it's glued to a matching prelim
+  dayBlks.forEach(function(fin) {
+    if (!fin || fin.type === 'break' || fin.passType !== 'FINALE') return;
+    var finSexe = (fin.athletes && fin.athletes[0] && fin.athletes[0].sexe) || '';
+
+    // Is there a PRELIM in the same day, same app, same sexe, matching cat,
+    // ending exactly at fin.wu_start ?
+    var glued = dayBlks.some(function(p) {
+      if (p.passType !== 'PRELIM' || p.type === 'break') return false;
+      if (p.app !== fin.app) return false;
+      if (Math.abs(p.cp_end - fin.wu_start) > 1) return false;
+      var pSexe = (p.athletes && p.athletes[0] && p.athletes[0].sexe) || '';
+      if (pSexe !== finSexe) return false;
+      return (p.cats || []).some(function(c){ return (fin.cats || []).indexOf(c) >= 0; });
+    });
+
+    if (glued) return; // short warmup OK
+
+    // Compute full warmup for this finale
+    var d = DUR[fin.app] || DUR.TR;
+    var n = (fin.athletes && fin.athletes.length) || fin.n || 0;
+    if (!n) return;
+    var fullWu = snap5(Math.ceil(n * d.wu_per));
+    var currentWu = fin.cp_start - fin.wu_start;
+    if (fullWu <= currentWu) return; // already long enough
+
+    // Extend warmup backwards: keep cp_start and cp_end, push wu_start earlier
+    var delta = fullWu - currentWu;
+    fin.wu_start -= delta;
+    // Note: we let _fixOverlaps handle any resulting column overlap
+  });
+}
+
 function _gluePrelimFinale(dayBlks) {
   ['TR','TR2','DM','TU'].forEach(function(app) {
     var col = dayBlks.filter(function(b){ return b.app === app; });
@@ -18522,7 +18778,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-072)
+  // NOUVEAU ALGO (v2026-04-08-079)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -18823,6 +19079,17 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
 
+  // v073: extend warmup for finales NOT glued to their prelim
+  _adjustUngluedFinaleWarmup(satBlocks);
+  _adjustUngluedFinaleWarmup(dimBlocks);
+  _adjustUngluedFinaleWarmup(venBlocks);
+  _fixOverlaps(satBlocks);
+  _fixOverlaps(dimBlocks);
+  _fixOverlaps(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
+
   // ────────────────────────────────────────────────────────────
   // v065: Overflow samedi → dimanche
   // Si une colonne samedi (TR/TR2 groupés, DM, TU) dépasse 21h00,
@@ -18867,6 +19134,13 @@ function _gsRebuild(athletes) {
     // v069: tighten pass after re-layout
     _tightenCrossAppConflicts(satBlks);
     _tightenCrossAppConflicts(dimBlks);
+    _fixOverlaps(satBlks);
+    _fixOverlaps(dimBlks);
+    _gluePrelimFinale(satBlks);
+    _gluePrelimFinale(dimBlks);
+    // v073: extend warmup for finales not glued to their prelim
+    _adjustUngluedFinaleWarmup(satBlks);
+    _adjustUngluedFinaleWarmup(dimBlks);
     _fixOverlaps(satBlks);
     _fixOverlaps(dimBlks);
     _gluePrelimFinale(satBlks);
@@ -19981,10 +20255,14 @@ function makeDraggable(el, block) {
     // ── Drag: move selected group or single block ──
     const isDragGroup = selectedBids.size > 1 && selectedBids.has(block.id);
 
+    // v077: mutable refs so cross-day drag can swap to the new day's element
+    let dragBlock = block;
+    let dragEl = el;
+
     startY = e.clientY;
     window._dragStartX = e.clientX;
-    startTop = parseFloat(el.style.top);
-    const scroller = document.getElementById('sheet-scroll');
+    startTop = parseFloat(dragEl.style.top);
+    let scroller = document.getElementById('sheet-scroll');
     let startScrollTop = scroller ? scroller.scrollTop : 0;
 
     // For group drag: gather all selected block elements and their start offsets
@@ -20031,6 +20309,40 @@ function makeDraggable(el, block) {
     const onMove = (e) => {
       if (e.pointerType === 'touch') return;
       lastClientY = e.clientY;
+
+      // v077: Cross-day drag — detect hover over a day tab (only for single-block drag).
+      // When detected, swap the internal state to the new day and re-acquire the
+      // dragged element. The pointer keeps "holding" the block.
+      if (!isDragGroup) {
+        var dayTabs = document.querySelectorAll('.day-tab');
+        for (var ti = 0; ti < dayTabs.length; ti++) {
+          var tab = dayTabs[ti];
+          if (tab.style.display === 'none') continue;
+          var tabRect = tab.getBoundingClientRect();
+          if (e.clientX >= tabRect.left && e.clientX <= tabRect.right &&
+              e.clientY >= tabRect.top  && e.clientY <= tabRect.bottom) {
+            var newDay = tab.dataset.day;
+            if (newDay && newDay !== dragBlock.day) {
+              try {
+                var swap = _crossDayDragSwitch(dragBlock, newDay);
+                if (swap && swap.el && swap.block) {
+                  dragBlock = swap.block;
+                  dragEl = swap.el;
+                  scroller = document.getElementById('sheet-scroll');
+                  // Re-anchor so further movement is relative to current pointer
+                  startY = e.clientY;
+                  startTop = parseFloat(dragEl.style.top);
+                  startScrollTop = scroller ? scroller.scrollTop : 0;
+                  // Re-capture pointer on new element
+                  try { dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId); } catch(_){}
+                }
+              } catch(err) { console.warn('[v077] cross-day drag failed:', err); }
+            }
+            break;
+          }
+        }
+      }
+
       if (rafId) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
@@ -20040,7 +20352,7 @@ function makeDraggable(el, block) {
 
         // ── Detect column change for TR ↔ TR2 ──────────────
         // Fonctionne aussi pour les drag groups (paires prélim+finale collées)
-        if (block.app === 'TR' || block.app === 'TR2') {
+        if (dragBlock.app === 'TR' || dragBlock.app === 'TR2') {
           var colTR  = document.getElementById('col-TR');
           var colTR2 = document.getElementById('col-TR2');
           if (colTR && colTR2) {
@@ -20049,7 +20361,7 @@ function makeDraggable(el, block) {
             var mx = e.clientX;
             var midPoint = (rectTR.right + rectTR2.left) / 2;
             var newApp = mx >= midPoint ? 'TR2' : 'TR';
-            if (newApp !== block.app) {
+            if (newApp !== dragBlock.app) {
               var targetCol = document.getElementById('col-' + newApp);
               if (targetCol) {
                 if (isDragGroup) {
@@ -20062,11 +20374,11 @@ function makeDraggable(el, block) {
                       gd.bEl.querySelector('.block-ech') && (gd.bEl.querySelector('.block-ech').style.background = nc2.pale);
                     }
                   }
-                } else if (el.parentElement !== targetCol) {
-                  targetCol.appendChild(el);
-                  block.app = newApp;
-                  var nc = getBlockColor(block);
-                  el.querySelector('.block-ech') && (el.querySelector('.block-ech').style.background = nc.pale);
+                } else if (dragEl.parentElement !== targetCol) {
+                  targetCol.appendChild(dragEl);
+                  dragBlock.app = newApp;
+                  var nc = getBlockColor(dragBlock);
+                  dragEl.querySelector('.block-ech') && (dragEl.querySelector('.block-ech').style.background = nc.pale);
                 }
               }
             }
@@ -20088,14 +20400,14 @@ function makeDraggable(el, block) {
           }
         } else {
           const newMin = clamp(snap5(yToMin(startTop + dy)), DAY_START, DAY_END - duration);
-          el.style.top = minToY(newMin) + 'px';
-          block.wu_start = newMin;
-          block.wu_end   = newMin + echDur;
-          block.cp_start = newMin + echDur;
-          block.cp_end   = newMin + duration;
+          dragEl.style.top = minToY(newMin) + 'px';
+          dragBlock.wu_start = newMin;
+          dragBlock.wu_end   = newMin + echDur;
+          dragBlock.cp_start = newMin + echDur;
+          dragBlock.cp_end   = newMin + duration;
           // Live time update in block
-          const times = el.querySelectorAll('.block-time');
-          if (block.type === 'break') {
+          const times = dragEl.querySelectorAll('.block-time');
+          if (dragBlock.type === 'break') {
             if (times[0]) times[0].textContent = toT(newMin) + '→' + toT(newMin + duration);
           } else {
             if (times[0]) times[0].textContent = toT(newMin) + '→' + toT(newMin + echDur);
@@ -20103,7 +20415,7 @@ function makeDraggable(el, block) {
           }
         }
         // Just update conflict highlights during drag — no pushing
-        liveConflictHighlight(block.id);
+        liveConflictHighlight(dragBlock.id);
       });
     };
 
@@ -20113,26 +20425,26 @@ function makeDraggable(el, block) {
       if (isDragGroup) {
         groupData.forEach(gd => gd.bEl.classList.remove('dragging'));
       } else {
-        el.classList.remove('dragging');
+        dragEl.classList.remove('dragging');
       }
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       // Resolve overlaps after release, pushing to later time
-      resolveOverlapsOnDrop(block.app, isDragGroup ? [...selectedBids] : [block.id]);
-      // Sync app change to _blocks_sam/_blocks_dim
-      var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).find(function(x){return x.id===block.id;});
-      if (_syncB) _syncB.app = block.app;
+      resolveOverlapsOnDrop(dragBlock.app, isDragGroup ? [...selectedBids] : [dragBlock.id]);
+      // Sync app change to _blocks_sam/_blocks_dim/_blocks_ven
+      var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]).find(function(x){return x.id===dragBlock.id;});
+      if (_syncB) _syncB.app = dragBlock.app;
       // Vider la sélection après le drop pour que le prochain clic démarre frais
       selectedBids.clear();
       render();
       // Awards follow blocks after every manual move
       try { autoScheduleAwards(); } catch(e) {}
       requestAnimationFrame(function() { try { autoFitCols(); } catch(e) {} });
-      liveConflictHighlight(block.id);
+      liveConflictHighlight(dragBlock.id);
     };
 
     scrollRafId = requestAnimationFrame(autoScroll);
-    el.setPointerCapture && el.setPointerCapture(e.pointerId);
+    dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId);
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
   });
@@ -20155,6 +20467,28 @@ function resolveOverlapsOnDrop(app, draggedBids) {
     b.cp_end   = t + dur;
   }
 
+  // v076: breaks are judges' lunches — athletes can still warm up during them.
+  // Only the block's CP time conflicts with a break. For non-break vs non-break,
+  // the normal wu+cp span is used.
+  function conflictsWith(a, b) {
+    var aIsBreak = a.type === 'break';
+    var bIsBreak = b.type === 'break';
+    if (aIsBreak && bIsBreak) {
+      // Two breaks: normal span overlap
+      return a.wu_start < b.cp_end && b.wu_start < a.cp_end;
+    }
+    if (aIsBreak) {
+      // a is break, b is block — only b's cp matters
+      return b.cp_start < a.cp_end && a.wu_start < b.cp_end;
+    }
+    if (bIsBreak) {
+      // b is break, a is block — only a's cp matters
+      return a.cp_start < b.cp_end && b.wu_start < a.cp_end;
+    }
+    // Normal case: full span overlap
+    return a.wu_start < b.cp_end && b.wu_start < a.cp_end;
+  }
+
   // Check if the dragged block(s) actually overlap with any other block
   const dragged = appBlocks.filter(b => dragSet.has(b.id));
   const others  = appBlocks.filter(b => !dragSet.has(b.id));
@@ -20162,7 +20496,7 @@ function resolveOverlapsOnDrop(app, draggedBids) {
   let hasOverlap = false;
   for (const d of dragged) {
     for (const o of others) {
-      if (d.wu_start < o.cp_end && o.wu_start < d.cp_end) {
+      if (conflictsWith(d, o)) {
         hasOverlap = true;
         break;
       }
@@ -20173,22 +20507,19 @@ function resolveOverlapsOnDrop(app, draggedBids) {
   // No overlap — don't touch anything
   if (!hasOverlap) return;
 
-  // There IS overlap — push only the overlapping blocks away
-  const all = [...appBlocks].sort((a, b) => a.wu_start - b.wu_start);
+  // There IS overlap — push only the overlapping blocks away.
+  // v076: skip breaks in the cascade (they stay put, and wu-only overlap is OK).
+  const nonBreak = appBlocks.filter(b => b.type !== 'break');
+  const all = [...nonBreak].sort((a, b) => a.wu_start - b.wu_start);
   for (let i = 1; i < all.length; i++) {
     if (all[i].wu_start < all[i-1].cp_end) {
-      // Only move the non-dragged block
-      if (dragSet.has(all[i].id)) {
-        // The dragged block overlaps with the one before — push the one before earlier
-        // Actually just push the later one forward
-        continue;
-      }
+      if (dragSet.has(all[i].id)) continue;
       setStart(all[i], all[i-1].cp_end);
     }
   }
 
-  // Final safety pass
-  const reSorted = [...appBlocks].sort((a, b) => a.wu_start - b.wu_start);
+  // Final safety pass (non-break only)
+  const reSorted = [...nonBreak].sort((a, b) => a.wu_start - b.wu_start);
   for (let i = 1; i < reSorted.length; i++) {
     if (reSorted[i].wu_start < reSorted[i-1].cp_end) {
       setStart(reSorted[i], reSorted[i-1].cp_end);
@@ -22667,6 +22998,33 @@ document.addEventListener('keydown', e => {
     selectedBids.clear();
     render();
   }
+
+  // v078: Raccourcis clavier
+  //   1 → Tout reconstruire (wipe + recharge complet depuis Sheet)
+  //   2 → Rafraîchir données (préserve les blocs existants)
+  // Ignore si l'utilisateur tape dans un input/textarea ou si une modale est ouverte
+  var tgt = e.target;
+  var tag = tgt && tgt.tagName;
+  var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tgt && tgt.isContentEditable);
+  if (isTyping) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+  // Skip if modal is open
+  var modalOpen = document.querySelector('.modal-overlay.open, #modal-overlay.open');
+  if (modalOpen) return;
+
+  if (e.key === '1') {
+    e.preventDefault();
+    if (typeof _GS_SHEET_ID !== 'undefined' && _GS_SHEET_ID) {
+      if (confirm('Tout reconstruire ?\n\nCeci va effacer tous les blocs actuels et recharger depuis le Google Sheet.')) {
+        try { _gsDoFullLoad(_GS_SHEET_ID, _GS_GID); } catch(err) { console.warn(err); }
+      }
+    } else {
+      alert('Aucun Google Sheet connecté.');
+    }
+  } else if (e.key === '2') {
+    e.preventDefault();
+    try { _gsRefreshData(); } catch(err) { console.warn(err); }
+  }
 });
 
 
@@ -22675,6 +23033,57 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════════════════
 _dimOptimized = false;
 _samOptimized = true; // Saturday gets optimized during initial load
+
+// v077: Helper to switch day during an active drag session — preserves the
+// dragged block as "still held" by the pointer and swaps the internal state.
+// Returns the new DOM element for the dragged block on the new day.
+function _crossDayDragSwitch(dragBlock, newDay) {
+  if (dragBlock.day === newDay) return null;
+
+  // Save current day state EXCLUDING the dragged block so it doesn't duplicate
+  var currentSave = JSON.parse(JSON.stringify(blocks.filter(function(x){ return x.id !== dragBlock.id; })));
+  if (currentDay === 'sam')      _blocks_sam = currentSave;
+  else if (currentDay === 'ven') _blocks_ven = currentSave;
+  else                           _blocks_dim = currentSave;
+
+  // Snapshot the block's current drag position
+  var blockSnap = JSON.parse(JSON.stringify(dragBlock));
+  blockSnap.day = newDay;
+
+  // Switch to new day — load target day's saved blocks
+  currentDay = newDay;
+  if (newDay === 'sam')      blocks = _blocks_sam ? JSON.parse(JSON.stringify(_blocks_sam)) : [];
+  else if (newDay === 'ven') blocks = _blocks_ven ? JSON.parse(JSON.stringify(_blocks_ven)) : [];
+  else                       blocks = _blocks_dim ? JSON.parse(JSON.stringify(_blocks_dim)) : [];
+
+  // Insert our block (with its current position) into the new day's blocks
+  blocks.push(blockSnap);
+
+  // Update day-tab active state visually
+  document.querySelectorAll('.day-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.day === newDay);
+  });
+
+  // Update status date
+  var cfg = (typeof EXTRA !== 'undefined' && EXTRA.competition) || {};
+  var dateEl = document.querySelector('#status-bar .status-item');
+  if (dateEl) {
+    dateEl.textContent = newDay==='sam' ? (cfg.date_sam||'Samedi')
+                        : newDay==='ven' ? (cfg.date_ven||'Vendredi')
+                        : (cfg.date_dim||'Dimanche');
+  }
+
+  // Re-render to show new day's blocks + our dragged block
+  try { render(); } catch(e) {}
+
+  // Re-acquire the DOM element for our block on the new day
+  var newEl = document.querySelector('.block[data-bid="' + dragBlock.id + '"]');
+  if (newEl) newEl.classList.add('dragging');
+
+  // Return the NEW live block reference from the `blocks` array + new element
+  var liveBlock = blocks.find(function(x){ return x.id === dragBlock.id; });
+  return { block: liveBlock, el: newEl };
+}
 
 function switchDay(day) {
   // Update day-tab active state
@@ -24751,7 +25160,7 @@ function renderRosterCols() {
         section.style.background = '#fff';
         section.style.outline = '';
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-        const toBlock = blocks.find(x => x.id === parseInt(section.dataset.bid));
+        const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
         if (!toBlock) return;
         const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
         const affectedBlocks = new Set();
@@ -24760,7 +25169,7 @@ function renderRosterCols() {
           // Multi-select transfer
           for (const item of data.multi) {
             if (toBlock.athletes.length >= blockMax) break;
-            const fromBlock = blocks.find(x => x.id === +item.fromBid);
+            const fromBlock = blocks.find(x => String(x.id) === String(item.fromBid));
             if (!fromBlock || fromBlock.id === toBlock.id) continue;
             const idx2 = fromBlock.athletes.findIndex(a => a.nom===item.nom && a.prenom===item.prenom);
             if (idx2 === -1) continue;
@@ -24773,7 +25182,7 @@ function renderRosterCols() {
           rosterSel.clear();
         } else {
           // Single athlete
-          const fromBlock = blocks.find(x => x.id === +data.fromBid);
+          const fromBlock = blocks.find(x => String(x.id) === String(data.fromBid));
           if (!fromBlock || fromBlock.id === toBlock.id) return;
           if (toBlock.athletes.length >= blockMax) return;
           const athIdx2 = fromBlock.athletes.findIndex(a => a.nom===data.nom && a.prenom===data.prenom);
@@ -24801,18 +25210,20 @@ function renderRosterCols() {
       // Sticky header
       const hdr = document.createElement('div');
       hdr.style.cssText = [
-        'flex-shrink:0','padding:2px 5px 1px 5px',
-        'background:'+clr.pale,'font-size:8px','font-weight:700',
-        'color:'+clr.text,'white-space:nowrap','overflow:hidden',
-        'text-overflow:ellipsis','letter-spacing:0.2px',
+        'flex-shrink:0','padding:4px 6px 3px 6px',
+        'background:'+clr.pale,
+        'color:'+clr.text,'overflow:hidden',
         'font-family:Calibri,sans-serif',
-        'border-bottom:1px solid rgba(0,0,0,0.08)',
+        'border-bottom:1px solid rgba(0,0,0,0.12)',
         'position:sticky','top:0','z-index:1',
       ].join(';');
       const passLabel = (b.passType === 'FINALE' ? 'Fin.' : 'Prél.') + (b.passNum || 1);
       const _blkSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe)||'';
       const _blkSexeShort = _blkSexe==='Féminin'?'F':_blkSexe==='Masculin'?'M':'';
-      const shortLabel = passLabel + ' ' + b.label.replace(/(^|\+\s*)(TR|DMT|TU|TRS)\s*-\s*/g,'$1').trim() + (_blkSexeShort?' '+_blkSexeShort:'');
+      var _cleanedLabel = b.label.replace(/(^|\+\s*)(TR|DMT|TU|TRS)\s*-\s*/g,'$1').trim();
+      // Don't append sexe if label already ends with ' F' or ' M' (would give 'N1 12- F F')
+      var _needsSexe = _blkSexeShort && !/\s[FM]$/.test(_cleanedLabel);
+      const shortLabel = passLabel + ' ' + _cleanedLabel + (_needsSexe ? ' '+_blkSexeShort : '');
       const displayCount = b.app === 'TRS'
         ? (function() {
             // Count only complete pairs using PARTNER_MAP
@@ -24841,7 +25252,14 @@ function renderRosterCols() {
         const sexeStr = (nF>0&&nM>0) ? ' ('+nF+'F/'+nM+'M)' : nF>0?' F':nM>0?' M':'';
         return short + sexeStr + ': ' + display;
       }).join(' | ');
-      hdr.textContent = catBreakdown + '  ('+countLabel+')';
+      // v073: 2-line header — shortLabel prominent (title), catBreakdown smaller below
+      hdr.innerHTML =
+        '<div style="font-size:13px;font-weight:800;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15">' +
+          shortLabel.replace(/</g,'&lt;') +
+        '</div>' +
+        '<div style="font-size:9px;font-weight:600;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px">' +
+          catBreakdown + '  (' + countLabel + ')' +
+        '</div>';
       section.appendChild(hdr);
 
       // Athlete rows — draggable
@@ -25504,7 +25922,7 @@ function rebuildBlockMeta(bl) {
   }
 
   function _applyDrop(section, payload) {
-    const toBlock = blocks.find(x => x.id === parseInt(section.dataset.bid));
+    const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
     if (!toBlock) return;
     const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
     const affectedBlocks = new Set();
@@ -25512,7 +25930,7 @@ function rebuildBlockMeta(bl) {
     if (payload.multi && Array.isArray(payload.multi)) {
       for (const item of payload.multi) {
         if (toBlock.athletes.length >= blockMax) break;
-        const fromBlock = blocks.find(x => x.id === +item.fromBid);
+        const fromBlock = blocks.find(x => String(x.id) === String(item.fromBid));
         if (!fromBlock || fromBlock.id === toBlock.id) continue;
         const idx2 = fromBlock.athletes.findIndex(a => a.nom===item.nom && a.prenom===item.prenom);
         if (idx2 === -1) continue;
@@ -25523,7 +25941,7 @@ function rebuildBlockMeta(bl) {
       }
       rosterSel.clear();
     } else {
-      const fromBlock = blocks.find(x => x.id === +payload.fromBid);
+      const fromBlock = blocks.find(x => String(x.id) === String(payload.fromBid));
       if (!fromBlock || fromBlock.id === toBlock.id) return;
       if (toBlock.athletes.length >= blockMax) return;
       const ai = fromBlock.athletes.findIndex(a => a.nom===payload.nom && a.prenom===payload.prenom);
