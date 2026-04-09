@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-080</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -771,7 +771,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-080</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1677,7 +1677,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-080<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1787,7 +1787,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-080<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -2418,7 +2418,7 @@ var _GS_GID = '';
       // Inject HTML after formula-bar
       bar = document.createElement('div');
       bar.id = 'gs-conn-bar';
-      bar.innerHTML = '<label>Google Sheet</label><input type="text" id="gs-sheet-input" placeholder="URL du Google Sheet…" onkeydown="if(event.key===\'Enter\')_gsLoadSheet()"><button class="gs-btn gs-btn-primary" onclick="_gsLoadSheet()">Charger</button><button class="gs-btn" style="background:#22c55e;color:#fff" onclick="_gsRefreshData()">ὐ4 Rafraîchir</button><button class="gs-btn" style="background:#7c3aed;color:#fff" onclick="_gsRecheckPartners()">↔ Partenaires</button><div class="gs-status"><div class="gs-dot" id="gs-status-dot"></div><span id="gs-status-text"></span></div>';
+      bar.innerHTML = '<label>Google Sheet</label><input type="text" id="gs-sheet-input" placeholder="URL du Google Sheet…" onkeydown="if(event.key===\'Enter\')_gsLoadSheet()"><button class="gs-btn gs-btn-primary" onclick="_gsLoadSheet()">Charger</button><button class="gs-btn" style="background:#22c55e;color:#fff" onclick="_gsRefreshData()">🔄 Rafraîchir</button><button class="gs-btn" style="background:#7c3aed;color:#fff" onclick="_gsRecheckPartners()">↔ Partenaires</button><div class="gs-status"><div class="gs-dot" id="gs-status-dot"></div><span id="gs-status-text"></span></div>';
       var fb = document.getElementById('formula-bar');
       if (fb && fb.parentNode) fb.parentNode.insertBefore(bar, fb.nextSibling);
     }
@@ -2490,10 +2490,10 @@ function _gsShowChargerDialog(sid, gid) {
     </p>
     <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
       <button id="gs-dlg-refresh" style="padding:8px 18px;border-radius:6px;border:none;background:#22c55e;color:#fff;font-size:13px;font-weight:700;cursor:pointer">
-        ὐ4 Enregistrer le lien et rafraîchir
+        🔄 Enregistrer le lien et rafraîchir
       </button>
       <button id="gs-dlg-wipe" style="padding:8px 18px;border-radius:6px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer">
-        Ὕ1 Tout reconstruire
+        🗑️ Tout reconstruire
       </button>
     </div>
   `;
@@ -5449,7 +5449,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-079)
+  // NOUVEAU ALGO (v2026-04-08-080)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -12374,7 +12374,7 @@ function openBreakEditor(bid) {
       <input id="break-start" type="time" value="${toT(b.cp_start)}" step="300" style="padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;margin-top:4px">
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button id="break-del" style="padding:7px 16px;border-radius:6px;border:none;background:#fecaca;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer">Ὕ1 Supprimer</button>
+      <button id="break-del" style="padding:7px 16px;border-radius:6px;border:none;background:#fecaca;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer">🗑️ Supprimer</button>
       <button id="break-cancel" style="padding:7px 16px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-size:12px;font-weight:600;cursor:pointer">Annuler</button>
       <button id="break-ok" style="padding:7px 16px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:12px;font-weight:700;cursor:pointer">OK</button>
     </div>
@@ -13905,7 +13905,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-080</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -14046,7 +14046,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-080</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14952,7 +14952,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-079<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-080<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -15062,7 +15062,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-079<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-080<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15693,7 +15693,7 @@ _GS_GID = '';
       // Inject HTML after formula-bar
       bar = document.createElement('div');
       bar.id = 'gs-conn-bar';
-      bar.innerHTML = '<label>Google Sheet</label><input type="text" id="gs-sheet-input" placeholder="URL du Google Sheet…" onkeydown="if(event.key===\'Enter\')_gsLoadSheet()"><button class="gs-btn gs-btn-primary" onclick="_gsLoadSheet()">Charger</button><button class="gs-btn" style="background:#22c55e;color:#fff" onclick="_gsRefreshData()">ὐ4 Rafraîchir</button><button class="gs-btn" style="background:#7c3aed;color:#fff" onclick="_gsRecheckPartners()">↔ Partenaires</button><div class="gs-status"><div class="gs-dot" id="gs-status-dot"></div><span id="gs-status-text"></span></div>';
+      bar.innerHTML = '<label>Google Sheet</label><input type="text" id="gs-sheet-input" placeholder="URL du Google Sheet…" onkeydown="if(event.key===\'Enter\')_gsLoadSheet()"><button class="gs-btn gs-btn-primary" onclick="_gsLoadSheet()">Charger</button><button class="gs-btn" style="background:#22c55e;color:#fff" onclick="_gsRefreshData()">🔄 Rafraîchir</button><button class="gs-btn" style="background:#7c3aed;color:#fff" onclick="_gsRecheckPartners()">↔ Partenaires</button><div class="gs-status"><div class="gs-dot" id="gs-status-dot"></div><span id="gs-status-text"></span></div>';
       var fb = document.getElementById('formula-bar');
       if (fb && fb.parentNode) fb.parentNode.insertBefore(bar, fb.nextSibling);
     }
@@ -15765,10 +15765,10 @@ function _gsShowChargerDialog(sid, gid) {
     </p>
     <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
       <button id="gs-dlg-refresh" style="padding:8px 18px;border-radius:6px;border:none;background:#22c55e;color:#fff;font-size:13px;font-weight:700;cursor:pointer">
-        ὐ4 Enregistrer le lien et rafraîchir
+        🔄 Enregistrer le lien et rafraîchir
       </button>
       <button id="gs-dlg-wipe" style="padding:8px 18px;border-radius:6px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer">
-        Ὕ1 Tout reconstruire
+        🗑️ Tout reconstruire
       </button>
     </div>
   `;
@@ -18778,7 +18778,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-079)
+  // NOUVEAU ALGO (v2026-04-08-080)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -25604,7 +25604,7 @@ function openBreakEditor(bid) {
       <input id="break-start" type="time" value="${toT(b.cp_start)}" step="300" style="padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;margin-top:4px">
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button id="break-del" style="padding:7px 16px;border-radius:6px;border:none;background:#fecaca;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer">Ὕ1 Supprimer</button>
+      <button id="break-del" style="padding:7px 16px;border-radius:6px;border:none;background:#fecaca;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer">🗑️ Supprimer</button>
       <button id="break-cancel" style="padding:7px 16px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-size:12px;font-weight:600;cursor:pointer">Annuler</button>
       <button id="break-ok" style="padding:7px 16px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:12px;font-weight:700;cursor:pointer">OK</button>
     </div>
