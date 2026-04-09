@@ -630,7 +630,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-081</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-085</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -664,6 +664,8 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <select id="comp-type-sel" onchange="onCompType(this.value)" title="Coupe QC : N1/N2 → dimanche, N3+ → samedi&#10;Champ. QC : prélims → samedi, finales → dimanche" style="font-family:inherit;font-size:11px;font-weight:700;background:rgba(0,0,0,0.25);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:3px;padding:2px 6px;cursor:pointer;outline:none"><option value="coupeQc">Coupe QC</option><option value="chQc">Champ. QC</option></select>
       <span id="comp-type-badge" style="font-size:9px;font-weight:700;color:var(--xl-green-dark,#14532d);background:#86efac;padding:1px 6px;border-radius:10px;white-space:nowrap">Coupe QC</span>
       <span id="color-mode-toggle" onclick="if(typeof toggleColorMode!=='undefined')toggleColorMode()" style="cursor:pointer;padding:2px 7px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;user-select:none;white-space:nowrap" title="Basculer Niveaux / Juges">🎨 Niveaux</span>
+      <button id="btn-undo" onclick="if(typeof _undo!=='undefined')_undo()" disabled style="margin-left:6px;padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Annuler (Ctrl+Z)">↶ Annuler</button>
+      <button id="btn-redo" onclick="if(typeof _redo!=='undefined')_redo()" disabled style="padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
       <span style="flex:1"></span>
       <span class="rtab-divider"></span>
       <span class="rtab-group-label">Outils</span>
@@ -771,7 +773,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-081</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-085</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1091,6 +1093,237 @@ var JUDGE_COLORS=[null,
 var DEFAULT_JUDGE_PANEL={TR:1,TR2:2,DM:3,TU:4,TRS:1};
 var COLOR_MODE='level';
 var _judgeNPanels = 3; // 3 = TR alternates A↔B, 4 = TR-A and TR-B independent
+
+// v083: Undo/Redo history (30 snapshots max)
+var _undoStack = [];
+var _redoStack = [];
+var _UNDO_MAX = 30;
+var _undoSuspend = false; // when true, _snapshot is a no-op (used during undo/redo itself)
+
+function _snapshotState(label) {
+  if (_undoSuspend) return;
+  if (typeof blocks === 'undefined') return;
+  try {
+    var snap = {
+      label: label || 'Action',
+      ts: Date.now(),
+      currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+      blocks: JSON.parse(JSON.stringify(blocks)),
+      awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+      sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+      dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+      ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+    };
+    _undoStack.push(snap);
+    if (_undoStack.length > _UNDO_MAX) _undoStack.shift();
+    _redoStack = []; // any new action clears redo
+    _updateUndoButtons();
+  } catch(e) { console.warn('[snapshot] failed:', e); }
+}
+
+function _restoreSnapshot(snap) {
+  if (!snap) return;
+  _undoSuspend = true;
+  try {
+    blocks.length = 0;
+    snap.blocks.forEach(function(b){ blocks.push(JSON.parse(JSON.stringify(b))); });
+    if (typeof awBlocks !== 'undefined' && snap.awBlocks) {
+      awBlocks.length = 0;
+      snap.awBlocks.forEach(function(a){ awBlocks.push(JSON.parse(JSON.stringify(a))); });
+    }
+    if (snap.sam) _blocks_sam = JSON.parse(JSON.stringify(snap.sam));
+    if (snap.dim) _blocks_dim = JSON.parse(JSON.stringify(snap.dim));
+    if (snap.ven) _blocks_ven = JSON.parse(JSON.stringify(snap.ven));
+    // If the snapshot was taken on another day, switch to that day
+    if (typeof currentDay !== 'undefined' && snap.currentDay && snap.currentDay !== currentDay) {
+      try { if (typeof switchDay === 'function') switchDay(snap.currentDay); } catch(e){}
+    }
+    try { render(); } catch(e){}
+    try { if (typeof liveConflictHighlight === 'function') liveConflictHighlight(null); } catch(e){}
+  } catch(e) { console.warn('[restore] failed:', e); }
+  _undoSuspend = false;
+}
+
+function _undo() {
+  if (_undoStack.length === 0) return;
+  var current = {
+    label: 'current',
+    ts: Date.now(),
+    currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+    blocks: JSON.parse(JSON.stringify(blocks)),
+    awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+    sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+    dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+    ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+  };
+  _redoStack.push(current);
+  if (_redoStack.length > _UNDO_MAX) _redoStack.shift();
+  var prev = _undoStack.pop();
+  _restoreSnapshot(prev);
+  _updateUndoButtons();
+}
+
+function _redo() {
+  if (_redoStack.length === 0) return;
+  var current = {
+    label: 'current',
+    ts: Date.now(),
+    currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+    blocks: JSON.parse(JSON.stringify(blocks)),
+    awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+    sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+    dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+    ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+  };
+  _undoStack.push(current);
+  if (_undoStack.length > _UNDO_MAX) _undoStack.shift();
+  var next = _redoStack.pop();
+  _restoreSnapshot(next);
+  _updateUndoButtons();
+}
+
+function _updateUndoButtons() {
+  var bu = document.getElementById('btn-undo');
+  var br = document.getElementById('btn-redo');
+  if (bu) {
+    bu.disabled = _undoStack.length === 0;
+    bu.style.opacity = _undoStack.length === 0 ? '0.35' : '1';
+    bu.style.cursor = _undoStack.length === 0 ? 'not-allowed' : 'pointer';
+    bu.title = 'Annuler (Ctrl+Z) — ' + _undoStack.length + ' action' + (_undoStack.length > 1 ? 's' : '') + ' disponible' + (_undoStack.length > 1 ? 's' : '');
+  }
+  if (br) {
+    br.disabled = _redoStack.length === 0;
+    br.style.opacity = _redoStack.length === 0 ? '0.35' : '1';
+    br.style.cursor = _redoStack.length === 0 ? 'not-allowed' : 'pointer';
+    br.title = 'Rétablir (Ctrl+Y) — ' + _redoStack.length + ' action' + (_redoStack.length > 1 ? 's' : '') + ' disponible' + (_redoStack.length > 1 ? 's' : '');
+  }
+}
+
+// v083: Cascade automatique après un drop — décale les blocs en conflit (athlètes
+// ou juges partagés) dans la MÊME direction que le bloc déplacé, pour absorber le
+// chevauchement. Les familles prélim+finale collées bougent ensemble.
+function _cascadeAfterDrop(droppedBlock, dragDelta) {
+  if (!droppedBlock || !dragDelta) return;
+  // dragDelta > 0 → bloc avancé (vers plus tard); < 0 → reculé (vers plus tôt)
+  var dayKey = droppedBlock.day || 'sam';
+  var dayBlks = blocks.filter(function(b){ return (b.day||'sam') === dayKey && b.type !== 'break'; });
+
+  function getFamily(b) {
+    var fam = [b];
+    if (b.passType === 'PRELIM') {
+      var sexe = (b.athletes && b.athletes[0] && b.athletes[0].sexe) || '';
+      var fin = dayBlks.find(function(x) {
+        if (x.passType !== 'FINALE' || x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xs = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+        if (xs !== sexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      if (fin) fam.push(fin);
+    } else if (b.passType === 'FINALE') {
+      var sexe2 = (b.athletes && b.athletes[0] && b.athletes[0].sexe) || '';
+      var pre = dayBlks.find(function(x) {
+        if (x.passType !== 'PRELIM' || x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xs = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+        if (xs !== sexe2) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      if (pre) fam.unshift(pre);
+    }
+    return fam;
+  }
+
+  // Same judge panel helper (chQc groups DM+TU; otherwise TR+TR2 always share)
+  function samePanel(a, b) {
+    if (a === b) return true;
+    var trGroup = ['TR','TR2','TRS'];
+    if (trGroup.indexOf(a) >= 0 && trGroup.indexOf(b) >= 0) return true;
+    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
+      if ((a === 'DM' && b === 'TU') || (a === 'TU' && b === 'DM')) return true;
+    }
+    return false;
+  }
+
+  function shiftFamily(fam, delta) {
+    fam.forEach(function(x) {
+      x.wu_start += delta;
+      x.cp_start += delta;
+      x.cp_end += delta;
+    });
+  }
+
+  // v085: simple cascade — shifts conflicting blocks by EXACTLY dragDelta.
+  // Drops are already snap5'd, so dragDelta is always a multiple of 5.
+  // Each block is shifted at most ONCE in a cascade (tracked via shifted set).
+  // No overlap calculation, no rounding, no caps — same direction, same amount.
+  var droppedFam = getFamily(droppedBlock);
+  var droppedIds = {};
+  droppedFam.forEach(function(b){ droppedIds[b.id] = true; });
+
+  var shifted = {}; // block IDs already shifted in this cascade
+  droppedFam.forEach(function(b){ shifted[b.id] = true; });
+
+  // Set of "active" blocks — start with the dropped family
+  var active = droppedFam.slice();
+  var maxIter = 30;
+
+  for (var iter = 0; iter < maxIter; iter++) {
+    var newlyShifted = [];
+
+    // For each active block, find ALL blocks in conflict with it and queue them
+    active.forEach(function(src) {
+      // Gather athletes of the source block
+      var srcAths = {};
+      (src.athletes||[]).forEach(function(a){ srcAths[a.nom+'|'+a.prenom] = true; });
+
+      dayBlks.forEach(function(other) {
+        if (shifted[other.id]) return;
+
+        // 1) Athlete conflict (different apparatus, shared athlete, wu+cp overlap)
+        var isAthConflict = false;
+        if (other.app !== src.app) {
+          var sharesAth = (other.athletes||[]).some(function(a){ return srcAths[a.nom+'|'+a.prenom]; });
+          if (sharesAth && other.wu_start < src.cp_end && src.wu_start < other.cp_end) {
+            isAthConflict = true;
+          }
+        }
+
+        // 2) Judge panel conflict (same panel, CP overlap only)
+        var isJudgeConflict = false;
+        if (!isAthConflict && samePanel(src.app, other.app) &&
+            other.cp_start < src.cp_end && src.cp_start < other.cp_end) {
+          isJudgeConflict = true;
+        }
+
+        if (isAthConflict || isJudgeConflict) {
+          // Shift this block's FAMILY by the exact dragDelta
+          var fam = getFamily(other);
+          // Only shift blocks we haven't already shifted
+          var famToShift = fam.filter(function(x){ return !shifted[x.id]; });
+          if (famToShift.length === 0) return;
+          shiftFamily(famToShift, dragDelta);
+          famToShift.forEach(function(x) {
+            shifted[x.id] = true;
+            newlyShifted.push(x);
+          });
+          console.log('[Cascade] shifted', famToShift.map(function(x){return x.id;}).join(','),
+                      'by', dragDelta, 'min (reason:', (isAthConflict ? 'athlete' : 'judge') + ')');
+        }
+      });
+    });
+
+    if (newlyShifted.length === 0) break; // no more cascades
+    // Next iteration: check if the newly shifted blocks cause more conflicts
+    active = newlyShifted;
+  }
+
+  var totalShifted = Object.keys(shifted).length - droppedFam.length;
+  if (totalShifted > 0) {
+    console.log('[Cascade] done. ' + totalShifted + ' block(s) shifted by ' + dragDelta + ' min.');
+  }
+  if (iter >= maxIter) console.warn('[Cascade] max iterations reached (30).');
+}
 function getBlockColor(b) {
   if (typeof COLOR_MODE !== 'undefined' && COLOR_MODE === 'judge') {
     // Use stored judgePanel, fallback to default by apparatus
@@ -1677,7 +1910,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-081<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-085<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -1787,7 +2020,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-081<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-085<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4030,30 +4263,43 @@ function _swapForRest(dayBlks) {
     return {good: goodGaps, bad: badGaps, conflicts: conflicts};
   }
 
-  // Vérifier que 2 familles ont le même format (même nb prélim, finale)
+  // Vérifier que 2 familles ont le même format (même nb prélim+finale) ET durées identiques.
+  // v082: ajout de la comparaison des durées wu et cp (était manquante — causait wu=5/cp=10
+  // quand une famille à grande durée était swappée avec une famille à petite durée).
   function sameFormat(fA, fB) {
     if (fA.blocks.length !== fB.blocks.length) return false;
-    // Comparer les durées de chaque bloc
     for (var i = 0; i < fA.blocks.length; i++) {
       var a = fA.blocks[i], b = fB.blocks[i];
       if (a.passType !== b.passType) return false;
+      // Same app (TR can swap with TR2, but not TR with DM)
+      if (a.app !== b.app && !((a.app==='TR'||a.app==='TR2') && (b.app==='TR'||b.app==='TR2'))) return false;
+      // Same wu and cp durations (SAFETY: avoid duration corruption during swap)
+      if ((a.cp_start - a.wu_start) !== (b.cp_start - b.wu_start)) return false;
+      if ((a.cp_end - a.cp_start) !== (b.cp_end - b.cp_start)) return false;
     }
     return true;
   }
 
-  // Effectuer un swap réel: échanger les positions de 2 familles
+  // Effectuer un swap réel: échanger les positions de 2 familles.
+  // v082: delta-shift pour préserver les durées individuelles de chaque bloc.
+  // sameFormat() garantit que A et B ont des durées identiques, donc le delta-shift
+  // est sûr et préserve les wu_dur/cp_dur exacts de chaque bloc.
   function applySwap(fA, fB) {
-    // Sauvegarder positions originales
-    var posA = fA.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
-    var posB = fB.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
-    // Échanger
-    fA.blocks.forEach(function(x, i) {
-      x.wu_start = posB[i].wu; x.cp_start = posB[i].cs; x.cp_end = posB[i].ce;
+    var fAstart = fA.blocks[0].wu_start;
+    var fBstart = fB.blocks[0].wu_start;
+    var deltaA = fBstart - fAstart; // A sera shifté vers la position de B
+    var deltaB = fAstart - fBstart; // B sera shifté vers la position de A
+    fA.blocks.forEach(function(x) {
+      x.wu_start += deltaA;
+      x.cp_start += deltaA;
+      x.cp_end += deltaA;
     });
-    fB.blocks.forEach(function(x, i) {
-      x.wu_start = posA[i].wu; x.cp_start = posA[i].cs; x.cp_end = posA[i].ce;
+    fB.blocks.forEach(function(x) {
+      x.wu_start += deltaB;
+      x.cp_start += deltaB;
+      x.cp_end += deltaB;
     });
-    // Mettre à jour les wuStart/cpEnd des familles
+    // Mettre à jour les wuStart/cpEnd des familles (cache métadonnées)
     var aWu = fA.wuStart, aCe = fA.cpEnd;
     fA.wuStart = fB.wuStart; fA.cpEnd = fB.cpEnd;
     fB.wuStart = aWu; fB.cpEnd = aCe;
@@ -5479,7 +5725,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-081)
+  // NOUVEAU ALGO (v2026-04-08-085)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -7059,6 +7305,10 @@ function makeDraggable(el, block) {
     let dragBlock = block;
     let dragEl = el;
 
+    // v083: capture original wu_start + day for undo snapshot + cascade delta
+    var _dragOrigWuStart = dragBlock.wu_start;
+    var _dragOrigDay = dragBlock.day || 'sam';
+
     startY = e.clientY;
     window._dragStartX = e.clientX;
     startTop = parseFloat(dragEl.style.top);
@@ -7229,8 +7479,38 @@ function makeDraggable(el, block) {
       }
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
+
+      // v083: detect if anything actually changed (position or day)
+      var _posChanged = (dragBlock.wu_start !== _dragOrigWuStart) || ((dragBlock.day||'sam') !== _dragOrigDay);
+      var _dragDelta = dragBlock.wu_start - _dragOrigWuStart;
+
+      // v083: snapshot BEFORE the drop's cascade so Ctrl+Z reverts everything
+      if (_posChanged && !_undoSuspend) {
+        // Undo the drop temporarily to snapshot the pre-drop state
+        var _newWu = dragBlock.wu_start, _newCs = dragBlock.cp_start, _newCe = dragBlock.cp_end;
+        var _newDay = dragBlock.day, _newApp = dragBlock.app;
+        var _echDur2 = dragBlock.cp_start - dragBlock.wu_start;
+        var _dur2 = dragBlock.cp_end - dragBlock.wu_start;
+        dragBlock.wu_start = _dragOrigWuStart;
+        dragBlock.cp_start = _dragOrigWuStart + _echDur2;
+        dragBlock.cp_end = _dragOrigWuStart + _dur2;
+        dragBlock.day = _dragOrigDay;
+        _snapshotState('Drag ' + (dragBlock.label||'bloc'));
+        // Restore the new position
+        dragBlock.wu_start = _newWu;
+        dragBlock.cp_start = _newCs;
+        dragBlock.cp_end = _newCe;
+        dragBlock.day = _newDay;
+      }
+
       // Resolve overlaps after release, pushing to later time
       resolveOverlapsOnDrop(dragBlock.app, isDragGroup ? [...selectedBids] : [dragBlock.id]);
+
+      // v083: Cascade — décaler les blocs en conflit (athlètes + juges) dans la même direction
+      if (_posChanged && !isDragGroup && Math.abs(_dragDelta) >= 5) {
+        try { _cascadeAfterDrop(dragBlock, _dragDelta); } catch(e) { console.warn('[cascade]', e); }
+      }
+
       // Sync app change to _blocks_sam/_blocks_dim/_blocks_ven
       var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]).find(function(x){return x.id===dragBlock.id;});
       if (_syncB) _syncB.app = dragBlock.app;
@@ -9807,10 +10087,31 @@ document.addEventListener('keydown', e => {
   var tag = tgt && tgt.tagName;
   var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tgt && tgt.isContentEditable);
   if (isTyping) return;
-  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
   // Skip if modal is open
   var modalOpen = document.querySelector('.modal-overlay.open, #modal-overlay.open');
   if (modalOpen) return;
+
+  // v083: Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z — undo/redo
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    if (e.key === 'z' || e.key === 'Z') {
+      if (e.shiftKey) {
+        e.preventDefault();
+        if (typeof _redo === 'function') _redo();
+        return;
+      } else {
+        e.preventDefault();
+        if (typeof _undo === 'function') _undo();
+        return;
+      }
+    }
+    if ((e.key === 'y' || e.key === 'Y') && !e.shiftKey) {
+      e.preventDefault();
+      if (typeof _redo === 'function') _redo();
+      return;
+    }
+  }
+  // Skip number shortcuts if modifier pressed
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
   if (e.key === '1') {
     e.preventDefault();
@@ -10109,6 +10410,8 @@ setTimeout(() => autoFitCol(3), 100);
 // Show conflicts immediately on load (no need to click first)
 autoAssignJudgePanels();
 requestAnimationFrame(() => { liveConflictHighlight(null); });
+// v083: init undo button state
+try { if (typeof _updateUndoButtons === 'function') _updateUndoButtons(); } catch(e){}
 updateLegend();
 updateJudgeConflictBadge();
 setSaveStatus(restored ? 'saved' : 'unsaved', restored ? 'restauré' : 'non sauvegardé');
@@ -11962,6 +12265,8 @@ function renderRosterCols() {
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
         const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
         if (!toBlock) return;
+        // v083: snapshot BEFORE athlete move
+        try { _snapshotState('Déplacement athlète'); } catch(_){}
         const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
         const affectedBlocks = new Set();
 
@@ -12021,8 +12326,9 @@ function renderRosterCols() {
       const _blkSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe)||'';
       const _blkSexeShort = _blkSexe==='Féminin'?'F':_blkSexe==='Masculin'?'M':'';
       var _cleanedLabel = b.label.replace(/(^|\+\s*)(TR|DMT|TU|TRS)\s*-\s*/g,'$1').trim();
-      // Don't append sexe if label already ends with ' F' or ' M' (would give 'N1 12- F F')
-      var _needsSexe = _blkSexeShort && !/\s[FM]$/.test(_cleanedLabel);
+      // v082: Don't append sexe if label already CONTAINS a lone F or M marker
+      // (handles 'N4 F Gr.1', 'N1 12- F', 'N5 17+ M Finale', etc.)
+      var _needsSexe = _blkSexeShort && !(new RegExp('\\s' + _blkSexeShort + '(\\s|$)').test(_cleanedLabel));
       const shortLabel = passLabel + ' ' + _cleanedLabel + (_needsSexe ? ' '+_blkSexeShort : '');
       const displayCount = b.app === 'TRS'
         ? (function() {
@@ -13935,7 +14241,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-081</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-085</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -13969,6 +14275,8 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <select id="comp-type-sel" onchange="onCompType(this.value)" title="Coupe QC : N1/N2 → dimanche, N3+ → samedi&#10;Champ. QC : prélims → samedi, finales → dimanche" style="font-family:inherit;font-size:11px;font-weight:700;background:rgba(0,0,0,0.25);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:3px;padding:2px 6px;cursor:pointer;outline:none"><option value="coupeQc">Coupe QC</option><option value="chQc">Champ. QC</option></select>
       <span id="comp-type-badge" style="font-size:9px;font-weight:700;color:var(--xl-green-dark,#14532d);background:#86efac;padding:1px 6px;border-radius:10px;white-space:nowrap">Coupe QC</span>
       <span id="color-mode-toggle" onclick="if(typeof toggleColorMode!=='undefined')toggleColorMode()" style="cursor:pointer;padding:2px 7px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;user-select:none;white-space:nowrap" title="Basculer Niveaux / Juges">🎨 Niveaux</span>
+      <button id="btn-undo" onclick="if(typeof _undo!=='undefined')_undo()" disabled style="margin-left:6px;padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Annuler (Ctrl+Z)">↶ Annuler</button>
+      <button id="btn-redo" onclick="if(typeof _redo!=='undefined')_redo()" disabled style="padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
       <span style="flex:1"></span>
       <span class="rtab-divider"></span>
       <span class="rtab-group-label">Outils</span>
@@ -14076,7 +14384,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-081</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-085</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14396,6 +14704,237 @@ var JUDGE_COLORS=[null,
 var DEFAULT_JUDGE_PANEL={TR:1,TR2:2,DM:3,TU:4,TRS:1};
 var COLOR_MODE='level';
 var _judgeNPanels = 3; // 3 = TR alternates A↔B, 4 = TR-A and TR-B independent
+
+// v083: Undo/Redo history (30 snapshots max)
+var _undoStack = [];
+var _redoStack = [];
+var _UNDO_MAX = 30;
+var _undoSuspend = false; // when true, _snapshot is a no-op (used during undo/redo itself)
+
+function _snapshotState(label) {
+  if (_undoSuspend) return;
+  if (typeof blocks === 'undefined') return;
+  try {
+    var snap = {
+      label: label || 'Action',
+      ts: Date.now(),
+      currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+      blocks: JSON.parse(JSON.stringify(blocks)),
+      awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+      sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+      dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+      ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+    };
+    _undoStack.push(snap);
+    if (_undoStack.length > _UNDO_MAX) _undoStack.shift();
+    _redoStack = []; // any new action clears redo
+    _updateUndoButtons();
+  } catch(e) { console.warn('[snapshot] failed:', e); }
+}
+
+function _restoreSnapshot(snap) {
+  if (!snap) return;
+  _undoSuspend = true;
+  try {
+    blocks.length = 0;
+    snap.blocks.forEach(function(b){ blocks.push(JSON.parse(JSON.stringify(b))); });
+    if (typeof awBlocks !== 'undefined' && snap.awBlocks) {
+      awBlocks.length = 0;
+      snap.awBlocks.forEach(function(a){ awBlocks.push(JSON.parse(JSON.stringify(a))); });
+    }
+    if (snap.sam) _blocks_sam = JSON.parse(JSON.stringify(snap.sam));
+    if (snap.dim) _blocks_dim = JSON.parse(JSON.stringify(snap.dim));
+    if (snap.ven) _blocks_ven = JSON.parse(JSON.stringify(snap.ven));
+    // If the snapshot was taken on another day, switch to that day
+    if (typeof currentDay !== 'undefined' && snap.currentDay && snap.currentDay !== currentDay) {
+      try { if (typeof switchDay === 'function') switchDay(snap.currentDay); } catch(e){}
+    }
+    try { render(); } catch(e){}
+    try { if (typeof liveConflictHighlight === 'function') liveConflictHighlight(null); } catch(e){}
+  } catch(e) { console.warn('[restore] failed:', e); }
+  _undoSuspend = false;
+}
+
+function _undo() {
+  if (_undoStack.length === 0) return;
+  var current = {
+    label: 'current',
+    ts: Date.now(),
+    currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+    blocks: JSON.parse(JSON.stringify(blocks)),
+    awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+    sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+    dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+    ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+  };
+  _redoStack.push(current);
+  if (_redoStack.length > _UNDO_MAX) _redoStack.shift();
+  var prev = _undoStack.pop();
+  _restoreSnapshot(prev);
+  _updateUndoButtons();
+}
+
+function _redo() {
+  if (_redoStack.length === 0) return;
+  var current = {
+    label: 'current',
+    ts: Date.now(),
+    currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+    blocks: JSON.parse(JSON.stringify(blocks)),
+    awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+    sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+    dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+    ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+  };
+  _undoStack.push(current);
+  if (_undoStack.length > _UNDO_MAX) _undoStack.shift();
+  var next = _redoStack.pop();
+  _restoreSnapshot(next);
+  _updateUndoButtons();
+}
+
+function _updateUndoButtons() {
+  var bu = document.getElementById('btn-undo');
+  var br = document.getElementById('btn-redo');
+  if (bu) {
+    bu.disabled = _undoStack.length === 0;
+    bu.style.opacity = _undoStack.length === 0 ? '0.35' : '1';
+    bu.style.cursor = _undoStack.length === 0 ? 'not-allowed' : 'pointer';
+    bu.title = 'Annuler (Ctrl+Z) — ' + _undoStack.length + ' action' + (_undoStack.length > 1 ? 's' : '') + ' disponible' + (_undoStack.length > 1 ? 's' : '');
+  }
+  if (br) {
+    br.disabled = _redoStack.length === 0;
+    br.style.opacity = _redoStack.length === 0 ? '0.35' : '1';
+    br.style.cursor = _redoStack.length === 0 ? 'not-allowed' : 'pointer';
+    br.title = 'Rétablir (Ctrl+Y) — ' + _redoStack.length + ' action' + (_redoStack.length > 1 ? 's' : '') + ' disponible' + (_redoStack.length > 1 ? 's' : '');
+  }
+}
+
+// v083: Cascade automatique après un drop — décale les blocs en conflit (athlètes
+// ou juges partagés) dans la MÊME direction que le bloc déplacé, pour absorber le
+// chevauchement. Les familles prélim+finale collées bougent ensemble.
+function _cascadeAfterDrop(droppedBlock, dragDelta) {
+  if (!droppedBlock || !dragDelta) return;
+  // dragDelta > 0 → bloc avancé (vers plus tard); < 0 → reculé (vers plus tôt)
+  var dayKey = droppedBlock.day || 'sam';
+  var dayBlks = blocks.filter(function(b){ return (b.day||'sam') === dayKey && b.type !== 'break'; });
+
+  function getFamily(b) {
+    var fam = [b];
+    if (b.passType === 'PRELIM') {
+      var sexe = (b.athletes && b.athletes[0] && b.athletes[0].sexe) || '';
+      var fin = dayBlks.find(function(x) {
+        if (x.passType !== 'FINALE' || x.app !== b.app) return false;
+        if (Math.abs(x.wu_start - b.cp_end) > 1) return false;
+        var xs = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+        if (xs !== sexe) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      if (fin) fam.push(fin);
+    } else if (b.passType === 'FINALE') {
+      var sexe2 = (b.athletes && b.athletes[0] && b.athletes[0].sexe) || '';
+      var pre = dayBlks.find(function(x) {
+        if (x.passType !== 'PRELIM' || x.app !== b.app) return false;
+        if (Math.abs(b.wu_start - x.cp_end) > 1) return false;
+        var xs = (x.athletes && x.athletes[0] && x.athletes[0].sexe) || '';
+        if (xs !== sexe2) return false;
+        return (b.cats||[]).some(function(c){ return (x.cats||[]).indexOf(c) >= 0; });
+      });
+      if (pre) fam.unshift(pre);
+    }
+    return fam;
+  }
+
+  // Same judge panel helper (chQc groups DM+TU; otherwise TR+TR2 always share)
+  function samePanel(a, b) {
+    if (a === b) return true;
+    var trGroup = ['TR','TR2','TRS'];
+    if (trGroup.indexOf(a) >= 0 && trGroup.indexOf(b) >= 0) return true;
+    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
+      if ((a === 'DM' && b === 'TU') || (a === 'TU' && b === 'DM')) return true;
+    }
+    return false;
+  }
+
+  function shiftFamily(fam, delta) {
+    fam.forEach(function(x) {
+      x.wu_start += delta;
+      x.cp_start += delta;
+      x.cp_end += delta;
+    });
+  }
+
+  // v085: simple cascade — shifts conflicting blocks by EXACTLY dragDelta.
+  // Drops are already snap5'd, so dragDelta is always a multiple of 5.
+  // Each block is shifted at most ONCE in a cascade (tracked via shifted set).
+  // No overlap calculation, no rounding, no caps — same direction, same amount.
+  var droppedFam = getFamily(droppedBlock);
+  var droppedIds = {};
+  droppedFam.forEach(function(b){ droppedIds[b.id] = true; });
+
+  var shifted = {}; // block IDs already shifted in this cascade
+  droppedFam.forEach(function(b){ shifted[b.id] = true; });
+
+  // Set of "active" blocks — start with the dropped family
+  var active = droppedFam.slice();
+  var maxIter = 30;
+
+  for (var iter = 0; iter < maxIter; iter++) {
+    var newlyShifted = [];
+
+    // For each active block, find ALL blocks in conflict with it and queue them
+    active.forEach(function(src) {
+      // Gather athletes of the source block
+      var srcAths = {};
+      (src.athletes||[]).forEach(function(a){ srcAths[a.nom+'|'+a.prenom] = true; });
+
+      dayBlks.forEach(function(other) {
+        if (shifted[other.id]) return;
+
+        // 1) Athlete conflict (different apparatus, shared athlete, wu+cp overlap)
+        var isAthConflict = false;
+        if (other.app !== src.app) {
+          var sharesAth = (other.athletes||[]).some(function(a){ return srcAths[a.nom+'|'+a.prenom]; });
+          if (sharesAth && other.wu_start < src.cp_end && src.wu_start < other.cp_end) {
+            isAthConflict = true;
+          }
+        }
+
+        // 2) Judge panel conflict (same panel, CP overlap only)
+        var isJudgeConflict = false;
+        if (!isAthConflict && samePanel(src.app, other.app) &&
+            other.cp_start < src.cp_end && src.cp_start < other.cp_end) {
+          isJudgeConflict = true;
+        }
+
+        if (isAthConflict || isJudgeConflict) {
+          // Shift this block's FAMILY by the exact dragDelta
+          var fam = getFamily(other);
+          // Only shift blocks we haven't already shifted
+          var famToShift = fam.filter(function(x){ return !shifted[x.id]; });
+          if (famToShift.length === 0) return;
+          shiftFamily(famToShift, dragDelta);
+          famToShift.forEach(function(x) {
+            shifted[x.id] = true;
+            newlyShifted.push(x);
+          });
+          console.log('[Cascade] shifted', famToShift.map(function(x){return x.id;}).join(','),
+                      'by', dragDelta, 'min (reason:', (isAthConflict ? 'athlete' : 'judge') + ')');
+        }
+      });
+    });
+
+    if (newlyShifted.length === 0) break; // no more cascades
+    // Next iteration: check if the newly shifted blocks cause more conflicts
+    active = newlyShifted;
+  }
+
+  var totalShifted = Object.keys(shifted).length - droppedFam.length;
+  if (totalShifted > 0) {
+    console.log('[Cascade] done. ' + totalShifted + ' block(s) shifted by ' + dragDelta + ' min.');
+  }
+  if (iter >= maxIter) console.warn('[Cascade] max iterations reached (30).');
+}
 function getBlockColor(b) {
   if (typeof COLOR_MODE !== 'undefined' && COLOR_MODE === 'judge') {
     // Use stored judgePanel, fallback to default by apparatus
@@ -14982,7 +15521,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-081<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-08-085<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -15092,7 +15631,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-081<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-08-085<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -17389,30 +17928,43 @@ function _swapForRest(dayBlks) {
     return {good: goodGaps, bad: badGaps, conflicts: conflicts};
   }
 
-  // Vérifier que 2 familles ont le même format (même nb prélim, finale)
+  // Vérifier que 2 familles ont le même format (même nb prélim+finale) ET durées identiques.
+  // v082: ajout de la comparaison des durées wu et cp (était manquante — causait wu=5/cp=10
+  // quand une famille à grande durée était swappée avec une famille à petite durée).
   function sameFormat(fA, fB) {
     if (fA.blocks.length !== fB.blocks.length) return false;
-    // Comparer les durées de chaque bloc
     for (var i = 0; i < fA.blocks.length; i++) {
       var a = fA.blocks[i], b = fB.blocks[i];
       if (a.passType !== b.passType) return false;
+      // Same app (TR can swap with TR2, but not TR with DM)
+      if (a.app !== b.app && !((a.app==='TR'||a.app==='TR2') && (b.app==='TR'||b.app==='TR2'))) return false;
+      // Same wu and cp durations (SAFETY: avoid duration corruption during swap)
+      if ((a.cp_start - a.wu_start) !== (b.cp_start - b.wu_start)) return false;
+      if ((a.cp_end - a.cp_start) !== (b.cp_end - b.cp_start)) return false;
     }
     return true;
   }
 
-  // Effectuer un swap réel: échanger les positions de 2 familles
+  // Effectuer un swap réel: échanger les positions de 2 familles.
+  // v082: delta-shift pour préserver les durées individuelles de chaque bloc.
+  // sameFormat() garantit que A et B ont des durées identiques, donc le delta-shift
+  // est sûr et préserve les wu_dur/cp_dur exacts de chaque bloc.
   function applySwap(fA, fB) {
-    // Sauvegarder positions originales
-    var posA = fA.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
-    var posB = fB.blocks.map(function(x) { return {wu: x.wu_start, cs: x.cp_start, ce: x.cp_end}; });
-    // Échanger
-    fA.blocks.forEach(function(x, i) {
-      x.wu_start = posB[i].wu; x.cp_start = posB[i].cs; x.cp_end = posB[i].ce;
+    var fAstart = fA.blocks[0].wu_start;
+    var fBstart = fB.blocks[0].wu_start;
+    var deltaA = fBstart - fAstart; // A sera shifté vers la position de B
+    var deltaB = fAstart - fBstart; // B sera shifté vers la position de A
+    fA.blocks.forEach(function(x) {
+      x.wu_start += deltaA;
+      x.cp_start += deltaA;
+      x.cp_end += deltaA;
     });
-    fB.blocks.forEach(function(x, i) {
-      x.wu_start = posA[i].wu; x.cp_start = posA[i].cs; x.cp_end = posA[i].ce;
+    fB.blocks.forEach(function(x) {
+      x.wu_start += deltaB;
+      x.cp_start += deltaB;
+      x.cp_end += deltaB;
     });
-    // Mettre à jour les wuStart/cpEnd des familles
+    // Mettre à jour les wuStart/cpEnd des familles (cache métadonnées)
     var aWu = fA.wuStart, aCe = fA.cpEnd;
     fA.wuStart = fB.wuStart; fA.cpEnd = fB.cpEnd;
     fB.wuStart = aWu; fB.cpEnd = aCe;
@@ -18838,7 +19390,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-08-081)
+  // NOUVEAU ALGO (v2026-04-08-085)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -20319,6 +20871,10 @@ function makeDraggable(el, block) {
     let dragBlock = block;
     let dragEl = el;
 
+    // v083: capture original wu_start + day for undo snapshot + cascade delta
+    var _dragOrigWuStart = dragBlock.wu_start;
+    var _dragOrigDay = dragBlock.day || 'sam';
+
     startY = e.clientY;
     window._dragStartX = e.clientX;
     startTop = parseFloat(dragEl.style.top);
@@ -20489,8 +21045,38 @@ function makeDraggable(el, block) {
       }
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
+
+      // v083: detect if anything actually changed (position or day)
+      var _posChanged = (dragBlock.wu_start !== _dragOrigWuStart) || ((dragBlock.day||'sam') !== _dragOrigDay);
+      var _dragDelta = dragBlock.wu_start - _dragOrigWuStart;
+
+      // v083: snapshot BEFORE the drop's cascade so Ctrl+Z reverts everything
+      if (_posChanged && !_undoSuspend) {
+        // Undo the drop temporarily to snapshot the pre-drop state
+        var _newWu = dragBlock.wu_start, _newCs = dragBlock.cp_start, _newCe = dragBlock.cp_end;
+        var _newDay = dragBlock.day, _newApp = dragBlock.app;
+        var _echDur2 = dragBlock.cp_start - dragBlock.wu_start;
+        var _dur2 = dragBlock.cp_end - dragBlock.wu_start;
+        dragBlock.wu_start = _dragOrigWuStart;
+        dragBlock.cp_start = _dragOrigWuStart + _echDur2;
+        dragBlock.cp_end = _dragOrigWuStart + _dur2;
+        dragBlock.day = _dragOrigDay;
+        _snapshotState('Drag ' + (dragBlock.label||'bloc'));
+        // Restore the new position
+        dragBlock.wu_start = _newWu;
+        dragBlock.cp_start = _newCs;
+        dragBlock.cp_end = _newCe;
+        dragBlock.day = _newDay;
+      }
+
       // Resolve overlaps after release, pushing to later time
       resolveOverlapsOnDrop(dragBlock.app, isDragGroup ? [...selectedBids] : [dragBlock.id]);
+
+      // v083: Cascade — décaler les blocs en conflit (athlètes + juges) dans la même direction
+      if (_posChanged && !isDragGroup && Math.abs(_dragDelta) >= 5) {
+        try { _cascadeAfterDrop(dragBlock, _dragDelta); } catch(e) { console.warn('[cascade]', e); }
+      }
+
       // Sync app change to _blocks_sam/_blocks_dim/_blocks_ven
       var _syncB = (_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]).find(function(x){return x.id===dragBlock.id;});
       if (_syncB) _syncB.app = dragBlock.app;
@@ -23067,10 +23653,31 @@ document.addEventListener('keydown', e => {
   var tag = tgt && tgt.tagName;
   var isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tgt && tgt.isContentEditable);
   if (isTyping) return;
-  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
   // Skip if modal is open
   var modalOpen = document.querySelector('.modal-overlay.open, #modal-overlay.open');
   if (modalOpen) return;
+
+  // v083: Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z — undo/redo
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    if (e.key === 'z' || e.key === 'Z') {
+      if (e.shiftKey) {
+        e.preventDefault();
+        if (typeof _redo === 'function') _redo();
+        return;
+      } else {
+        e.preventDefault();
+        if (typeof _undo === 'function') _undo();
+        return;
+      }
+    }
+    if ((e.key === 'y' || e.key === 'Y') && !e.shiftKey) {
+      e.preventDefault();
+      if (typeof _redo === 'function') _redo();
+      return;
+    }
+  }
+  // Skip number shortcuts if modifier pressed
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
   if (e.key === '1') {
     e.preventDefault();
@@ -23369,6 +23976,8 @@ setTimeout(() => autoFitCol(3), 100);
 // Show conflicts immediately on load (no need to click first)
 autoAssignJudgePanels();
 requestAnimationFrame(() => { liveConflictHighlight(null); });
+// v083: init undo button state
+try { if (typeof _updateUndoButtons === 'function') _updateUndoButtons(); } catch(e){}
 updateLegend();
 updateJudgeConflictBadge();
 setSaveStatus(restored ? 'saved' : 'unsaved', restored ? 'restauré' : 'non sauvegardé');
@@ -25222,6 +25831,8 @@ function renderRosterCols() {
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
         const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
         if (!toBlock) return;
+        // v083: snapshot BEFORE athlete move
+        try { _snapshotState('Déplacement athlète'); } catch(_){}
         const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
         const affectedBlocks = new Set();
 
@@ -25281,8 +25892,9 @@ function renderRosterCols() {
       const _blkSexe = (b.athletes&&b.athletes[0]&&b.athletes[0].sexe)||'';
       const _blkSexeShort = _blkSexe==='Féminin'?'F':_blkSexe==='Masculin'?'M':'';
       var _cleanedLabel = b.label.replace(/(^|\+\s*)(TR|DMT|TU|TRS)\s*-\s*/g,'$1').trim();
-      // Don't append sexe if label already ends with ' F' or ' M' (would give 'N1 12- F F')
-      var _needsSexe = _blkSexeShort && !/\s[FM]$/.test(_cleanedLabel);
+      // v082: Don't append sexe if label already CONTAINS a lone F or M marker
+      // (handles 'N4 F Gr.1', 'N1 12- F', 'N5 17+ M Finale', etc.)
+      var _needsSexe = _blkSexeShort && !(new RegExp('\\s' + _blkSexeShort + '(\\s|$)').test(_cleanedLabel));
       const shortLabel = passLabel + ' ' + _cleanedLabel + (_needsSexe ? ' '+_blkSexeShort : '');
       const displayCount = b.app === 'TRS'
         ? (function() {
