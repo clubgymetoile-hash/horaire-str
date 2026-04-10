@@ -633,7 +633,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -750,7 +750,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
     </div>
     <div id="ribbon-affichage" style="display:none;align-items:center;gap:8px;padding:0 12px;flex:1">
       <button class="rbtn" onclick="_splitTR()" title="Rééquilibrer les blocs TR entre Tapis A et B&#10;&#10;Redistribue automatiquement tous les blocs TR de la journée courante entre Tapis A et Tapis B, en remplissant le tapis le plus libre en premier.&#10;&#10;Utile si tu as bougé des blocs manuellement et que les deux tapis sont déséquilibrés." style="background:rgba(2,132,199,0.25);border:1px solid rgba(2,132,199,0.5)"><span class="ico">&#8644;</span><span class="lbl">Rééquil. TR</span></button>
-      <button class="rbtn" onclick="_autoGenerate()" title="Re-générer les blocs depuis les inscriptions" style="background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.5)"><span class="ico">&#127959;</span><span class="lbl">Générer</span></button>
+      <button class="rbtn" onclick="_autoGenerate()" title="Re-générer les blocs depuis les inscriptions (MASQUÉ v123 — _autoGenerate dérive de _gsRebuild, usage déconseillé)" style="display:none;background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.5)"><span class="ico">&#127959;</span><span class="lbl">Générer</span></button>
       <button class="rbtn" id="btn-toggle-cascade" onclick="_toggleAutoCascadeOnDrop()" title="Cascade ON — déplacer un bloc déplace aussi les autres en conflit" style="background:rgba(34,197,94,0.25);border:1px solid rgba(34,197,94,0.6)"><span class="ico">&#8635;</span><span class="lbl">Cascade ON</span></button>
       <button class="rbtn" onclick="exportHTML()" title="Exporter une copie HTML"><span class="ico">&#128190;</span><span class="lbl">Enregistrer</span></button>
       <button class="rbtn" onclick="importScheduleFromFile()" title="Importer l'horaire d'un autre fichier" style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.4)"><span class="ico">&#128194;</span><span class="lbl">Importer</span></button>
@@ -777,7 +777,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1969,7 +1969,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2079,7 +2079,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3622,6 +3622,157 @@ function _gsRebuildPartnerMap(athletes) {
 
 // ── Competition type ────────────────────────────────────────────
 var _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
+// ═══════════════════════════════════════════════════════════════
+// v126: DEBUG SYSTEM — silent ring buffer + on-demand floating panel
+// ═══════════════════════════════════════════════════════════════
+// Collects dbg() calls into a 500-entry ring buffer from startup.
+// Invisible by default. Reveal the panel via:
+//   • Keyboard: Ctrl+Shift+D (or Cmd+Shift+D on Mac)
+//   • Console:  __dbg.show() / .hide() / .toggle() / .dump() / .copy()
+// Log from anywhere:  dbg('synchro', 'block', b.id, 'n='+n);
+// Categories get auto-colored in the panel. Filter with the input box
+// or __dbg.filter('synchro').
+var __DBG_MAX = 500;
+var __dbg_buf = [];
+var __dbg_panel = null;
+function dbg(cat) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  var entry = {
+    t: Date.now(),
+    cat: String(cat || 'log'),
+    msg: args.map(function(a) {
+      if (a === null) return 'null';
+      if (a === undefined) return 'undefined';
+      if (typeof a === 'string') return a;
+      if (typeof a === 'number' || typeof a === 'boolean') return String(a);
+      try { return JSON.stringify(a); } catch(e) { return String(a); }
+    }).join(' ')
+  };
+  __dbg_buf.push(entry);
+  if (__dbg_buf.length > __DBG_MAX) __dbg_buf.shift();
+  if (__dbg_panel && __dbg_panel.style.display !== 'none') __dbgRender();
+}
+function __dbgFmt(e) {
+  var d = new Date(e.t);
+  function pad(n,w){ n=String(n); while(n.length<w) n='0'+n; return n; }
+  return pad(d.getHours(),2)+':'+pad(d.getMinutes(),2)+':'+pad(d.getSeconds(),2)+'.'+pad(d.getMilliseconds(),3)+' ['+e.cat+'] '+e.msg;
+}
+function __dbgRender() {
+  if (!__dbg_panel) return;
+  var body = __dbg_panel.querySelector('.dbg-body');
+  var filt = (__dbg_panel.querySelector('.dbg-filter').value || '').toLowerCase();
+  var countEl = __dbg_panel.querySelector('.dbg-count');
+  if (countEl) countEl.textContent = __dbg_buf.length + '/' + __DBG_MAX;
+  var catColors = {
+    synchro:'#2563eb', import:'#9333ea', migrate:'#ca8a04',
+    render:'#16a34a', warn:'#d97706', err:'#b91c1c', log:'#64748b',
+    roster:'#0891b2', gen:'#7c3aed'
+  };
+  var parts = [];
+  for (var i = __dbg_buf.length - 1; i >= 0; i--) {
+    var e = __dbg_buf[i];
+    var line = __dbgFmt(e);
+    if (filt && line.toLowerCase().indexOf(filt) < 0) continue;
+    var color = catColors[e.cat] || '#334155';
+    var timeStr = line.substring(0,12);
+    var rest = e.msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    parts.push('<div style="padding:1px 4px;border-bottom:1px solid #f1f5f9;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#334155;white-space:pre-wrap;word-break:break-word"><span style="color:#94a3b8">'+timeStr+'</span> <span style="color:'+color+';font-weight:700">['+e.cat+']</span> '+rest+'</div>');
+  }
+  body.innerHTML = parts.join('') || '<div style="padding:8px;color:#94a3b8;font-size:11px;font-style:italic">Aucune entrée</div>';
+}
+function __dbgMakePanel() {
+  var p = document.createElement('div');
+  p.id = '__dbg_panel';
+  p.style.cssText = 'position:fixed;bottom:10px;right:10px;width:560px;height:380px;background:#fff;border:2px solid #334155;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,0.35);z-index:99999;display:flex;flex-direction:column;font-family:Calibri,sans-serif;';
+  p.innerHTML =
+    '<div class="dbg-header" style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:#334155;color:#fff;border-radius:4px 4px 0 0;cursor:move;user-select:none">' +
+      '<span style="font-size:11px;font-weight:700;flex-shrink:0">&#128300; Debug</span>' +
+      '<input class="dbg-filter" type="text" placeholder="Filtrer&hellip;" style="flex:1;min-width:40px;font-size:10px;padding:2px 6px;border:1px solid #64748b;border-radius:3px;background:#f1f5f9;color:#0f172a">' +
+      '<span class="dbg-count" style="font-size:10px;color:#cbd5e1;font-variant-numeric:tabular-nums">0/0</span>' +
+      '<button class="dbg-clear" title="Vider le buffer" style="font-size:10px;padding:2px 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer">Vider</button>' +
+      '<button class="dbg-copy" title="Copier tout dans le presse-papier" style="font-size:10px;padding:2px 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer">Copier</button>' +
+      '<button class="dbg-close" title="Fermer (Ctrl+Shift+D)" style="font-size:13px;padding:0 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer;line-height:1.2">&times;</button>' +
+    '</div>' +
+    '<div class="dbg-body" style="flex:1;overflow:auto;background:#f8fafc"></div>';
+  document.body.appendChild(p);
+  p.querySelector('.dbg-filter').addEventListener('input', __dbgRender);
+  p.querySelector('.dbg-clear').addEventListener('click', function(){ __dbg_buf.length=0; __dbgRender(); });
+  var copyBtn = p.querySelector('.dbg-copy');
+  copyBtn.addEventListener('click', function(){
+    var txt = __dbg_buf.map(__dbgFmt).join('\n');
+    var self = this;
+    try {
+      navigator.clipboard.writeText(txt).then(function(){
+        self.textContent = 'Copié ' + __dbg_buf.length;
+        setTimeout(function(){ self.textContent = 'Copier'; }, 1200);
+      }).catch(function(){ window.prompt('Copier manuellement (Ctrl+C) :', txt); });
+    } catch(e) { window.prompt('Copier manuellement (Ctrl+C) :', txt); }
+  });
+  p.querySelector('.dbg-close').addEventListener('click', function(){ p.style.display = 'none'; });
+  // Drag
+  var hdr = p.querySelector('.dbg-header');
+  var dx=0, dy=0, dragging=false;
+  hdr.addEventListener('mousedown', function(e){
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    dragging = true;
+    dx = e.clientX - p.offsetLeft;
+    dy = e.clientY - p.offsetTop;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){
+    if (!dragging) return;
+    p.style.left = Math.max(0, e.clientX - dx) + 'px';
+    p.style.top  = Math.max(0, e.clientY - dy) + 'px';
+    p.style.right = 'auto';
+    p.style.bottom = 'auto';
+  });
+  document.addEventListener('mouseup', function(){ dragging = false; });
+  return p;
+}
+window.__dbg = {
+  dump: function() { return __dbg_buf.map(__dbgFmt).join('\n'); },
+  copy: function() {
+    var txt = this.dump();
+    try {
+      navigator.clipboard.writeText(txt);
+      console.log('[__dbg] copied', __dbg_buf.length, 'entries');
+      return 'OK ('+__dbg_buf.length+' entrées)';
+    } catch(e) {
+      console.log(txt);
+      return txt;
+    }
+  },
+  clear: function() { __dbg_buf.length = 0; if (__dbg_panel) __dbgRender(); return 'Cleared'; },
+  show: function() {
+    if (!__dbg_panel) __dbg_panel = __dbgMakePanel();
+    __dbg_panel.style.display = 'flex';
+    __dbgRender();
+    return 'Shown';
+  },
+  hide: function() { if (__dbg_panel) __dbg_panel.style.display = 'none'; return 'Hidden'; },
+  toggle: function() {
+    if (!__dbg_panel || __dbg_panel.style.display === 'none') return this.show();
+    return this.hide();
+  },
+  filter: function(q) {
+    if (!__dbg_panel) this.show();
+    __dbg_panel.querySelector('.dbg-filter').value = q || '';
+    __dbgRender();
+    return 'Filtered: '+(q||'(none)');
+  },
+  raw: function() { return __dbg_buf.slice(); },
+  count: function() { return __dbg_buf.length; },
+  log: function() { dbg.apply(null, arguments); return 'logged'; }
+};
+document.addEventListener('keydown', function(e){
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+    e.preventDefault();
+    window.__dbg.toggle();
+  }
+});
+dbg('log', 'Debug system v126 initialized — Ctrl+Shift+D to toggle panel');
+// ═══════════════════════════════════════════════════════════════
+
 
 // v120: Toggle pour la cascade automatique après drag-drop manuel.
 // Quand OFF: un drag-drop ne déplace QUE le bloc déplacé. Aucun autre bloc
@@ -4982,6 +5133,71 @@ function _avoidBackToBackSameAthlete(dayBlks) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// v121: Chump ChQc finale blocks to their max finalist count (finN).
+// ChQc finales are SEPARATE from prelims (different days), so they
+// carry the full roster (for conflict detection) but should only
+// be sized for the top-N finalists (typically 8).
+// This function runs AFTER all other pipeline transforms and enforces:
+//   - b.n = min(nTotal, finN) (or finN*2 for TRS duos)
+//   - wu/cp durations recomputed from the capped n
+//   - cp_end stays anchored (finale's end time doesn't change)
+// CoupeQc is COMPLETELY untouched — early-return on _COMP_TYPE.
+function _capChQcFinales(dayBlks) {
+  if (typeof _COMP_TYPE === 'undefined' || _COMP_TYPE !== 'chQc') return;
+  if (!dayBlks || !dayBlks.length) return;
+  var rules = (typeof FMT !== 'undefined' && FMT[_COMP_TYPE]) || {};
+  function _findFN(app, cats) {
+    var appRules = (rules && rules[app]) || {};
+    var best = null;
+    (cats || []).forEach(function(cat) {
+      var stripped = (cat || '').replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '').replace(/^Synchro\s+/, '');
+      var rule = appRules[stripped] || appRules[cat];
+      if (!rule) {
+        for (var k in appRules) {
+          if (stripped === k || stripped.toLowerCase().indexOf(k.toLowerCase()) >= 0 ||
+              k.toLowerCase().indexOf(stripped.toLowerCase()) >= 0) {
+            rule = appRules[k];
+            break;
+          }
+        }
+      }
+      if (rule && rule.finN) {
+        if (best === null || rule.finN > best) best = rule.finN;
+      }
+    });
+    return best;
+  }
+  dayBlks.forEach(function(b) {
+    if (!b || b.passType !== 'FINALE' || b.type === 'break') return;
+    var finN = _findFN(b.app, b.cats);
+    if (!finN) return;
+    var nTotal = (b.athletes && b.athletes.length) || b.n || 0;
+    if (nTotal <= 0) return;
+    // For TRS (synchro), finN is in duos → x2 for athletes count
+    var isTrs = (b.app === 'TRS' || b.is_trs);
+    var nCap = isTrs ? finN * 2 : finN;
+    var cappedN = Math.min(nTotal, nCap);
+    if (cappedN <= 0) return;
+    // Only touch if the current n is wrong
+    if (b.n === cappedN) {
+      // n is correct — but double-check wu/cp durations
+      var dNow = _calcDur(b.app, cappedN);
+      var wuNow = b.cp_start - b.wu_start;
+      var cpNow = b.cp_end - b.cp_start;
+      if (wuNow === dNow.wu && cpNow === dNow.cp) return;
+    }
+    // Recalc dimensions based on capped n — keep cp_end anchored
+    var dur = _calcDur(b.app, cappedN);
+    var keepCpEnd = b.cp_end;
+    b.n = cappedN;
+    b.cp_end = keepCpEnd;
+    b.cp_start = b.cp_end - dur.cp;
+    b.wu_start = b.cp_start - dur.wu;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
 function _compactJudgeCp(dayBlks) {
   var maxIter = 30;
   
@@ -6130,7 +6346,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-120)
+  // NOUVEAU ALGO (v2026-04-10-126)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -6607,6 +6823,14 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
+
+  // v121: Cap ChQc finales à leur finN (top 8 finalistes typique).
+  // No-op en coupeQc (early-return sur _COMP_TYPE). Doit être APRÈS glue
+  // pour que les finales collées (prélim-finale sam en chQc) soient
+  // cappées avec un cp_end déjà à la bonne position.
+  _capChQcFinales(satBlocks);
+  _capChQcFinales(dimBlocks);
+  _capChQcFinales(venBlocks);
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
 
@@ -10229,6 +10453,9 @@ function importScheduleFromFile() {
         blocks = JSON.parse(JSON.stringify(SAVED_STATE.blocks));
         _blocks_sam = JSON.parse(JSON.stringify(blocks));
         _blocks_dim = JSON.parse(JSON.stringify(SS_DIM.blocks));
+        // v124: migrate legacy TRS blocks after import — root-cause fix so
+        // that duo grouping always triggers, even for pre-v093 imported files.
+        try { _migrateTRSBlocks(); } catch(e){ console.warn('migrate post-import:', e); }
         _awBlocks_sam = SAVED_STATE.awBlocks ? JSON.parse(JSON.stringify(SAVED_STATE.awBlocks)) : null;
         _awBlocks_dim = SS_DIM.awBlocks ? JSON.parse(JSON.stringify(SS_DIM.awBlocks)) : null;
         _samOptimized = true;
@@ -11532,7 +11759,16 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
 
   apps.forEach(function(appKey) {
     var appBlocks = dayBlocksToUse
-      .filter(function(b) { return b.app === appKey && b.athletes && b.athletes.length > 0; })
+      .filter(function(b) {
+        // v124: The TR section aggregates TR, TR2, and legacy 'TRS' app blocks.
+        // TRS synchro blocks live in the TR/TR2 plateaus (or legacy app='TRS'
+        // from pre-v093 imports), and TR2 (Plateau B) must NOT be invisible
+        // in the print roster. This guarantees every synchro reaches the
+        // duo grouping code below, regardless of plateau or legacy shape.
+        if (!b || !b.athletes || b.athletes.length === 0) return false;
+        if (appKey === 'TR') return b.app === 'TR' || b.app === 'TR2' || b.app === 'TRS';
+        return b.app === appKey;
+      })
       .sort(function(a, b) { return a.wu_start - b.wu_start; });
     if (appBlocks.length === 0) return;
     hasContent = true;
@@ -11566,36 +11802,96 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
       var catsStr = (b.cats||[]).join(', ');
       var rowBg = bi % 2 === 0 ? '#ffffff' : '#f8f8f8';
       var topBorder = 'border-top:2px solid #aaaaaa;';
-      var rowspan = athletes.length;
-      athletes.forEach(function(a, ai) {
+
+      // v122: For synchro (TRS) blocks, group athletes by duo via PARTNER_MAP.
+      // Pairs render on two consecutive rows that share a rowspan=2 duo number
+      // in the # column, so duos are visually grouped. Orphans (partner missing
+      // from this block) render as single rows flagged with ⚠.
+      // v124: defensive — detect synchro via is_trs flag OR legacy app==='TRS'
+      var isSynchroBlock = (b.is_trs === true) || (b.app === 'TRS');
+      var displayRows = [];
+      if (isSynchroBlock) {
+        var _paired = {};
+        var _duoNum = 0;
+        athletes.forEach(function(a1) {
+          var k1 = (a1.nom||'') + '|' + (a1.prenom||'');
+          if (_paired[k1]) return;
+          var pk = (typeof PARTNER_MAP !== 'undefined') ? PARTNER_MAP[k1] : null;
+          var a2 = null;
+          if (pk) {
+            for (var _i = 0; _i < athletes.length; _i++) {
+              var _a = athletes[_i];
+              if (((_a.nom||'') + '|' + (_a.prenom||'')) === pk) { a2 = _a; break; }
+            }
+          }
+          _duoNum++;
+          _paired[k1] = true;
+          if (a2) {
+            _paired[pk] = true;
+            displayRows.push({ kind:'duoA', athlete:a1, duoNum:_duoNum });
+            displayRows.push({ kind:'duoB', athlete:a2, duoNum:_duoNum });
+          } else {
+            displayRows.push({ kind:'orphan', athlete:a1, duoNum:_duoNum, missingPartner: pk });
+          }
+        });
+      } else {
+        athletes.forEach(function(a, ai) {
+          displayRows.push({ kind:'solo', athlete:a, idx: ai + 1 });
+        });
+      }
+
+      var rowCount = displayRows.length;
+      displayRows.forEach(function(r, ri) {
+        var a = r.athlete;
         var tr = document.createElement('tr');
-        var isFirst = ai === 0;
-        var tb = isFirst ? topBorder : '';
+        var isFirstInBlock = ri === 0;
+        var tb = isFirstInBlock ? topBorder : '';
         var cs = 'padding:3px 7px;border:1px solid #ddd;background:' + rowBg + ';' + tb;
-        if (isFirst) {
-          tr.innerHTML =
-            '<td rowspan="'+rowspan+'" style="'+cs+'font-weight:700;vertical-align:top;white-space:nowrap;">'+timeStr+'</td>' +
-            '<td rowspan="'+rowspan+'" style="'+cs+'font-size:9px;color:#555;vertical-align:top;">'+catsStr+'</td>' +
-            '<td style="'+cs+'text-align:center;color:#888;">'+(ai+1)+'</td>' +
-            '<td style="'+cs+'font-weight:600;">'+(a.nom||'')+'</td>' +
-            '<td style="'+cs+'">'+(a.prenom||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.club||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.cat||'')+'</td>';
-        } else {
-          tr.innerHTML =
-            '<td style="'+cs+'text-align:center;color:#888;">'+(ai+1)+'</td>' +
-            '<td style="'+cs+'font-weight:600;">'+(a.nom||'')+'</td>' +
-            '<td style="'+cs+'">'+(a.prenom||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.club||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.cat||'')+'</td>';
+
+        var html = '';
+        if (isFirstInBlock) {
+          html += '<td rowspan="'+rowCount+'" style="'+cs+'font-weight:700;vertical-align:top;white-space:nowrap;">'+timeStr+'</td>';
+          html += '<td rowspan="'+rowCount+'" style="'+cs+'font-size:9px;color:#555;vertical-align:top;">'+catsStr+'</td>';
         }
+
+        // # column — duoA spans 2 rows, duoB is absorbed by that rowspan
+        if (r.kind === 'duoA') {
+          html += '<td rowspan="2" style="'+cs+'text-align:center;color:#333;font-weight:700;vertical-align:middle;background:#eef2ff;">'+r.duoNum+'</td>';
+        } else if (r.kind === 'duoB') {
+          // no cell — covered by duoA rowspan=2
+        } else if (r.kind === 'orphan') {
+          html += '<td style="'+cs+'text-align:center;color:#dc2626;font-weight:700;background:#fef2f2;" title="Partenaire manquant dans ce bloc">'+r.duoNum+' ⚠</td>';
+        } else {
+          html += '<td style="'+cs+'text-align:center;color:#888;">'+r.idx+'</td>';
+        }
+
+        html += '<td style="'+cs+'font-weight:600;">'+(a.nom||'')+'</td>';
+        html += '<td style="'+cs+'">'+(a.prenom||'')+'</td>';
+        html += '<td style="'+cs+'font-size:9px;color:#555;">'+(a.club||'')+'</td>';
+        html += '<td style="'+cs+'font-size:9px;color:#555;">'+(a.cat||'')+'</td>';
+
+        tr.innerHTML = html;
         tbody.appendChild(tr);
       });
+
       var totRow = document.createElement('tr');
+      var totLabel;
+      if (isSynchroBlock) {
+        var _duoCount = 0, _orphanCount = 0;
+        displayRows.forEach(function(r){
+          if (r.kind === 'duoA') _duoCount++;
+          else if (r.kind === 'orphan') _orphanCount++;
+        });
+        totLabel = _duoCount + ' duo' + (_duoCount > 1 ? 's' : '');
+        if (_orphanCount) totLabel += ' + ' + _orphanCount + ' orphelin' + (_orphanCount > 1 ? 's' : '');
+        totLabel += ' (' + athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '') + ')';
+      } else {
+        totLabel = athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '');
+      }
       totRow.innerHTML =
         '<td colspan="2" style="padding:2px 7px;border:1px solid #ddd;background:#f0f0f0;"></td>' +
         '<td colspan="5" style="padding:2px 7px;border:1px solid #ddd;background:#f0f0f0;font-size:9px;color:#555;font-style:italic;">' +
-        athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '') + '</td>';
+        totLabel + '</td>';
       tbody.appendChild(totRow);
     });
 
@@ -13246,7 +13542,11 @@ function renderRosterCols() {
 
       // Athlete rows — draggable
       // For TRS (synchro): group by club → show pairs on same line
-      if (b.app === 'TRS') {
+      // v125: detect via is_trs flag (post-v093 migration) OR legacy app==='TRS'.
+      // The old check `b.app === 'TRS'` was dead code after v093 migrated all
+      // synchro blocks to app='TR'/'TR2' with is_trs:true — duo grouping silently
+      // stopped running on screen. This fix restores it for every synchro block.
+      if (b.is_trs === true || b.app === 'TRS') {
         // Count athletes per club in this block to sort dominant club first
         const clubCnt = {};
         for (const ath of b.athletes) clubCnt[ath.club] = (clubCnt[ath.club]||0)+1;
@@ -13281,6 +13581,16 @@ function renderRosterCols() {
           }
           paired.add(k1); paired.add(partnerKey);
           orderedPairs.push([a1, a2]);
+        }
+
+        // v126: debug trace — one entry per synchro block rendered on screen
+        if (typeof dbg === 'function') {
+          try {
+            dbg('synchro', 'block='+b.id, 'app='+b.app, 'is_trs='+b.is_trs,
+                'n='+(b.athletes&&b.athletes.length), 'pairs='+orderedPairs.length,
+                'orphans='+orphans.length, 'cats='+JSON.stringify(b.cats||[]),
+                'day='+(b.day||'?'));
+          } catch(_) {}
         }
 
         // Show orphan athletes with warning FIRST
@@ -15244,7 +15554,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -15361,7 +15671,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
     </div>
     <div id="ribbon-affichage" style="display:none;align-items:center;gap:8px;padding:0 12px;flex:1">
       <button class="rbtn" onclick="_splitTR()" title="Rééquilibrer les blocs TR entre Tapis A et B&#10;&#10;Redistribue automatiquement tous les blocs TR de la journée courante entre Tapis A et Tapis B, en remplissant le tapis le plus libre en premier.&#10;&#10;Utile si tu as bougé des blocs manuellement et que les deux tapis sont déséquilibrés." style="background:rgba(2,132,199,0.25);border:1px solid rgba(2,132,199,0.5)"><span class="ico">&#8644;</span><span class="lbl">Rééquil. TR</span></button>
-      <button class="rbtn" onclick="_autoGenerate()" title="Re-générer les blocs depuis les inscriptions" style="background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.5)"><span class="ico">&#127959;</span><span class="lbl">Générer</span></button>
+      <button class="rbtn" onclick="_autoGenerate()" title="Re-générer les blocs depuis les inscriptions (MASQUÉ v123 — _autoGenerate dérive de _gsRebuild, usage déconseillé)" style="display:none;background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.5)"><span class="ico">&#127959;</span><span class="lbl">Générer</span></button>
       <button class="rbtn" id="btn-toggle-cascade" onclick="_toggleAutoCascadeOnDrop()" title="Cascade ON — déplacer un bloc déplace aussi les autres en conflit" style="background:rgba(34,197,94,0.25);border:1px solid rgba(34,197,94,0.6)"><span class="ico">&#8635;</span><span class="lbl">Cascade ON</span></button>
       <button class="rbtn" onclick="exportHTML()" title="Exporter une copie HTML"><span class="ico">&#128190;</span><span class="lbl">Enregistrer</span></button>
       <button class="rbtn" onclick="importScheduleFromFile()" title="Importer l'horaire d'un autre fichier" style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.4)"><span class="ico">&#128194;</span><span class="lbl">Importer</span></button>
@@ -15388,7 +15698,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -16580,7 +16890,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -16690,7 +17000,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -18230,6 +18540,159 @@ function _gsRebuildPartnerMap(athletes) {
 
 // ── Competition type ────────────────────────────────────────────
 _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
+// ═══════════════════════════════════════════════════════════════
+// v126: DEBUG SYSTEM — silent ring buffer + on-demand floating panel
+// ═══════════════════════════════════════════════════════════════
+// Collects dbg() calls into a 500-entry ring buffer from startup.
+// Invisible by default. Reveal the panel via:
+//   • Keyboard: Ctrl+Shift+D (or Cmd+Shift+D on Mac)
+//   • Console:  __dbg.show() / .hide() / .toggle() / .dump() / .copy()
+// Log from anywhere:  dbg('synchro', 'block', b.id, 'n='+n);
+// Categories get auto-colored in the panel. Filter with the input box
+// or __dbg.filter('synchro').
+var __DBG_MAX = 500;
+var __dbg_buf = [];
+var __dbg_panel = null;
+function dbg(cat) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  var entry = {
+    t: Date.now(),
+    cat: String(cat || 'log'),
+    msg: args.map(function(a) {
+      if (a === null) return 'null';
+      if (a === undefined) return 'undefined';
+      if (typeof a === 'string') return a;
+      if (typeof a === 'number' || typeof a === 'boolean') return String(a);
+      try { return JSON.stringify(a); } catch(e) { return String(a); }
+    }).join(' ')
+  };
+  __dbg_buf.push(entry);
+  if (__dbg_buf.length > __DBG_MAX) __dbg_buf.shift();
+  if (__dbg_panel && __dbg_panel.style.display !== 'none') __dbgRender();
+}
+function __dbgFmt(e) {
+  var d = new Date(e.t);
+  function pad(n,w){ n=String(n); while(n.length<w) n='0'+n; return n; }
+  return pad(d.getHours(),2)+':'+pad(d.getMinutes(),2)+':'+pad(d.getSeconds(),2)+'.'+pad(d.getMilliseconds(),3)+' ['+e.cat+'] '+e.msg;
+}
+function __dbgRender() {
+  if (!__dbg_panel) return;
+  var body = __dbg_panel.querySelector('.dbg-body');
+  var filt = (__dbg_panel.querySelector('.dbg-filter').value || '').toLowerCase();
+  var countEl = __dbg_panel.querySelector('.dbg-count');
+  if (countEl) countEl.textContent = __dbg_buf.length + '/' + __DBG_MAX;
+  var catColors = {
+    synchro:'#2563eb', import:'#9333ea', migrate:'#ca8a04',
+    render:'#16a34a', warn:'#d97706', err:'#b91c1c', log:'#64748b',
+    roster:'#0891b2', gen:'#7c3aed'
+  };
+  var parts = [];
+  for (var i = __dbg_buf.length - 1; i >= 0; i--) {
+    var e = __dbg_buf[i];
+    var line = __dbgFmt(e);
+    if (filt && line.toLowerCase().indexOf(filt) < 0) continue;
+    var color = catColors[e.cat] || '#334155';
+    var timeStr = line.substring(0,12);
+    var rest = e.msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    parts.push('<div style="padding:1px 4px;border-bottom:1px solid #f1f5f9;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#334155;white-space:pre-wrap;word-break:break-word"><span style="color:#94a3b8">'+timeStr+'</span> <span style="color:'+color+';font-weight:700">['+e.cat+']</span> '+rest+'</div>');
+  }
+  body.innerHTML = parts.join('') || '<div style="padding:8px;color:#94a3b8;font-size:11px;font-style:italic">Aucune entrée</div>';
+}
+function __dbgMakePanel() {
+  var p = document.createElement('div');
+  p.id = '__dbg_panel';
+  p.style.cssText = 'position:fixed;bottom:10px;right:10px;width:560px;height:380px;background:#fff;border:2px solid #334155;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,0.35);z-index:99999;display:flex;flex-direction:column;font-family:Calibri,sans-serif;';
+  p.innerHTML =
+    '<div class="dbg-header" style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:#334155;color:#fff;border-radius:4px 4px 0 0;cursor:move;user-select:none">' +
+      '<span style="font-size:11px;font-weight:700;flex-shrink:0">&#128300; Debug</span>' +
+      '<input class="dbg-filter" type="text" placeholder="Filtrer&hellip;" style="flex:1;min-width:40px;font-size:10px;padding:2px 6px;border:1px solid #64748b;border-radius:3px;background:#f1f5f9;color:#0f172a">' +
+      '<span class="dbg-count" style="font-size:10px;color:#cbd5e1;font-variant-numeric:tabular-nums">0/0</span>' +
+      '<button class="dbg-clear" title="Vider le buffer" style="font-size:10px;padding:2px 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer">Vider</button>' +
+      '<button class="dbg-copy" title="Copier tout dans le presse-papier" style="font-size:10px;padding:2px 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer">Copier</button>' +
+      '<button class="dbg-close" title="Fermer (Ctrl+Shift+D)" style="font-size:13px;padding:0 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer;line-height:1.2">&times;</button>' +
+    '</div>' +
+    '<div class="dbg-body" style="flex:1;overflow:auto;background:#f8fafc"></div>';
+  document.body.appendChild(p);
+  p.querySelector('.dbg-filter').addEventListener('input', __dbgRender);
+  p.querySelector('.dbg-clear').addEventListener('click', function(){ __dbg_buf.length=0; __dbgRender(); });
+  var copyBtn = p.querySelector('.dbg-copy');
+  copyBtn.addEventListener('click', function(){
+    var txt = __dbg_buf.map(__dbgFmt).join('
+');
+    var self = this;
+    try {
+      navigator.clipboard.writeText(txt).then(function(){
+        self.textContent = 'Copié ' + __dbg_buf.length;
+        setTimeout(function(){ self.textContent = 'Copier'; }, 1200);
+      }).catch(function(){ window.prompt('Copier manuellement (Ctrl+C) :', txt); });
+    } catch(e) { window.prompt('Copier manuellement (Ctrl+C) :', txt); }
+  });
+  p.querySelector('.dbg-close').addEventListener('click', function(){ p.style.display = 'none'; });
+  // Drag
+  var hdr = p.querySelector('.dbg-header');
+  var dx=0, dy=0, dragging=false;
+  hdr.addEventListener('mousedown', function(e){
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    dragging = true;
+    dx = e.clientX - p.offsetLeft;
+    dy = e.clientY - p.offsetTop;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){
+    if (!dragging) return;
+    p.style.left = Math.max(0, e.clientX - dx) + 'px';
+    p.style.top  = Math.max(0, e.clientY - dy) + 'px';
+    p.style.right = 'auto';
+    p.style.bottom = 'auto';
+  });
+  document.addEventListener('mouseup', function(){ dragging = false; });
+  return p;
+}
+window.__dbg = {
+  dump: function() { return __dbg_buf.map(__dbgFmt).join('
+'); },
+  copy: function() {
+    var txt = this.dump();
+    try {
+      navigator.clipboard.writeText(txt);
+      console.log('[__dbg] copied', __dbg_buf.length, 'entries');
+      return 'OK ('+__dbg_buf.length+' entrées)';
+    } catch(e) {
+      console.log(txt);
+      return txt;
+    }
+  },
+  clear: function() { __dbg_buf.length = 0; if (__dbg_panel) __dbgRender(); return 'Cleared'; },
+  show: function() {
+    if (!__dbg_panel) __dbg_panel = __dbgMakePanel();
+    __dbg_panel.style.display = 'flex';
+    __dbgRender();
+    return 'Shown';
+  },
+  hide: function() { if (__dbg_panel) __dbg_panel.style.display = 'none'; return 'Hidden'; },
+  toggle: function() {
+    if (!__dbg_panel || __dbg_panel.style.display === 'none') return this.show();
+    return this.hide();
+  },
+  filter: function(q) {
+    if (!__dbg_panel) this.show();
+    __dbg_panel.querySelector('.dbg-filter').value = q || '';
+    __dbgRender();
+    return 'Filtered: '+(q||'(none)');
+  },
+  raw: function() { return __dbg_buf.slice(); },
+  count: function() { return __dbg_buf.length; },
+  log: function() { dbg.apply(null, arguments); return 'logged'; }
+};
+document.addEventListener('keydown', function(e){
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+    e.preventDefault();
+    window.__dbg.toggle();
+  }
+});
+dbg('log', 'Debug system v126 initialized — Ctrl+Shift+D to toggle panel');
+// ═══════════════════════════════════════════════════════════════
+
 
 // v120: cascade toggle global (re-init in script 1 in case localStorage updated)
 if (typeof _autoCascadeOnDrop === 'undefined') _autoCascadeOnDrop = true;
@@ -19597,6 +20060,71 @@ function _avoidBackToBackSameAthlete(dayBlks) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// v121: Chump ChQc finale blocks to their max finalist count (finN).
+// ChQc finales are SEPARATE from prelims (different days), so they
+// carry the full roster (for conflict detection) but should only
+// be sized for the top-N finalists (typically 8).
+// This function runs AFTER all other pipeline transforms and enforces:
+//   - b.n = min(nTotal, finN) (or finN*2 for TRS duos)
+//   - wu/cp durations recomputed from the capped n
+//   - cp_end stays anchored (finale's end time doesn't change)
+// CoupeQc is COMPLETELY untouched — early-return on _COMP_TYPE.
+function _capChQcFinales(dayBlks) {
+  if (typeof _COMP_TYPE === 'undefined' || _COMP_TYPE !== 'chQc') return;
+  if (!dayBlks || !dayBlks.length) return;
+  var rules = (typeof FMT !== 'undefined' && FMT[_COMP_TYPE]) || {};
+  function _findFN(app, cats) {
+    var appRules = (rules && rules[app]) || {};
+    var best = null;
+    (cats || []).forEach(function(cat) {
+      var stripped = (cat || '').replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '').replace(/^Synchro\s+/, '');
+      var rule = appRules[stripped] || appRules[cat];
+      if (!rule) {
+        for (var k in appRules) {
+          if (stripped === k || stripped.toLowerCase().indexOf(k.toLowerCase()) >= 0 ||
+              k.toLowerCase().indexOf(stripped.toLowerCase()) >= 0) {
+            rule = appRules[k];
+            break;
+          }
+        }
+      }
+      if (rule && rule.finN) {
+        if (best === null || rule.finN > best) best = rule.finN;
+      }
+    });
+    return best;
+  }
+  dayBlks.forEach(function(b) {
+    if (!b || b.passType !== 'FINALE' || b.type === 'break') return;
+    var finN = _findFN(b.app, b.cats);
+    if (!finN) return;
+    var nTotal = (b.athletes && b.athletes.length) || b.n || 0;
+    if (nTotal <= 0) return;
+    // For TRS (synchro), finN is in duos → x2 for athletes count
+    var isTrs = (b.app === 'TRS' || b.is_trs);
+    var nCap = isTrs ? finN * 2 : finN;
+    var cappedN = Math.min(nTotal, nCap);
+    if (cappedN <= 0) return;
+    // Only touch if the current n is wrong
+    if (b.n === cappedN) {
+      // n is correct — but double-check wu/cp durations
+      var dNow = _calcDur(b.app, cappedN);
+      var wuNow = b.cp_start - b.wu_start;
+      var cpNow = b.cp_end - b.cp_start;
+      if (wuNow === dNow.wu && cpNow === dNow.cp) return;
+    }
+    // Recalc dimensions based on capped n — keep cp_end anchored
+    var dur = _calcDur(b.app, cappedN);
+    var keepCpEnd = b.cp_end;
+    b.n = cappedN;
+    b.cp_end = keepCpEnd;
+    b.cp_start = b.cp_end - dur.cp;
+    b.wu_start = b.cp_start - dur.wu;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
 function _compactJudgeCp(dayBlks) {
   var maxIter = 30;
   
@@ -20745,7 +21273,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-120)
+  // NOUVEAU ALGO (v2026-04-10-126)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -21222,6 +21750,14 @@ function _gsRebuild(athletes) {
   _gluePrelimFinale(satBlocks);
   _gluePrelimFinale(dimBlocks);
   _gluePrelimFinale(venBlocks);
+
+  // v121: Cap ChQc finales à leur finN (top 8 finalistes typique).
+  // No-op en coupeQc (early-return sur _COMP_TYPE). Doit être APRÈS glue
+  // pour que les finales collées (prélim-finale sam en chQc) soient
+  // cappées avec un cp_end déjà à la bonne position.
+  _capChQcFinales(satBlocks);
+  _capChQcFinales(dimBlocks);
+  _capChQcFinales(venBlocks);
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
 
@@ -24745,6 +25281,9 @@ function importScheduleFromFile() {
         blocks = JSON.parse(JSON.stringify(SAVED_STATE.blocks));
         _blocks_sam = JSON.parse(JSON.stringify(blocks));
         _blocks_dim = JSON.parse(JSON.stringify(SS_DIM.blocks));
+        // v124: migrate legacy TRS blocks after import — root-cause fix so
+        // that duo grouping always triggers, even for pre-v093 imported files.
+        try { _migrateTRSBlocks(); } catch(e){ console.warn('migrate post-import:', e); }
         _awBlocks_sam = SAVED_STATE.awBlocks ? JSON.parse(JSON.stringify(SAVED_STATE.awBlocks)) : null;
         _awBlocks_dim = SS_DIM.awBlocks ? JSON.parse(JSON.stringify(SS_DIM.awBlocks)) : null;
         _samOptimized = true;
@@ -26048,7 +26587,16 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
 
   apps.forEach(function(appKey) {
     var appBlocks = dayBlocksToUse
-      .filter(function(b) { return b.app === appKey && b.athletes && b.athletes.length > 0; })
+      .filter(function(b) {
+        // v124: The TR section aggregates TR, TR2, and legacy 'TRS' app blocks.
+        // TRS synchro blocks live in the TR/TR2 plateaus (or legacy app='TRS'
+        // from pre-v093 imports), and TR2 (Plateau B) must NOT be invisible
+        // in the print roster. This guarantees every synchro reaches the
+        // duo grouping code below, regardless of plateau or legacy shape.
+        if (!b || !b.athletes || b.athletes.length === 0) return false;
+        if (appKey === 'TR') return b.app === 'TR' || b.app === 'TR2' || b.app === 'TRS';
+        return b.app === appKey;
+      })
       .sort(function(a, b) { return a.wu_start - b.wu_start; });
     if (appBlocks.length === 0) return;
     hasContent = true;
@@ -26082,36 +26630,96 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
       var catsStr = (b.cats||[]).join(', ');
       var rowBg = bi % 2 === 0 ? '#ffffff' : '#f8f8f8';
       var topBorder = 'border-top:2px solid #aaaaaa;';
-      var rowspan = athletes.length;
-      athletes.forEach(function(a, ai) {
+
+      // v122: For synchro (TRS) blocks, group athletes by duo via PARTNER_MAP.
+      // Pairs render on two consecutive rows that share a rowspan=2 duo number
+      // in the # column, so duos are visually grouped. Orphans (partner missing
+      // from this block) render as single rows flagged with ⚠.
+      // v124: defensive — detect synchro via is_trs flag OR legacy app==='TRS'
+      var isSynchroBlock = (b.is_trs === true) || (b.app === 'TRS');
+      var displayRows = [];
+      if (isSynchroBlock) {
+        var _paired = {};
+        var _duoNum = 0;
+        athletes.forEach(function(a1) {
+          var k1 = (a1.nom||'') + '|' + (a1.prenom||'');
+          if (_paired[k1]) return;
+          var pk = (typeof PARTNER_MAP !== 'undefined') ? PARTNER_MAP[k1] : null;
+          var a2 = null;
+          if (pk) {
+            for (var _i = 0; _i < athletes.length; _i++) {
+              var _a = athletes[_i];
+              if (((_a.nom||'') + '|' + (_a.prenom||'')) === pk) { a2 = _a; break; }
+            }
+          }
+          _duoNum++;
+          _paired[k1] = true;
+          if (a2) {
+            _paired[pk] = true;
+            displayRows.push({ kind:'duoA', athlete:a1, duoNum:_duoNum });
+            displayRows.push({ kind:'duoB', athlete:a2, duoNum:_duoNum });
+          } else {
+            displayRows.push({ kind:'orphan', athlete:a1, duoNum:_duoNum, missingPartner: pk });
+          }
+        });
+      } else {
+        athletes.forEach(function(a, ai) {
+          displayRows.push({ kind:'solo', athlete:a, idx: ai + 1 });
+        });
+      }
+
+      var rowCount = displayRows.length;
+      displayRows.forEach(function(r, ri) {
+        var a = r.athlete;
         var tr = document.createElement('tr');
-        var isFirst = ai === 0;
-        var tb = isFirst ? topBorder : '';
+        var isFirstInBlock = ri === 0;
+        var tb = isFirstInBlock ? topBorder : '';
         var cs = 'padding:3px 7px;border:1px solid #ddd;background:' + rowBg + ';' + tb;
-        if (isFirst) {
-          tr.innerHTML =
-            '<td rowspan="'+rowspan+'" style="'+cs+'font-weight:700;vertical-align:top;white-space:nowrap;">'+timeStr+'</td>' +
-            '<td rowspan="'+rowspan+'" style="'+cs+'font-size:9px;color:#555;vertical-align:top;">'+catsStr+'</td>' +
-            '<td style="'+cs+'text-align:center;color:#888;">'+(ai+1)+'</td>' +
-            '<td style="'+cs+'font-weight:600;">'+(a.nom||'')+'</td>' +
-            '<td style="'+cs+'">'+(a.prenom||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.club||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.cat||'')+'</td>';
-        } else {
-          tr.innerHTML =
-            '<td style="'+cs+'text-align:center;color:#888;">'+(ai+1)+'</td>' +
-            '<td style="'+cs+'font-weight:600;">'+(a.nom||'')+'</td>' +
-            '<td style="'+cs+'">'+(a.prenom||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.club||'')+'</td>' +
-            '<td style="'+cs+'font-size:9px;color:#555;">'+(a.cat||'')+'</td>';
+
+        var html = '';
+        if (isFirstInBlock) {
+          html += '<td rowspan="'+rowCount+'" style="'+cs+'font-weight:700;vertical-align:top;white-space:nowrap;">'+timeStr+'</td>';
+          html += '<td rowspan="'+rowCount+'" style="'+cs+'font-size:9px;color:#555;vertical-align:top;">'+catsStr+'</td>';
         }
+
+        // # column — duoA spans 2 rows, duoB is absorbed by that rowspan
+        if (r.kind === 'duoA') {
+          html += '<td rowspan="2" style="'+cs+'text-align:center;color:#333;font-weight:700;vertical-align:middle;background:#eef2ff;">'+r.duoNum+'</td>';
+        } else if (r.kind === 'duoB') {
+          // no cell — covered by duoA rowspan=2
+        } else if (r.kind === 'orphan') {
+          html += '<td style="'+cs+'text-align:center;color:#dc2626;font-weight:700;background:#fef2f2;" title="Partenaire manquant dans ce bloc">'+r.duoNum+' ⚠</td>';
+        } else {
+          html += '<td style="'+cs+'text-align:center;color:#888;">'+r.idx+'</td>';
+        }
+
+        html += '<td style="'+cs+'font-weight:600;">'+(a.nom||'')+'</td>';
+        html += '<td style="'+cs+'">'+(a.prenom||'')+'</td>';
+        html += '<td style="'+cs+'font-size:9px;color:#555;">'+(a.club||'')+'</td>';
+        html += '<td style="'+cs+'font-size:9px;color:#555;">'+(a.cat||'')+'</td>';
+
+        tr.innerHTML = html;
         tbody.appendChild(tr);
       });
+
       var totRow = document.createElement('tr');
+      var totLabel;
+      if (isSynchroBlock) {
+        var _duoCount = 0, _orphanCount = 0;
+        displayRows.forEach(function(r){
+          if (r.kind === 'duoA') _duoCount++;
+          else if (r.kind === 'orphan') _orphanCount++;
+        });
+        totLabel = _duoCount + ' duo' + (_duoCount > 1 ? 's' : '');
+        if (_orphanCount) totLabel += ' + ' + _orphanCount + ' orphelin' + (_orphanCount > 1 ? 's' : '');
+        totLabel += ' (' + athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '') + ')';
+      } else {
+        totLabel = athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '');
+      }
       totRow.innerHTML =
         '<td colspan="2" style="padding:2px 7px;border:1px solid #ddd;background:#f0f0f0;"></td>' +
         '<td colspan="5" style="padding:2px 7px;border:1px solid #ddd;background:#f0f0f0;font-size:9px;color:#555;font-style:italic;">' +
-        athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '') + '</td>';
+        totLabel + '</td>';
       tbody.appendChild(totRow);
     });
 
@@ -27762,7 +28370,11 @@ function renderRosterCols() {
 
       // Athlete rows — draggable
       // For TRS (synchro): group by club → show pairs on same line
-      if (b.app === 'TRS') {
+      // v125: detect via is_trs flag (post-v093 migration) OR legacy app==='TRS'.
+      // The old check `b.app === 'TRS'` was dead code after v093 migrated all
+      // synchro blocks to app='TR'/'TR2' with is_trs:true — duo grouping silently
+      // stopped running on screen. This fix restores it for every synchro block.
+      if (b.is_trs === true || b.app === 'TRS') {
         // Count athletes per club in this block to sort dominant club first
         const clubCnt = {};
         for (const ath of b.athletes) clubCnt[ath.club] = (clubCnt[ath.club]||0)+1;
@@ -27797,6 +28409,16 @@ function renderRosterCols() {
           }
           paired.add(k1); paired.add(partnerKey);
           orderedPairs.push([a1, a2]);
+        }
+
+        // v126: debug trace — one entry per synchro block rendered on screen
+        if (typeof dbg === 'function') {
+          try {
+            dbg('synchro', 'block='+b.id, 'app='+b.app, 'is_trs='+b.is_trs,
+                'n='+(b.athletes&&b.athletes.length), 'pairs='+orderedPairs.length,
+                'orphans='+orphans.length, 'cats='+JSON.stringify(b.cats||[]),
+                'day='+(b.day||'?'));
+          } catch(_) {}
         }
 
         // Show orphan athletes with warning FIRST
