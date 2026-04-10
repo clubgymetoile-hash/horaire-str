@@ -633,7 +633,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-136</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -777,7 +777,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-136</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1969,7 +1969,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-136<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2079,7 +2079,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-136<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -6346,7 +6346,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-10-131)
+  // NOUVEAU ALGO (v2026-04-10-136)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -8798,7 +8798,7 @@ function renderModal() {
         const lvlBadge = lvlM ? `<span style="background:#dbeafe;color:#1d4ed8;border-radius:2px;padding:0 4px;font-size:9px;font-weight:700;flex-shrink:0">R${lvlM[1]}<${'/'}span>` : '';
         item.innerHTML = `
           ${lvlBadge}
-          <span style="font-weight:600;flex:1;font-size:11px;">${a1.nom} ${a1.prenom}${a2 ? ' <span style="color:#94a3b8">+<${'/'}span> '+a2.nom+' '+a2.prenom : ' <span style="color:#f59e0b;font-size:9px">(sans partenaire)<${'/'}span>'}<${'/'}span>
+          <span style="font-weight:600;flex:1;font-size:11px;">${a1.nom} ${a1.prenom}${a2 ? ' <span style="color:#94a3b8">+</span> '+a2.nom+' '+a2.prenom : ' <span style="color:#f59e0b;font-size:9px">(sans partenaire)</span>'}<${'/'}span>
           <span style="font-size:9px;color:#64748b;flex-shrink:0">${a1.club.replace('Acrobatique ','Acro.')}<${'/'}span>
           <button class="rm-btn" title="Retirer ${a1.prenom}" onclick="removeAthFromModal(${i1})" style="flex-shrink:0">×${a2?'×':''}<${'/'}button>
         `;
@@ -9706,7 +9706,7 @@ function renderRemisesTab() {
     const row=document.createElement('div');
     row.className='rem-row';
     row.innerHTML=`
-      <div class="rem-cell"><span class="rem-app-badge ${aw.app} R${aw.level}">${aw.app} R${aw.level}<${'/'}span><${'/'}div>
+      <div class="rem-cell"><span class="rem-app-badge ${aw.app} R${aw.level}">${aw.app}${aw.sexe?' '+aw.sexe:''} R${aw.level}<${'/'}span><${'/'}div>
       <div class="rem-cell" style="font-weight:700">R${aw.level}<${'/'}div>
       <div class="rem-cell" style="font-family:monospace;font-size:11px;font-weight:600">${toT(aw.start_m)}<${'/'}div>
       <div class="rem-cell" style="font-family:monospace;font-size:11px">${toT(aw.end_m)}<${'/'}div>
@@ -11083,7 +11083,7 @@ function switchDay(day) {
   EXTRA.awards.forEach((aw,i) => {
     const saved = savedAw && savedAw.find(s => s.id === 'aw_'+i);
     awBlocks.push({
-      id:'aw_'+i, app:aw.app, level:aw.level, cats:[...aw.cats],
+      id:'aw_'+i, app:aw.app, level:aw.level, levelKey:aw.levelKey, sexe:aw.sexe||'', cats:[...aw.cats],
       start_m: saved ? saved.start_m : _timeToM(aw.start),
       end_m:   saved ? saved.end_m   : _timeToM(aw.end),
       athletes: getAthletesForAward(aw)
@@ -11135,9 +11135,15 @@ function switchDay(day) {
   initPoolBlocks();
   render();
 
-  // Run autoScheduleAwards() on every day switch — exactly the same as clicking ⟳.
-  // This is the single reliable code path. No guards, no flags, no background tricks.
+  // v133: mirror the full REMISES ⟳ button behavior on every day switch.
+  // Previously only autoScheduleAwards() ran, which left dimanche empty on
+  // first visit (awBlocks.length === 0 → nothing to position) and never
+  // called renderAwardBlocks() to actually paint them in the grid.
+  if (awBlocks.length === 0) {
+    try { generateAwardsFromBlocks(); } catch(e){ console.warn('switchDay: gen awards:', e); }
+  }
   autoScheduleAwards();
+  try { renderAwardBlocks(); } catch(e){ console.warn('switchDay: renderAwardBlocks:', e); }
   if (day === 'dim') {
     _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   } else if (day === 'ven') {
@@ -11149,8 +11155,10 @@ function switchDay(day) {
   requestAnimationFrame(function() { try { autoFitCols(); } catch(e) {} });
   requestAnimationFrame(renderRemisesTab);
   setTimeout(renderRemisesTab, 50);
-  // Auto-fit TRS column so award categories are visible
-  requestAnimationFrame(() => autoFitCol(3));
+  // v133: auto-fit the REMISES column (index 4), not index 3. The old comment
+  // "Auto-fit TRS column" was misleading — TRS lives in TR/TR2 since v093.
+  // autoFitAwCol() is the dedicated helper (= autoFitCol(4)).
+  requestAnimationFrame(function() { try { autoFitAwCol(); } catch(e) {} });
   // Refresh athletes tab if it is visible — keeps search/filter but updates schedule data for new day
   if (document.getElementById('view-athletes') &&
       document.getElementById('view-athletes').style.display !== 'none') {
@@ -12054,7 +12062,7 @@ function renderAwardBlocks() {
     inner.innerHTML = `
       <span class="aw-tag">REM.<${'/'}span>
       <span class="aw-time">${toT(aw.start_m)}→${toT(aw.end_m)}<${'/'}span>
-      <span class="aw-label">${aw.app} — ${cats_label}<${'/'}span>
+      <span class="aw-label">${aw.app}${aw.sexe?' '+aw.sexe:''} — ${cats_label}<${'/'}span>
       ${h > 38 ? `<span class="aw-count">${aw.athletes.length} ath.</span>` : ''}
       ${hasTimingViol ? `<span class="aw-cpill">${timingTxt}</span>` : ''}
       ${conflictAths.length > 0 ? `<span class="aw-cpill">⚠ ${conflictAths.length} conflit${conflictAths.length>1?'s':''} (tous appareils)</span>` : ''}
@@ -12068,7 +12076,7 @@ function renderAwardBlocks() {
       const appEndLines = timingViol && timingViol.byApp
         ? Object.entries(timingViol.byApp).map(([app,t])=>`${app}: ${toT(t)}`).join(' · ')
         : '';
-      tt.innerHTML = `<strong>REMISE ${aw.app} R${aw.level}<${'/'}strong><br>${toT(aw.start_m)}→${toT(aw.end_m)}<br><span style="color:#64748b">${cats}<${'/'}span><br><strong>${aw.athletes.length} athlètes<${'/'}strong>${hasTimingViol?`<br><span style="color:#ef4444">⛔ Fin des compétitions: ${toT(timingViol.latestEnd)}${appEndLines?'<br><span style=\"color:#94a3b8;font-size:9px\">'+appEndLines+'</span>':''}<br>Trop tôt: ${timingViol.gap<0?timingViol.gap:'+'+timingViol.gap} min</span>`:''}${conflictAths.length>0?`<br><span style="color:#ef4444">⚠ ${conflictAths.length} conflit(s) — tous appareils</span>`:''}`;
+      tt.innerHTML = `<strong>REMISE ${aw.app}${aw.sexe?' '+aw.sexe:''} R${aw.level}<${'/'}strong><br>${toT(aw.start_m)}→${toT(aw.end_m)}<br><span style="color:#64748b">${cats}<${'/'}span><br><strong>${aw.athletes.length} athlètes<${'/'}strong>${hasTimingViol?`<br><span style="color:#ef4444">⛔ Fin des compétitions: ${toT(timingViol.latestEnd)}${appEndLines?'<br><span style=\"color:#94a3b8;font-size:9px\">'+appEndLines+'</span>':''}<br>Trop tôt: ${timingViol.gap<0?timingViol.gap:'+'+timingViol.gap} min</span>`:''}${conflictAths.length>0?`<br><span style="color:#ef4444">⚠ ${conflictAths.length} conflit(s) — tous appareils</span>`:''}`;
       tt.classList.add('show');
     });
     el.addEventListener('mouseleave', hideTooltip);
@@ -12874,10 +12882,12 @@ function generateAwardsFromBlocks() {
       var bk = _bucketKey(b, cat);
       var key = bk.key;
 
-      // ChQc rule: skip prelims that have a matching finale in this bucket
-      if (isChQc && b.passType === 'PRELIM' && bucketsWithFinale[key]) {
-        return;
-      }
+      // ChQc rule (v134): ALL categories have a finale in ChQc — the award is
+      // always deferred to the finale ceremony. Skip prelims unconditionally.
+      // The previous conditional skip (on bucketsWithFinale[key]) left a hole
+      // when bucket-key matching failed (differing sexe metadata, processing
+      // order, etc.), causing orphan prelim remises to appear.
+      if (isChQc && b.passType === 'PRELIM') return;
 
       if (!buckets[key]) {
         buckets[key] = {
@@ -12886,12 +12896,14 @@ function generateAwardsFromBlocks() {
           levelKey: bk.levelKey,
           sexe: bk.sexe,
           cats: {},
-          latestEnd: 0
+          latestEnd: 0,
+          latestEndDay: null  // v135: which day the latest-ending block belongs to
         };
       }
       buckets[key].cats[cat] = true;
       if (b.cp_end > buckets[key].latestEnd) {
         buckets[key].latestEnd = b.cp_end;
+        buckets[key].latestEndDay = b.day || 'sam';  // v135: remember the winning day
       }
     });
   });
@@ -12906,6 +12918,11 @@ function generateAwardsFromBlocks() {
 
   var awI = 0;
   bucketList.forEach(function(bk) {
+    // v135: only emit the award on the day the event actually finishes.
+    // Without this, cross-day events (prelim sam + finale dim in ChQc) would
+    // generate a remise on BOTH days' caches because generateAwardsFromBlocks
+    // writes into the current day's awBlocks array regardless of origin.
+    if (bk.latestEndDay && bk.latestEndDay !== currentDay) return;
     // Start 5 min after competition ends (snap to 5)
     var start = Math.ceil((bk.latestEnd + 5) / 5) * 5;
     var aw = {
@@ -12913,6 +12930,7 @@ function generateAwardsFromBlocks() {
       app: bk.app,
       level: bk.level,
       levelKey: bk.levelKey,  // v103: string key for color lookup
+      sexe: bk.sexe || '',    // v136: carry sexe so label can show F/M
       cats: Object.keys(bk.cats).sort(),
       start_m: start,
       end_m: start + 5,
@@ -12930,6 +12948,7 @@ function generateAwardsFromBlocks() {
         app: aw.app,
         level: aw.level,
         levelKey: aw.levelKey,
+        sexe: aw.sexe || '',  // v136
         cats: aw.cats.slice(),
         start: toT(aw.start_m),
         end: toT(aw.end_m)
@@ -15578,7 +15597,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-136</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -15722,7 +15741,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-136</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -16914,7 +16933,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-136<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -17024,7 +17043,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-136<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -21145,7 +21164,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-10-131)
+  // NOUVEAU ALGO (v2026-04-10-136)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -23498,7 +23517,7 @@ function renderModal() {
         const lvlBadge = lvlM ? `<span style="background:#dbeafe;color:#1d4ed8;border-radius:2px;padding:0 4px;font-size:9px;font-weight:700;flex-shrink:0">R${lvlM[1]}<${'/'}span>` : '';
         item.innerHTML = `
           ${lvlBadge}
-          <span style="font-weight:600;flex:1;font-size:11px;">${a1.nom} ${a1.prenom}${a2 ? ' <span style="color:#94a3b8">+<${'/'}span> '+a2.nom+' '+a2.prenom : ' <span style="color:#f59e0b;font-size:9px">(sans partenaire)<${'/'}span>'}<${'/'}span>
+          <span style="font-weight:600;flex:1;font-size:11px;">${a1.nom} ${a1.prenom}${a2 ? ' <span style="color:#94a3b8">+</span> '+a2.nom+' '+a2.prenom : ' <span style="color:#f59e0b;font-size:9px">(sans partenaire)</span>'}<${'/'}span>
           <span style="font-size:9px;color:#64748b;flex-shrink:0">${a1.club.replace('Acrobatique ','Acro.')}<${'/'}span>
           <button class="rm-btn" title="Retirer ${a1.prenom}" onclick="removeAthFromModal(${i1})" style="flex-shrink:0">×${a2?'×':''}<${'/'}button>
         `;
@@ -24406,7 +24425,7 @@ function renderRemisesTab() {
     const row=document.createElement('div');
     row.className='rem-row';
     row.innerHTML=`
-      <div class="rem-cell"><span class="rem-app-badge ${aw.app} R${aw.level}">${aw.app} R${aw.level}<${'/'}span><${'/'}div>
+      <div class="rem-cell"><span class="rem-app-badge ${aw.app} R${aw.level}">${aw.app}${aw.sexe?' '+aw.sexe:''} R${aw.level}<${'/'}span><${'/'}div>
       <div class="rem-cell" style="font-weight:700">R${aw.level}<${'/'}div>
       <div class="rem-cell" style="font-family:monospace;font-size:11px;font-weight:600">${toT(aw.start_m)}<${'/'}div>
       <div class="rem-cell" style="font-family:monospace;font-size:11px">${toT(aw.end_m)}<${'/'}div>
@@ -25783,7 +25802,7 @@ function switchDay(day) {
   EXTRA.awards.forEach((aw,i) => {
     const saved = savedAw && savedAw.find(s => s.id === 'aw_'+i);
     awBlocks.push({
-      id:'aw_'+i, app:aw.app, level:aw.level, cats:[...aw.cats],
+      id:'aw_'+i, app:aw.app, level:aw.level, levelKey:aw.levelKey, sexe:aw.sexe||'', cats:[...aw.cats],
       start_m: saved ? saved.start_m : _timeToM(aw.start),
       end_m:   saved ? saved.end_m   : _timeToM(aw.end),
       athletes: getAthletesForAward(aw)
@@ -25835,9 +25854,15 @@ function switchDay(day) {
   initPoolBlocks();
   render();
 
-  // Run autoScheduleAwards() on every day switch — exactly the same as clicking ⟳.
-  // This is the single reliable code path. No guards, no flags, no background tricks.
+  // v133: mirror the full REMISES ⟳ button behavior on every day switch.
+  // Previously only autoScheduleAwards() ran, which left dimanche empty on
+  // first visit (awBlocks.length === 0 → nothing to position) and never
+  // called renderAwardBlocks() to actually paint them in the grid.
+  if (awBlocks.length === 0) {
+    try { generateAwardsFromBlocks(); } catch(e){ console.warn('switchDay: gen awards:', e); }
+  }
   autoScheduleAwards();
+  try { renderAwardBlocks(); } catch(e){ console.warn('switchDay: renderAwardBlocks:', e); }
   if (day === 'dim') {
     _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   } else if (day === 'ven') {
@@ -25849,8 +25874,10 @@ function switchDay(day) {
   requestAnimationFrame(function() { try { autoFitCols(); } catch(e) {} });
   requestAnimationFrame(renderRemisesTab);
   setTimeout(renderRemisesTab, 50);
-  // Auto-fit TRS column so award categories are visible
-  requestAnimationFrame(() => autoFitCol(3));
+  // v133: auto-fit the REMISES column (index 4), not index 3. The old comment
+  // "Auto-fit TRS column" was misleading — TRS lives in TR/TR2 since v093.
+  // autoFitAwCol() is the dedicated helper (= autoFitCol(4)).
+  requestAnimationFrame(function() { try { autoFitAwCol(); } catch(e) {} });
   // Refresh athletes tab if it is visible — keeps search/filter but updates schedule data for new day
   if (document.getElementById('view-athletes') &&
       document.getElementById('view-athletes').style.display !== 'none') {
@@ -26754,7 +26781,7 @@ function renderAwardBlocks() {
     inner.innerHTML = `
       <span class="aw-tag">REM.<${'/'}span>
       <span class="aw-time">${toT(aw.start_m)}→${toT(aw.end_m)}<${'/'}span>
-      <span class="aw-label">${aw.app} — ${cats_label}<${'/'}span>
+      <span class="aw-label">${aw.app}${aw.sexe?' '+aw.sexe:''} — ${cats_label}<${'/'}span>
       ${h > 38 ? `<span class="aw-count">${aw.athletes.length} ath.</span>` : ''}
       ${hasTimingViol ? `<span class="aw-cpill">${timingTxt}</span>` : ''}
       ${conflictAths.length > 0 ? `<span class="aw-cpill">⚠ ${conflictAths.length} conflit${conflictAths.length>1?'s':''} (tous appareils)</span>` : ''}
@@ -26768,7 +26795,7 @@ function renderAwardBlocks() {
       const appEndLines = timingViol && timingViol.byApp
         ? Object.entries(timingViol.byApp).map(([app,t])=>`${app}: ${toT(t)}`).join(' · ')
         : '';
-      tt.innerHTML = `<strong>REMISE ${aw.app} R${aw.level}<${'/'}strong><br>${toT(aw.start_m)}→${toT(aw.end_m)}<br><span style="color:#64748b">${cats}<${'/'}span><br><strong>${aw.athletes.length} athlètes<${'/'}strong>${hasTimingViol?`<br><span style="color:#ef4444">⛔ Fin des compétitions: ${toT(timingViol.latestEnd)}${appEndLines?'<br><span style=\"color:#94a3b8;font-size:9px\">'+appEndLines+'</span>':''}<br>Trop tôt: ${timingViol.gap<0?timingViol.gap:'+'+timingViol.gap} min</span>`:''}${conflictAths.length>0?`<br><span style="color:#ef4444">⚠ ${conflictAths.length} conflit(s) — tous appareils</span>`:''}`;
+      tt.innerHTML = `<strong>REMISE ${aw.app}${aw.sexe?' '+aw.sexe:''} R${aw.level}<${'/'}strong><br>${toT(aw.start_m)}→${toT(aw.end_m)}<br><span style="color:#64748b">${cats}<${'/'}span><br><strong>${aw.athletes.length} athlètes<${'/'}strong>${hasTimingViol?`<br><span style="color:#ef4444">⛔ Fin des compétitions: ${toT(timingViol.latestEnd)}${appEndLines?'<br><span style=\"color:#94a3b8;font-size:9px\">'+appEndLines+'</span>':''}<br>Trop tôt: ${timingViol.gap<0?timingViol.gap:'+'+timingViol.gap} min</span>`:''}${conflictAths.length>0?`<br><span style="color:#ef4444">⚠ ${conflictAths.length} conflit(s) — tous appareils</span>`:''}`;
       tt.classList.add('show');
     });
     el.addEventListener('mouseleave', hideTooltip);
@@ -27574,10 +27601,12 @@ function generateAwardsFromBlocks() {
       var bk = _bucketKey(b, cat);
       var key = bk.key;
 
-      // ChQc rule: skip prelims that have a matching finale in this bucket
-      if (isChQc && b.passType === 'PRELIM' && bucketsWithFinale[key]) {
-        return;
-      }
+      // ChQc rule (v134): ALL categories have a finale in ChQc — the award is
+      // always deferred to the finale ceremony. Skip prelims unconditionally.
+      // The previous conditional skip (on bucketsWithFinale[key]) left a hole
+      // when bucket-key matching failed (differing sexe metadata, processing
+      // order, etc.), causing orphan prelim remises to appear.
+      if (isChQc && b.passType === 'PRELIM') return;
 
       if (!buckets[key]) {
         buckets[key] = {
@@ -27586,12 +27615,14 @@ function generateAwardsFromBlocks() {
           levelKey: bk.levelKey,
           sexe: bk.sexe,
           cats: {},
-          latestEnd: 0
+          latestEnd: 0,
+          latestEndDay: null  // v135: which day the latest-ending block belongs to
         };
       }
       buckets[key].cats[cat] = true;
       if (b.cp_end > buckets[key].latestEnd) {
         buckets[key].latestEnd = b.cp_end;
+        buckets[key].latestEndDay = b.day || 'sam';  // v135: remember the winning day
       }
     });
   });
@@ -27606,6 +27637,11 @@ function generateAwardsFromBlocks() {
 
   var awI = 0;
   bucketList.forEach(function(bk) {
+    // v135: only emit the award on the day the event actually finishes.
+    // Without this, cross-day events (prelim sam + finale dim in ChQc) would
+    // generate a remise on BOTH days' caches because generateAwardsFromBlocks
+    // writes into the current day's awBlocks array regardless of origin.
+    if (bk.latestEndDay && bk.latestEndDay !== currentDay) return;
     // Start 5 min after competition ends (snap to 5)
     var start = Math.ceil((bk.latestEnd + 5) / 5) * 5;
     var aw = {
@@ -27613,6 +27649,7 @@ function generateAwardsFromBlocks() {
       app: bk.app,
       level: bk.level,
       levelKey: bk.levelKey,  // v103: string key for color lookup
+      sexe: bk.sexe || '',    // v136: carry sexe so label can show F/M
       cats: Object.keys(bk.cats).sort(),
       start_m: start,
       end_m: start + 5,
@@ -27630,6 +27667,7 @@ function generateAwardsFromBlocks() {
         app: aw.app,
         level: aw.level,
         levelKey: aw.levelKey,
+        sexe: aw.sexe || '',  // v136
         cats: aw.cats.slice(),
         start: toT(aw.start_m),
         end: toT(aw.end_m)
