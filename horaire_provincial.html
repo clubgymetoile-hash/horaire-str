@@ -633,7 +633,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -777,7 +777,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1969,7 +1969,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2079,7 +2079,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -6346,7 +6346,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-10-126)
+  // NOUVEAU ALGO (v2026-04-10-131)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -7067,16 +7067,21 @@ function getConflicts(athIdx) {
     if (apps.length < 2) continue;
     const sorted = [...apps].sort((a,b)=>a.wu_start-b.wu_start);
     const conflicts = [];
-    for (let i=0;i<sorted.length-1;i++) {
-      // Skip same-apparatus: Prélim1 + Prélim2 for same athlete is normal
-      if (sorted[i].app === sorted[i+1].app) continue;
-      // Skip cross-day: TR samedi vs DMT dimanche is not a real conflict
-      if (sorted[i].day !== sorted[i+1].day) continue;
-      const gap = sorted[i+1].wu_start - sorted[i].cp_end;
-      if (gap < 0)
-        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'conflict', bid1:sorted[i].bid, bid2:sorted[i+1].bid});
-      else if (gap < WARN_GAP)
-        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'warn', bid1:sorted[i].bid, bid2:sorted[i+1].bid});
+    // v131: full pairwise O(n²) — adjacent-only missed long-block-envelops-short cases
+    for (let i=0;i<sorted.length;i++) {
+      for (let j=i+1;j<sorted.length;j++) {
+        // Skip same-apparatus: Prélim1 + Prélim2 for same athlete is normal
+        if (sorted[i].app === sorted[j].app) continue;
+        // Skip cross-day: TR samedi vs DMT dimanche is not a real conflict
+        if (sorted[i].day !== sorted[j].day) continue;
+        // Athlete busy from wu_start to cp_end on both blocks — real overlap
+        // exists iff [wu_i, cp_end_i] and [wu_j, cp_end_j] intersect.
+        const gap = sorted[j].wu_start - sorted[i].cp_end;
+        if (gap < 0)
+          conflicts.push({gap, app1:sorted[i].app, app2:sorted[j].app, t1_end:sorted[i].cp_end, t2_start:sorted[j].wu_start, severity:'conflict', bid1:sorted[i].bid, bid2:sorted[j].bid});
+        else if (gap < WARN_GAP)
+          conflicts.push({gap, app1:sorted[i].app, app2:sorted[j].app, t1_end:sorted[i].cp_end, t2_start:sorted[j].wu_start, severity:'warn', bid1:sorted[i].bid, bid2:sorted[j].bid});
+      }
     }
     if (conflicts.length) out[k] = conflicts;
   }
@@ -7684,8 +7689,9 @@ function renderBlocks(conflicts) {
     const cats_short = sortCats(b.cats).map(cat => {
       const short = cat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'');
       const athCount = (b.athletes||[]).filter(a => a.cat === cat).length;
-      const cnt = b.app === 'TRS' ? Math.floor(athCount / 2) : athCount;
-      const unit = b.app === 'TRS' ? (cnt > 1 ? ' duos' : ' duo') : '';
+      const _isSyn = (b.is_trs === true || b.app === 'TRS');
+      const cnt = _isSyn ? Math.floor(athCount / 2) : athCount;
+      const unit = _isSyn ? (cnt > 1 ? ' duos' : ' duo') : '';
       return short + (_sexeLabel ? ' '+_sexeLabel : '') + ' (' + cnt + unit + ')';
     }).join(', ');
     ech.innerHTML = `
@@ -8340,27 +8346,26 @@ function liveConflictHighlight(draggedBid) {
   for (const [k, entries] of Object.entries(athIdx)) {
     if (entries.length < 2) continue;
     const sorted = [...entries].sort((a,b) => a.wu_start - b.wu_start);
-    for (let i = 0; i < sorted.length - 1; i++) {
-      // Skip same-apparatus (Prélim1 vs Prélim2 is intentional in provincial)
-      if (sorted[i].app === sorted[i+1].app) continue;
-      // Skip cross-day
-      if ((sorted[i].day||'sam') !== (sorted[i+1].day||'sam')) continue;
-      const gap = sorted[i+1].wu_start - sorted[i].cp_end;
-      const bid1 = sorted[i].bid, bid2 = sorted[i+1].bid;
-      if (gap < 0) {
-        // Red conflict — actual overlap
-        conflictBids.add(bid1); conflictBids.add(bid2);
-        if (!bidConflictAths.has(bid1)) bidConflictAths.set(bid1, new Set());
-        if (!bidConflictAths.has(bid2)) bidConflictAths.set(bid2, new Set());
-        bidConflictAths.get(bid1).add(k);
-        bidConflictAths.get(bid2).add(k);
-      } else if (gap < WARN_GAP_LIVE) {
-        // Orange warning — too tight
-        warnBids.add(bid1); warnBids.add(bid2);
-        if (!bidWarnAths.has(bid1)) bidWarnAths.set(bid1, new Set());
-        if (!bidWarnAths.has(bid2)) bidWarnAths.set(bid2, new Set());
-        bidWarnAths.get(bid1).add(k);
-        bidWarnAths.get(bid2).add(k);
+    // v131: full pairwise O(n²) — adjacent-only missed envelop cases
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i + 1; j < sorted.length; j++) {
+        if (sorted[i].app === sorted[j].app) continue;
+        if ((sorted[i].day||'sam') !== (sorted[j].day||'sam')) continue;
+        const gap = sorted[j].wu_start - sorted[i].cp_end;
+        const bid1 = sorted[i].bid, bid2 = sorted[j].bid;
+        if (gap < 0) {
+          conflictBids.add(bid1); conflictBids.add(bid2);
+          if (!bidConflictAths.has(bid1)) bidConflictAths.set(bid1, new Set());
+          if (!bidConflictAths.has(bid2)) bidConflictAths.set(bid2, new Set());
+          bidConflictAths.get(bid1).add(k);
+          bidConflictAths.get(bid2).add(k);
+        } else if (gap < WARN_GAP_LIVE) {
+          warnBids.add(bid1); warnBids.add(bid2);
+          if (!bidWarnAths.has(bid1)) bidWarnAths.set(bid1, new Set());
+          if (!bidWarnAths.has(bid2)) bidWarnAths.set(bid2, new Set());
+          bidWarnAths.get(bid1).add(k);
+          bidWarnAths.get(bid2).add(k);
+        }
       }
     }
   }
@@ -8767,7 +8772,7 @@ function renderModal() {
     ? ` <span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:6px">⚠ ${_unassignedCount} non assigné${_unassignedCount>1?'s':''}<${'/'}span>`
     : '';
   // For TRS: show pairs grouped by club
-  if (b && b.app === 'TRS') {
+  if (b && (b.is_trs === true || b.app === 'TRS')) {
     // Build pairs using actual partner assignments
     const paired_modal = new Set();
     const modalPairs = [];
@@ -8889,7 +8894,7 @@ function renderModal() {
     sec2.appendChild(empty);
   }
 
-  if (b && b.app === 'TRS') {
+  if (b && (b.is_trs === true || b.app === 'TRS')) {
     // For TRS: show duos in the add section
     const _seenDuos = new Set();
     filtered.forEach(a => {
@@ -8955,7 +8960,7 @@ function addAthToModal(nom, prenom, cat, club, fromBid) {
   pendingAths.push({nom, prenom, cat, club, partenaire:''});
   // For TRS: auto-add partner if available and not already in pendingAths
   const b = blocks.find(x => x.id === editingBlockId);
-  if (b && b.app === 'TRS') {
+  if (b && (b.is_trs === true || b.app === 'TRS')) {
     const partnerKey = PARTNER_MAP[nom+'|'+prenom];
     if (partnerKey) {
       const [pNom, pPrenom] = partnerKey.split('|');
@@ -8991,7 +8996,10 @@ function saveModal() {
     }
   }
 
-  const modalMax = b.app === 'TRS' ? 32 : MAX_BLOCK;
+  const modalMax = !(b.is_trs === true || b.app === 'TRS') ? MAX_BLOCK
+    : (b.passType === 'FINALE'
+        ? ((typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') ? 64 : 16)
+        : 32);
   b.athletes = [...pendingAths].slice(0, modalMax);
   rebuildBlockMeta(b);
   rebuildPool(b.app);  // sync pool after change
@@ -9836,8 +9844,9 @@ function measureColFitWidth(appIdx) {
       const cats_short = sortCats(b.cats).map(function(cat) {
         const short = cat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'');
         const athCount = (b.athletes||[]).filter(function(a){ return a.cat === cat; }).length;
-        const cnt = b.app === 'TRS' ? Math.floor(athCount / 2) : athCount;
-        const unit = b.app === 'TRS' ? (cnt > 1 ? ' duos' : ' duo') : '';
+        const _isSyn = (b.is_trs === true || b.app === 'TRS');
+        const cnt = _isSyn ? Math.floor(athCount / 2) : athCount;
+        const unit = _isSyn ? (cnt > 1 ? ' duos' : ' duo') : '';
         return short + ' (' + cnt + unit + ')';
       }).join(', ');
       const catsFullW = mw('<span style="font-size:10px;font-weight:800;font-family:Calibri,sans-serif;white-space:nowrap;">' + cats_short + '</span>');
@@ -9858,7 +9867,7 @@ function measureColFitWidth(appIdx) {
       // this is typically the widest line in the print COMP section.
       maxW = Math.max(maxW,
         mw('<span style="font-size:8px;font-family:Calibri,sans-serif;white-space:nowrap;">' +
-           n + ' ath. · ' + toT(b.cp_start) + ' → ' + toT(b.cp_end) + '</span>') + BLOCK_PAD
+           ((b.is_trs === true || b.app === 'TRS') ? Math.floor(n/2) + ' duos' : n + ' ath.') + ' · ' + toT(b.cp_start) + ' → ' + toT(b.cp_end) + '</span>') + BLOCK_PAD
       );
     }
   }
@@ -10562,7 +10571,7 @@ render = function() {
     }
     if (!b.athletes || b.athletes.length === 0) return false;
     // For TRS: remove if no valid partner pairs exist
-    if (b.app === 'TRS') {
+    if (b.is_trs === true || b.app === 'TRS') {
       const seen = new Set();
       let pairs = 0;
       for (const a of b.athletes) {
@@ -11683,7 +11692,7 @@ function buildPrintScheduleDay(competitionName, dayLabel, dayBlocks, dayAwards, 
       var cats_print = (b.label || (b.cats||[]).join(', ') || '');
       cpEl.innerHTML =
         '<div style="font-size:10px;font-weight:800;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
-          'COMP. ' + toT(b.cp_start) + '→' + toT(b.cp_end) + ' ' + n + ' ath.' +
+          'COMP. ' + toT(b.cp_start) + '→' + toT(b.cp_end) + ' ' + ((b.is_trs === true || b.app === 'TRS') ? ((b.passType === 'FINALE' ? Math.min(Math.floor(n/2), 8) : Math.floor(n/2)) + ' duos') : n + ' ath.') +
         '</div>' +
         '<div style="font-size:10px;font-weight:800;color:#fff;line-height:1.3;word-break:break-word;white-space:normal;">' +
           cats_print +
@@ -11882,7 +11891,11 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
           if (r.kind === 'duoA') _duoCount++;
           else if (r.kind === 'orphan') _orphanCount++;
         });
-        totLabel = _duoCount + ' duo' + (_duoCount > 1 ? 's' : '');
+        // v130: cap displayed duo count at finN (typically 8) for finales.
+        // In ChQc, athletes array carries all registered for conflict detection,
+        // but the label must reflect the finalist cap.
+        var _displayDuoCount = (b.passType === 'FINALE') ? Math.min(_duoCount, 8) : _duoCount;
+        totLabel = _displayDuoCount + ' duo' + (_displayDuoCount > 1 ? 's' : '');
         if (_orphanCount) totLabel += ' + ' + _orphanCount + ' orphelin' + (_orphanCount > 1 ? 's' : '');
         totLabel += ' (' + athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '') + ')';
       } else {
@@ -13439,7 +13452,10 @@ function renderRosterCols() {
         if (!toBlock) return;
         // v083: snapshot BEFORE athlete move
         try { _snapshotState('Déplacement athlète'); } catch(_){}
-        const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
+        const blockMax = !(toBlock.is_trs === true || toBlock.app === 'TRS') ? MAX_BLOCK
+          : (toBlock.passType === 'FINALE'
+              ? ((typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') ? 64 : 16)
+              : 32);
         const affectedBlocks = new Set();
 
         if (data.multi && Array.isArray(data.multi)) {
@@ -13502,7 +13518,9 @@ function renderRosterCols() {
       // (handles 'N4 F Gr.1', 'N1 12- F', 'N5 17+ M Finale', etc.)
       var _needsSexe = _blkSexeShort && !(new RegExp('\\s' + _blkSexeShort + '(\\s|$)').test(_cleanedLabel));
       const shortLabel = passLabel + ' ' + _cleanedLabel + (_needsSexe ? ' '+_blkSexeShort : '');
-      const displayCount = b.app === 'TRS'
+      // v129: defensive — detect synchro via is_trs flag OR legacy app==='TRS'
+      const _isSynRoster = (b.is_trs === true || b.app === 'TRS');
+      const displayCount = _isSynRoster
         ? (function() {
             // Count only complete pairs using PARTNER_MAP
             const seen = new Set();
@@ -13515,15 +13533,18 @@ function renderRosterCols() {
               if (!a2) continue;
               seen.add(k); seen.add(pk); pairs++;
             }
-            return pairs;
+            // v130: for synchro finales, cap displayed count at finN (typically 8).
+            // In ChQc, b.athletes carries all registered for conflict detection,
+            // but the label must show the finalist count.
+            return (b.passType === 'FINALE') ? Math.min(pairs, 8) : pairs;
           })()
         : b.athletes.length;
-      const countLabel = b.app === 'TRS' ? displayCount+' duos' : displayCount+' athlètes';
+      const countLabel = _isSynRoster ? displayCount+' duos' : displayCount+' athlètes';
       const catBreakdown = sortCats(b.cats).map(cat => {
         const short = cat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'');
         const catAths = (b.athletes||[]).filter(a => a.cat === cat);
         const cnt = catAths.length;
-        const display = b.app === 'TRS' ? Math.floor(cnt/2) + ' duo' + (Math.floor(cnt/2)>1?'s':'') : cnt;
+        const display = _isSynRoster ? Math.floor(cnt/2) + ' duo' + (Math.floor(cnt/2)>1?'s':'') : cnt;
         // Show gender breakdown if mixed
         const nF = catAths.filter(a=>a.sexe==='Féminin').length;
         const nM = catAths.filter(a=>a.sexe==='Masculin').length;
@@ -14114,7 +14135,7 @@ function measureRosterWidth(app) {
 
   for (const b of appBlocks) {
     let rows = [];
-    if (b.app === 'TRS') {
+    if (b.is_trs === true || b.app === 'TRS') {
       const paired = new Set();
       for (const a1 of b.athletes) {
         const k1 = a1.nom+'|'+a1.prenom;
@@ -14280,7 +14301,10 @@ function rebuildBlockMeta(bl) {
   function _applyDrop(section, payload) {
     const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
     if (!toBlock) return;
-    const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
+    const blockMax = !(toBlock.is_trs === true || toBlock.app === 'TRS') ? MAX_BLOCK
+          : (toBlock.passType === 'FINALE'
+              ? ((typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') ? 64 : 16)
+              : 32);
     const affectedBlocks = new Set();
 
     if (payload.multi && Array.isArray(payload.multi)) {
@@ -15554,7 +15578,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -15698,7 +15722,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -16890,7 +16914,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-126<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-131<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -17000,7 +17024,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-126<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-10-131<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -18540,158 +18564,6 @@ function _gsRebuildPartnerMap(athletes) {
 
 // ── Competition type ────────────────────────────────────────────
 _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
-// ═══════════════════════════════════════════════════════════════
-// v126: DEBUG SYSTEM — silent ring buffer + on-demand floating panel
-// ═══════════════════════════════════════════════════════════════
-// Collects dbg() calls into a 500-entry ring buffer from startup.
-// Invisible by default. Reveal the panel via:
-//   • Keyboard: Ctrl+Shift+D (or Cmd+Shift+D on Mac)
-//   • Console:  __dbg.show() / .hide() / .toggle() / .dump() / .copy()
-// Log from anywhere:  dbg('synchro', 'block', b.id, 'n='+n);
-// Categories get auto-colored in the panel. Filter with the input box
-// or __dbg.filter('synchro').
-var __DBG_MAX = 500;
-var __dbg_buf = [];
-var __dbg_panel = null;
-function dbg(cat) {
-  var args = Array.prototype.slice.call(arguments, 1);
-  var entry = {
-    t: Date.now(),
-    cat: String(cat || 'log'),
-    msg: args.map(function(a) {
-      if (a === null) return 'null';
-      if (a === undefined) return 'undefined';
-      if (typeof a === 'string') return a;
-      if (typeof a === 'number' || typeof a === 'boolean') return String(a);
-      try { return JSON.stringify(a); } catch(e) { return String(a); }
-    }).join(' ')
-  };
-  __dbg_buf.push(entry);
-  if (__dbg_buf.length > __DBG_MAX) __dbg_buf.shift();
-  if (__dbg_panel && __dbg_panel.style.display !== 'none') __dbgRender();
-}
-function __dbgFmt(e) {
-  var d = new Date(e.t);
-  function pad(n,w){ n=String(n); while(n.length<w) n='0'+n; return n; }
-  return pad(d.getHours(),2)+':'+pad(d.getMinutes(),2)+':'+pad(d.getSeconds(),2)+'.'+pad(d.getMilliseconds(),3)+' ['+e.cat+'] '+e.msg;
-}
-function __dbgRender() {
-  if (!__dbg_panel) return;
-  var body = __dbg_panel.querySelector('.dbg-body');
-  var filt = (__dbg_panel.querySelector('.dbg-filter').value || '').toLowerCase();
-  var countEl = __dbg_panel.querySelector('.dbg-count');
-  if (countEl) countEl.textContent = __dbg_buf.length + '/' + __DBG_MAX;
-  var catColors = {
-    synchro:'#2563eb', import:'#9333ea', migrate:'#ca8a04',
-    render:'#16a34a', warn:'#d97706', err:'#b91c1c', log:'#64748b',
-    roster:'#0891b2', gen:'#7c3aed'
-  };
-  var parts = [];
-  for (var i = __dbg_buf.length - 1; i >= 0; i--) {
-    var e = __dbg_buf[i];
-    var line = __dbgFmt(e);
-    if (filt && line.toLowerCase().indexOf(filt) < 0) continue;
-    var color = catColors[e.cat] || '#334155';
-    var timeStr = line.substring(0,12);
-    var rest = e.msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    parts.push('<div style="padding:1px 4px;border-bottom:1px solid #f1f5f9;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#334155;white-space:pre-wrap;word-break:break-word"><span style="color:#94a3b8">'+timeStr+'</span> <span style="color:'+color+';font-weight:700">['+e.cat+']</span> '+rest+'</div>');
-  }
-  body.innerHTML = parts.join('') || '<div style="padding:8px;color:#94a3b8;font-size:11px;font-style:italic">Aucune entrée</div>';
-}
-function __dbgMakePanel() {
-  var p = document.createElement('div');
-  p.id = '__dbg_panel';
-  p.style.cssText = 'position:fixed;bottom:10px;right:10px;width:560px;height:380px;background:#fff;border:2px solid #334155;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,0.35);z-index:99999;display:flex;flex-direction:column;font-family:Calibri,sans-serif;';
-  p.innerHTML =
-    '<div class="dbg-header" style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:#334155;color:#fff;border-radius:4px 4px 0 0;cursor:move;user-select:none">' +
-      '<span style="font-size:11px;font-weight:700;flex-shrink:0">&#128300; Debug</span>' +
-      '<input class="dbg-filter" type="text" placeholder="Filtrer&hellip;" style="flex:1;min-width:40px;font-size:10px;padding:2px 6px;border:1px solid #64748b;border-radius:3px;background:#f1f5f9;color:#0f172a">' +
-      '<span class="dbg-count" style="font-size:10px;color:#cbd5e1;font-variant-numeric:tabular-nums">0/0</span>' +
-      '<button class="dbg-clear" title="Vider le buffer" style="font-size:10px;padding:2px 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer">Vider</button>' +
-      '<button class="dbg-copy" title="Copier tout dans le presse-papier" style="font-size:10px;padding:2px 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer">Copier</button>' +
-      '<button class="dbg-close" title="Fermer (Ctrl+Shift+D)" style="font-size:13px;padding:0 8px;border:1px solid #64748b;background:#475569;color:#fff;border-radius:3px;cursor:pointer;line-height:1.2">&times;</button>' +
-    '</div>' +
-    '<div class="dbg-body" style="flex:1;overflow:auto;background:#f8fafc"></div>';
-  document.body.appendChild(p);
-  p.querySelector('.dbg-filter').addEventListener('input', __dbgRender);
-  p.querySelector('.dbg-clear').addEventListener('click', function(){ __dbg_buf.length=0; __dbgRender(); });
-  var copyBtn = p.querySelector('.dbg-copy');
-  copyBtn.addEventListener('click', function(){
-    var txt = __dbg_buf.map(__dbgFmt).join('
-');
-    var self = this;
-    try {
-      navigator.clipboard.writeText(txt).then(function(){
-        self.textContent = 'Copié ' + __dbg_buf.length;
-        setTimeout(function(){ self.textContent = 'Copier'; }, 1200);
-      }).catch(function(){ window.prompt('Copier manuellement (Ctrl+C) :', txt); });
-    } catch(e) { window.prompt('Copier manuellement (Ctrl+C) :', txt); }
-  });
-  p.querySelector('.dbg-close').addEventListener('click', function(){ p.style.display = 'none'; });
-  // Drag
-  var hdr = p.querySelector('.dbg-header');
-  var dx=0, dy=0, dragging=false;
-  hdr.addEventListener('mousedown', function(e){
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
-    dragging = true;
-    dx = e.clientX - p.offsetLeft;
-    dy = e.clientY - p.offsetTop;
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove', function(e){
-    if (!dragging) return;
-    p.style.left = Math.max(0, e.clientX - dx) + 'px';
-    p.style.top  = Math.max(0, e.clientY - dy) + 'px';
-    p.style.right = 'auto';
-    p.style.bottom = 'auto';
-  });
-  document.addEventListener('mouseup', function(){ dragging = false; });
-  return p;
-}
-window.__dbg = {
-  dump: function() { return __dbg_buf.map(__dbgFmt).join('
-'); },
-  copy: function() {
-    var txt = this.dump();
-    try {
-      navigator.clipboard.writeText(txt);
-      console.log('[__dbg] copied', __dbg_buf.length, 'entries');
-      return 'OK ('+__dbg_buf.length+' entrées)';
-    } catch(e) {
-      console.log(txt);
-      return txt;
-    }
-  },
-  clear: function() { __dbg_buf.length = 0; if (__dbg_panel) __dbgRender(); return 'Cleared'; },
-  show: function() {
-    if (!__dbg_panel) __dbg_panel = __dbgMakePanel();
-    __dbg_panel.style.display = 'flex';
-    __dbgRender();
-    return 'Shown';
-  },
-  hide: function() { if (__dbg_panel) __dbg_panel.style.display = 'none'; return 'Hidden'; },
-  toggle: function() {
-    if (!__dbg_panel || __dbg_panel.style.display === 'none') return this.show();
-    return this.hide();
-  },
-  filter: function(q) {
-    if (!__dbg_panel) this.show();
-    __dbg_panel.querySelector('.dbg-filter').value = q || '';
-    __dbgRender();
-    return 'Filtered: '+(q||'(none)');
-  },
-  raw: function() { return __dbg_buf.slice(); },
-  count: function() { return __dbg_buf.length; },
-  log: function() { dbg.apply(null, arguments); return 'logged'; }
-};
-document.addEventListener('keydown', function(e){
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
-    e.preventDefault();
-    window.__dbg.toggle();
-  }
-});
-dbg('log', 'Debug system v126 initialized — Ctrl+Shift+D to toggle panel');
-// ═══════════════════════════════════════════════════════════════
 
 
 // v120: cascade toggle global (re-init in script 1 in case localStorage updated)
@@ -21273,7 +21145,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-10-126)
+  // NOUVEAU ALGO (v2026-04-10-131)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -21994,16 +21866,21 @@ function getConflicts(athIdx) {
     if (apps.length < 2) continue;
     const sorted = [...apps].sort((a,b)=>a.wu_start-b.wu_start);
     const conflicts = [];
-    for (let i=0;i<sorted.length-1;i++) {
-      // Skip same-apparatus: Prélim1 + Prélim2 for same athlete is normal
-      if (sorted[i].app === sorted[i+1].app) continue;
-      // Skip cross-day: TR samedi vs DMT dimanche is not a real conflict
-      if (sorted[i].day !== sorted[i+1].day) continue;
-      const gap = sorted[i+1].wu_start - sorted[i].cp_end;
-      if (gap < 0)
-        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'conflict', bid1:sorted[i].bid, bid2:sorted[i+1].bid});
-      else if (gap < WARN_GAP)
-        conflicts.push({gap, app1:sorted[i].app, app2:sorted[i+1].app, t1_end:sorted[i].cp_end, t2_start:sorted[i+1].wu_start, severity:'warn', bid1:sorted[i].bid, bid2:sorted[i+1].bid});
+    // v131: full pairwise O(n²) — adjacent-only missed long-block-envelops-short cases
+    for (let i=0;i<sorted.length;i++) {
+      for (let j=i+1;j<sorted.length;j++) {
+        // Skip same-apparatus: Prélim1 + Prélim2 for same athlete is normal
+        if (sorted[i].app === sorted[j].app) continue;
+        // Skip cross-day: TR samedi vs DMT dimanche is not a real conflict
+        if (sorted[i].day !== sorted[j].day) continue;
+        // Athlete busy from wu_start to cp_end on both blocks — real overlap
+        // exists iff [wu_i, cp_end_i] and [wu_j, cp_end_j] intersect.
+        const gap = sorted[j].wu_start - sorted[i].cp_end;
+        if (gap < 0)
+          conflicts.push({gap, app1:sorted[i].app, app2:sorted[j].app, t1_end:sorted[i].cp_end, t2_start:sorted[j].wu_start, severity:'conflict', bid1:sorted[i].bid, bid2:sorted[j].bid});
+        else if (gap < WARN_GAP)
+          conflicts.push({gap, app1:sorted[i].app, app2:sorted[j].app, t1_end:sorted[i].cp_end, t2_start:sorted[j].wu_start, severity:'warn', bid1:sorted[i].bid, bid2:sorted[j].bid});
+      }
     }
     if (conflicts.length) out[k] = conflicts;
   }
@@ -22512,8 +22389,9 @@ function renderBlocks(conflicts) {
     const cats_short = sortCats(b.cats).map(cat => {
       const short = cat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'');
       const athCount = (b.athletes||[]).filter(a => a.cat === cat).length;
-      const cnt = b.app === 'TRS' ? Math.floor(athCount / 2) : athCount;
-      const unit = b.app === 'TRS' ? (cnt > 1 ? ' duos' : ' duo') : '';
+      const _isSyn = (b.is_trs === true || b.app === 'TRS');
+      const cnt = _isSyn ? Math.floor(athCount / 2) : athCount;
+      const unit = _isSyn ? (cnt > 1 ? ' duos' : ' duo') : '';
       return short + (_sexeLabel ? ' '+_sexeLabel : '') + ' (' + cnt + unit + ')';
     }).join(', ');
     ech.innerHTML = `
@@ -23168,27 +23046,26 @@ function liveConflictHighlight(draggedBid) {
   for (const [k, entries] of Object.entries(athIdx)) {
     if (entries.length < 2) continue;
     const sorted = [...entries].sort((a,b) => a.wu_start - b.wu_start);
-    for (let i = 0; i < sorted.length - 1; i++) {
-      // Skip same-apparatus (Prélim1 vs Prélim2 is intentional in provincial)
-      if (sorted[i].app === sorted[i+1].app) continue;
-      // Skip cross-day
-      if ((sorted[i].day||'sam') !== (sorted[i+1].day||'sam')) continue;
-      const gap = sorted[i+1].wu_start - sorted[i].cp_end;
-      const bid1 = sorted[i].bid, bid2 = sorted[i+1].bid;
-      if (gap < 0) {
-        // Red conflict — actual overlap
-        conflictBids.add(bid1); conflictBids.add(bid2);
-        if (!bidConflictAths.has(bid1)) bidConflictAths.set(bid1, new Set());
-        if (!bidConflictAths.has(bid2)) bidConflictAths.set(bid2, new Set());
-        bidConflictAths.get(bid1).add(k);
-        bidConflictAths.get(bid2).add(k);
-      } else if (gap < WARN_GAP_LIVE) {
-        // Orange warning — too tight
-        warnBids.add(bid1); warnBids.add(bid2);
-        if (!bidWarnAths.has(bid1)) bidWarnAths.set(bid1, new Set());
-        if (!bidWarnAths.has(bid2)) bidWarnAths.set(bid2, new Set());
-        bidWarnAths.get(bid1).add(k);
-        bidWarnAths.get(bid2).add(k);
+    // v131: full pairwise O(n²) — adjacent-only missed envelop cases
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i + 1; j < sorted.length; j++) {
+        if (sorted[i].app === sorted[j].app) continue;
+        if ((sorted[i].day||'sam') !== (sorted[j].day||'sam')) continue;
+        const gap = sorted[j].wu_start - sorted[i].cp_end;
+        const bid1 = sorted[i].bid, bid2 = sorted[j].bid;
+        if (gap < 0) {
+          conflictBids.add(bid1); conflictBids.add(bid2);
+          if (!bidConflictAths.has(bid1)) bidConflictAths.set(bid1, new Set());
+          if (!bidConflictAths.has(bid2)) bidConflictAths.set(bid2, new Set());
+          bidConflictAths.get(bid1).add(k);
+          bidConflictAths.get(bid2).add(k);
+        } else if (gap < WARN_GAP_LIVE) {
+          warnBids.add(bid1); warnBids.add(bid2);
+          if (!bidWarnAths.has(bid1)) bidWarnAths.set(bid1, new Set());
+          if (!bidWarnAths.has(bid2)) bidWarnAths.set(bid2, new Set());
+          bidWarnAths.get(bid1).add(k);
+          bidWarnAths.get(bid2).add(k);
+        }
       }
     }
   }
@@ -23595,7 +23472,7 @@ function renderModal() {
     ? ` <span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:6px">⚠ ${_unassignedCount} non assigné${_unassignedCount>1?'s':''}<${'/'}span>`
     : '';
   // For TRS: show pairs grouped by club
-  if (b && b.app === 'TRS') {
+  if (b && (b.is_trs === true || b.app === 'TRS')) {
     // Build pairs using actual partner assignments
     const paired_modal = new Set();
     const modalPairs = [];
@@ -23717,7 +23594,7 @@ function renderModal() {
     sec2.appendChild(empty);
   }
 
-  if (b && b.app === 'TRS') {
+  if (b && (b.is_trs === true || b.app === 'TRS')) {
     // For TRS: show duos in the add section
     const _seenDuos = new Set();
     filtered.forEach(a => {
@@ -23783,7 +23660,7 @@ function addAthToModal(nom, prenom, cat, club, fromBid) {
   pendingAths.push({nom, prenom, cat, club, partenaire:''});
   // For TRS: auto-add partner if available and not already in pendingAths
   const b = blocks.find(x => x.id === editingBlockId);
-  if (b && b.app === 'TRS') {
+  if (b && (b.is_trs === true || b.app === 'TRS')) {
     const partnerKey = PARTNER_MAP[nom+'|'+prenom];
     if (partnerKey) {
       const [pNom, pPrenom] = partnerKey.split('|');
@@ -23819,7 +23696,10 @@ function saveModal() {
     }
   }
 
-  const modalMax = b.app === 'TRS' ? 32 : MAX_BLOCK;
+  const modalMax = !(b.is_trs === true || b.app === 'TRS') ? MAX_BLOCK
+    : (b.passType === 'FINALE'
+        ? ((typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') ? 64 : 16)
+        : 32);
   b.athletes = [...pendingAths].slice(0, modalMax);
   rebuildBlockMeta(b);
   rebuildPool(b.app);  // sync pool after change
@@ -24664,8 +24544,9 @@ function measureColFitWidth(appIdx) {
       const cats_short = sortCats(b.cats).map(function(cat) {
         const short = cat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'');
         const athCount = (b.athletes||[]).filter(function(a){ return a.cat === cat; }).length;
-        const cnt = b.app === 'TRS' ? Math.floor(athCount / 2) : athCount;
-        const unit = b.app === 'TRS' ? (cnt > 1 ? ' duos' : ' duo') : '';
+        const _isSyn = (b.is_trs === true || b.app === 'TRS');
+        const cnt = _isSyn ? Math.floor(athCount / 2) : athCount;
+        const unit = _isSyn ? (cnt > 1 ? ' duos' : ' duo') : '';
         return short + ' (' + cnt + unit + ')';
       }).join(', ');
       const catsFullW = mw('<span style="font-size:10px;font-weight:800;font-family:Calibri,sans-serif;white-space:nowrap;">' + cats_short + '</span>');
@@ -24686,7 +24567,7 @@ function measureColFitWidth(appIdx) {
       // this is typically the widest line in the print COMP section.
       maxW = Math.max(maxW,
         mw('<span style="font-size:8px;font-family:Calibri,sans-serif;white-space:nowrap;">' +
-           n + ' ath. · ' + toT(b.cp_start) + ' → ' + toT(b.cp_end) + '</span>') + BLOCK_PAD
+           ((b.is_trs === true || b.app === 'TRS') ? Math.floor(n/2) + ' duos' : n + ' ath.') + ' · ' + toT(b.cp_start) + ' → ' + toT(b.cp_end) + '</span>') + BLOCK_PAD
       );
     }
   }
@@ -25390,7 +25271,7 @@ render = function() {
     }
     if (!b.athletes || b.athletes.length === 0) return false;
     // For TRS: remove if no valid partner pairs exist
-    if (b.app === 'TRS') {
+    if (b.is_trs === true || b.app === 'TRS') {
       const seen = new Set();
       let pairs = 0;
       for (const a of b.athletes) {
@@ -26511,7 +26392,7 @@ function buildPrintScheduleDay(competitionName, dayLabel, dayBlocks, dayAwards, 
       var cats_print = (b.label || (b.cats||[]).join(', ') || '');
       cpEl.innerHTML =
         '<div style="font-size:10px;font-weight:800;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
-          'COMP. ' + toT(b.cp_start) + '→' + toT(b.cp_end) + ' ' + n + ' ath.' +
+          'COMP. ' + toT(b.cp_start) + '→' + toT(b.cp_end) + ' ' + ((b.is_trs === true || b.app === 'TRS') ? ((b.passType === 'FINALE' ? Math.min(Math.floor(n/2), 8) : Math.floor(n/2)) + ' duos') : n + ' ath.') +
         '</div>' +
         '<div style="font-size:10px;font-weight:800;color:#fff;line-height:1.3;word-break:break-word;white-space:normal;">' +
           cats_print +
@@ -26710,7 +26591,11 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
           if (r.kind === 'duoA') _duoCount++;
           else if (r.kind === 'orphan') _orphanCount++;
         });
-        totLabel = _duoCount + ' duo' + (_duoCount > 1 ? 's' : '');
+        // v130: cap displayed duo count at finN (typically 8) for finales.
+        // In ChQc, athletes array carries all registered for conflict detection,
+        // but the label must reflect the finalist cap.
+        var _displayDuoCount = (b.passType === 'FINALE') ? Math.min(_duoCount, 8) : _duoCount;
+        totLabel = _displayDuoCount + ' duo' + (_displayDuoCount > 1 ? 's' : '');
         if (_orphanCount) totLabel += ' + ' + _orphanCount + ' orphelin' + (_orphanCount > 1 ? 's' : '');
         totLabel += ' (' + athletes.length + ' athlète' + (athletes.length > 1 ? 's' : '') + ')';
       } else {
@@ -28267,7 +28152,10 @@ function renderRosterCols() {
         if (!toBlock) return;
         // v083: snapshot BEFORE athlete move
         try { _snapshotState('Déplacement athlète'); } catch(_){}
-        const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
+        const blockMax = !(toBlock.is_trs === true || toBlock.app === 'TRS') ? MAX_BLOCK
+          : (toBlock.passType === 'FINALE'
+              ? ((typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') ? 64 : 16)
+              : 32);
         const affectedBlocks = new Set();
 
         if (data.multi && Array.isArray(data.multi)) {
@@ -28330,7 +28218,9 @@ function renderRosterCols() {
       // (handles 'N4 F Gr.1', 'N1 12- F', 'N5 17+ M Finale', etc.)
       var _needsSexe = _blkSexeShort && !(new RegExp('\\s' + _blkSexeShort + '(\\s|$)').test(_cleanedLabel));
       const shortLabel = passLabel + ' ' + _cleanedLabel + (_needsSexe ? ' '+_blkSexeShort : '');
-      const displayCount = b.app === 'TRS'
+      // v129: defensive — detect synchro via is_trs flag OR legacy app==='TRS'
+      const _isSynRoster = (b.is_trs === true || b.app === 'TRS');
+      const displayCount = _isSynRoster
         ? (function() {
             // Count only complete pairs using PARTNER_MAP
             const seen = new Set();
@@ -28343,15 +28233,18 @@ function renderRosterCols() {
               if (!a2) continue;
               seen.add(k); seen.add(pk); pairs++;
             }
-            return pairs;
+            // v130: for synchro finales, cap displayed count at finN (typically 8).
+            // In ChQc, b.athletes carries all registered for conflict detection,
+            // but the label must show the finalist count.
+            return (b.passType === 'FINALE') ? Math.min(pairs, 8) : pairs;
           })()
         : b.athletes.length;
-      const countLabel = b.app === 'TRS' ? displayCount+' duos' : displayCount+' athlètes';
+      const countLabel = _isSynRoster ? displayCount+' duos' : displayCount+' athlètes';
       const catBreakdown = sortCats(b.cats).map(cat => {
         const short = cat.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'');
         const catAths = (b.athletes||[]).filter(a => a.cat === cat);
         const cnt = catAths.length;
-        const display = b.app === 'TRS' ? Math.floor(cnt/2) + ' duo' + (Math.floor(cnt/2)>1?'s':'') : cnt;
+        const display = _isSynRoster ? Math.floor(cnt/2) + ' duo' + (Math.floor(cnt/2)>1?'s':'') : cnt;
         // Show gender breakdown if mixed
         const nF = catAths.filter(a=>a.sexe==='Féminin').length;
         const nM = catAths.filter(a=>a.sexe==='Masculin').length;
@@ -28409,16 +28302,6 @@ function renderRosterCols() {
           }
           paired.add(k1); paired.add(partnerKey);
           orderedPairs.push([a1, a2]);
-        }
-
-        // v126: debug trace — one entry per synchro block rendered on screen
-        if (typeof dbg === 'function') {
-          try {
-            dbg('synchro', 'block='+b.id, 'app='+b.app, 'is_trs='+b.is_trs,
-                'n='+(b.athletes&&b.athletes.length), 'pairs='+orderedPairs.length,
-                'orphans='+orphans.length, 'cats='+JSON.stringify(b.cats||[]),
-                'day='+(b.day||'?'));
-          } catch(_) {}
         }
 
         // Show orphan athletes with warning FIRST
@@ -28942,7 +28825,7 @@ function measureRosterWidth(app) {
 
   for (const b of appBlocks) {
     let rows = [];
-    if (b.app === 'TRS') {
+    if (b.is_trs === true || b.app === 'TRS') {
       const paired = new Set();
       for (const a1 of b.athletes) {
         const k1 = a1.nom+'|'+a1.prenom;
@@ -29108,7 +28991,10 @@ function rebuildBlockMeta(bl) {
   function _applyDrop(section, payload) {
     const toBlock = blocks.find(x => String(x.id) === String(section.dataset.bid));
     if (!toBlock) return;
-    const blockMax = toBlock.app === 'TRS' ? MAX_BLOCK_TRS : MAX_BLOCK;
+    const blockMax = !(toBlock.is_trs === true || toBlock.app === 'TRS') ? MAX_BLOCK
+          : (toBlock.passType === 'FINALE'
+              ? ((typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') ? 64 : 16)
+              : 32);
     const affectedBlocks = new Set();
 
     if (payload.multi && Array.isArray(payload.multi)) {
