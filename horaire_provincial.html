@@ -91,6 +91,7 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 .col-hdr.DM{color:var(--R2-text);border-bottom:2px solid var(--R2)}
 .col-hdr.TU{color:var(--R3-text);border-bottom:2px solid var(--R3)}
 .col-hdr.TRS{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
+.col-hdr.AW{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
 /* TRS keeps gold since synchro spans levels */
 .col-hdr-corner{background:var(--xl-gray2);color:var(--xl-gray5);font-size:9px}
 
@@ -630,7 +631,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-091</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-093</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -773,7 +774,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-091</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-093</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -843,7 +844,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
         <div class="col-hdr roster-hdr DM" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes DM<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('DM')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔</button></div>
         <div class="col-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;"><span>TUMBLING (TU)</span><span style="display:flex;align-items:center;gap:3px;"><button class="col-add-btn" onclick="showAddMenu(this,'TU')" title="Ajouter…">＋</button><button class="col-autofit-btn-inline" onclick="autoFitCol(3)" title="Ajuster à la largeur du contenu">⇔</button></span></div>
         <div class="col-hdr roster-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes TU<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('TU')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔</button></div>
-        <div class="col-hdr TRS" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="autoScheduleAwards()" title="Repositionner toutes les remises automatiquement">⟳</button> <button class="col-autofit-btn-inline" onclick="autoFitTRSCol()" title="Ajuster à la largeur du contenu">⇔</button></div>
+        <div class="col-hdr AW" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="(function(){if(awBlocks.length===0)generateAwardsFromBlocks();autoScheduleAwards();renderAwardBlocks();renderRemisesTab();})()" title="Générer/repositionner toutes les remises automatiquement">⟳</button> <button class="col-autofit-btn-inline" onclick="autoFitAwCol()" title="Ajuster à la largeur du contenu">⇔</button></div>
         </div>
         <div id="grid-container">
           <div class="time-col" id="time-col"></div>
@@ -855,7 +856,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
           <div class="roster-col" id="roster-DM"></div>
           <div class="app-col" id="col-TU" data-app="TU"></div>
           <div class="roster-col" id="roster-TU"></div>
-          <div class="app-col" id="col-TRS" data-app="TRS"></div>
+          <div class="app-col" id="col-AW" data-app="AW"></div>
         </div>
       </div>
     </div>
@@ -1457,6 +1458,7 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 .col-hdr.DM{color:var(--R2-text);border-bottom:2px solid var(--R2)}
 .col-hdr.TU{color:var(--R3-text);border-bottom:2px solid var(--R3)}
 .col-hdr.TRS{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
+.col-hdr.AW{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
 /* TRS keeps gold since synchro spans levels */
 .col-hdr-corner{background:var(--xl-gray2);color:var(--xl-gray5);font-size:9px}
 
@@ -1924,7 +1926,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-091<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-093<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2034,7 +2036,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-091<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-093<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -2084,7 +2086,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
         <div class="col-hdr roster-hdr DM" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes DM<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('DM')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔<${'/'}button><${'/'}div>
         <div class="col-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;"><span>TUMBLING (TU)<${'/'}span><span style="display:flex;align-items:center;gap:3px;"><button class="col-add-btn" onclick="showAddMenu(this,'TU')" title="Ajouter…">＋<${'/'}button><button class="col-autofit-btn-inline" onclick="autoFitCol(2)" title="Ajuster à la largeur du contenu">⇔<${'/'}button><${'/'}span><${'/'}div>
         <div class="col-hdr roster-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes TU<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('TU')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔<${'/'}button><${'/'}div>
-        <div class="col-hdr TRS" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="autoScheduleAwards()" title="Repositionner toutes les remises automatiquement">⟳<${'/'}button> <button class="col-autofit-btn-inline" onclick="autoFitTRSCol()" title="Ajuster à la largeur du contenu">⇔<${'/'}button><${'/'}div>
+        <div class="col-hdr AW" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="(function(){if(awBlocks.length===0)generateAwardsFromBlocks();autoScheduleAwards();renderAwardBlocks();renderRemisesTab();})()" title="Générer/repositionner toutes les remises automatiquement">⟳<${'/'}button> <button class="col-autofit-btn-inline" onclick="autoFitAwCol()" title="Ajuster à la largeur du contenu">⇔<${'/'}button><${'/'}div>
         <${'/'}div>
         <div id="grid-container">
           <div class="time-col" id="time-col"><${'/'}div>
@@ -2096,7 +2098,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
           <div class="roster-col" id="roster-DM"><${'/'}div>
           <div class="app-col" id="col-TU" data-app="TU"><${'/'}div>
           <div class="roster-col" id="roster-TU"><${'/'}div>
-          <div class="app-col" id="col-TRS" data-app="TRS"><${'/'}div>
+          <div class="app-col" id="col-AW" data-app="AW"><${'/'}div>
         <${'/'}div>
       <${'/'}div>
     <${'/'}div>
@@ -5748,7 +5750,7 @@ function _gsRebuild(athletes) {
   // ── Layout: stack blocks per app per day ──────────────────
   function _layout(dayBlks, startM) {
     var GAP=0; // pas de gap (règle GymQC)
-    ['TR','TR2','DM','TU','TRS'].forEach(function(app){
+    ['TR','TR2','DM','TU','AW'].forEach(function(app){
       var ab=dayBlks.filter(function(b){return b.app===app;});
       ab.sort(function(a,b){
         if(a.passType!==b.passType) return a.passType==='PRELIM'?-1:1;
@@ -5766,7 +5768,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-091)
+  // NOUVEAU ALGO (v2026-04-09-093)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -6253,7 +6255,7 @@ function _gsRebuild(athletes) {
     _samOptimized = false;
 
     // Clear old grid
-    ['TR','TR2','DM','TU','TRS'].forEach(function(app){
+    ['TR','TR2','DM','TU','AW'].forEach(function(app){
       var col=document.getElementById('col-'+app);
       if(col) col.querySelectorAll('.grid-line,.block').forEach(function(el){el.remove();});
     });
@@ -6282,6 +6284,9 @@ function _gsRebuild(athletes) {
       // prelim/finale block structure must be preserved
       _samOptimized = true;
       setTimeout(function(){
+        // v093: migrate legacy TRS blocks and generate awards from blocks
+        try { _migrateTRSBlocks(); } catch(e){ console.warn('migrate:', e); }
+        try { generateAwardsFromBlocks(); } catch(e){ console.warn('gen awards:', e); }
         try { autoScheduleAwards(); } catch(e){}
         // v065: dispatcher correctement selon currentDay. L'ancien filter vidait
         // _blocks_sam (ou laissait _blocks_dim stale) quand on rebuildait depuis
@@ -6459,7 +6464,7 @@ function getConflicts(athIdx) {
 // ── Grid Setup ────────────────────────────────────
 function setupGrid() {
   const timeCol = document.getElementById('time-col');
-  const cols = ['TR','TR2','DM','TU','TRS'].map(a=>document.getElementById('col-'+a));
+  const cols = ['TR','TR2','DM','TU','AW'].map(a=>document.getElementById('col-'+a));
   const totalH = TOTAL_H;
 
   // Clear old time labels and grid lines
@@ -6970,7 +6975,7 @@ function cycleJudgePanel(bid) {
 
 
 function renderBlocks(conflicts) {
-  ['TR','TR2','DM','TU','TRS'].forEach(app => {
+  ['TR','TR2','DM','TU','AW'].forEach(app => {
     const col = document.getElementById('col-'+app);
     if (!col) return;
     // Remove old blocks only
@@ -9047,7 +9052,7 @@ function renderRemisesTab() {
 function getColWidths() {
   // Single source of truth: read actual pixel widths from the DOM
   const timeW = document.getElementById('time-col').getBoundingClientRect().width || 52;
-  const apps = ['TR','TR2','DM','TU','TRS'];
+  const apps = ['TR','TR2','DM','TU','AW'];
   const appWs = apps.map(a => { const el = document.getElementById('col-'+a); return el ? el.getBoundingClientRect().width || 200 : 200; });
   return { timeW, appWs };
 }
@@ -9094,7 +9099,7 @@ function measureColFitWidth(appIdx) {
   //   Block:  left:2 + right:2 (margins) + padding 4+4 (ech/comp) = 12 px
   //   Award:  left:2 + right:2 (margins) + padding 5+5 (inner)    = 14 px
 
-  const APPS      = ['TR','TR2','DM','TU','TRS'];
+  const APPS      = ['TR','TR2','DM','TU','AW'];
   const app       = APPS[appIdx];
   const BLOCK_PAD = 12;
   const AW_PAD    = 14;
@@ -9117,8 +9122,8 @@ function measureColFitWidth(appIdx) {
 
   let maxW = 60;
 
-  if (appIdx === 3) {
-    // ── TRS awards: widest individual span sets minimum column width ─────
+  if (appIdx === 4) {
+    // v093: ── AW awards: widest individual span sets minimum column width ─────
     // The inner block uses overflow:hidden so each span clips independently.
     // Measure both current day and other day awards.
     const allAwards = [...awBlocks];
@@ -9208,7 +9213,9 @@ function autoFitCol(appIdx) {
 }
 
 // Keep backward-compat alias
-function autoFitTRSCol() { autoFitCol(4); }
+function autoFitAwCol() { autoFitCol(4); }
+// v093: Backward-compat alias
+function autoFitTRSCol() { autoFitAwCol(); }
 
 function autoFitRosterCol(app) {
   rosterWidths[app] = measureRosterWidth(app);
@@ -9936,7 +9943,7 @@ function _cpDur(n, app) {
 
 function reoptimizeSchedule() {
   const DS = DAY_START;
-  const APPS = ['TR','TR2','DM','TU','TRS'];
+  const APPS = ['TR','TR2','DM','TU','AW'];
 
   // ── PASS 0: Consolidate — each category goes to ONE primary block ──
   for (const app of APPS) {
@@ -10439,7 +10446,12 @@ function _initDimAwardsBackground() {
 }
 
 // Awards: schedule on startup using the same single code path as ⟳
+// v093: generate awards from blocks if none exist yet + migrate legacy TRS
 setTimeout(function() {
+  try { _migrateTRSBlocks(); } catch(e){}
+  if (typeof awBlocks !== 'undefined' && awBlocks.length === 0 && blocks && blocks.length > 0) {
+    try { generateAwardsFromBlocks(); } catch(e){ console.warn('gen awards startup:', e); }
+  }
   autoScheduleAwards();
   _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   scheduleSave();
@@ -11049,7 +11061,7 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
 function initColReorder() {
   const headerRow = document.getElementById('col-headers');
   const appHdrs = [...headerRow.querySelectorAll('.col-hdr:not(.col-hdr-corner)')];
-  const apps = ['TR','TR2','DM','TU','TRS'];
+  const apps = ['TR','TR2','DM','TU','AW'];
 
   appHdrs.forEach((hdr, i) => {
     hdr.setAttribute('draggable', 'true');
@@ -11112,7 +11124,7 @@ function swapAppColumns(appA, appB) {
 }
 
 // ══════════════════════════════════════════════════════════
-// AWARD BLOCKS (REMISES column = col-TRS)
+// v093: AWARD BLOCKS (REMISES column = col-AW)
 // ══════════════════════════════════════════════════════════
 
 function getAwardConflicts(aw) {
@@ -11147,7 +11159,7 @@ function getAwardTimingViolation(aw) {
 }
 
 function renderAwardBlocks() {
-  const col = document.getElementById('col-TRS');
+  const col = document.getElementById('col-AW');
   if (!col) return;
   col.querySelectorAll('.aw-block').forEach(el => el.remove());
 
@@ -11807,6 +11819,138 @@ function resolveAwardOverlaps(droppedId) {
 }
 
 
+// v093: Migrate any blocks that have app === 'TRS' (legacy) to app === 'TR'
+// with is_trs:true. The col-TRS column has been renamed to col-AW (awards only),
+// so synchro blocks must live in the TR/TR2 plateaus.
+function _migrateTRSBlocks() {
+  if (typeof blocks === 'undefined' || !blocks) return 0;
+  var migrated = 0;
+  blocks.forEach(function(b) {
+    if (b && b.app === 'TRS') {
+      b.app = 'TR';
+      b.is_trs = true;
+      migrated++;
+    }
+  });
+  // Same for cached days
+  ['_blocks_sam','_blocks_dim','_blocks_ven'].forEach(function(k) {
+    var arr = window[k];
+    if (Array.isArray(arr)) {
+      arr.forEach(function(b) {
+        if (b && b.app === 'TRS') {
+          b.app = 'TR';
+          b.is_trs = true;
+          migrated++;
+        }
+      });
+    }
+  });
+  if (migrated > 0) console.log('[v093] Migrated ' + migrated + " TRS blocks to TR/is_trs:true");
+  return migrated;
+}
+
+// v093: Auto-generate awards (remises) from the current blocks.
+// Creates one award per unique (app, level) bucket, scheduled 5 min after
+// the latest competition of that bucket ends. Awards are 5 min each.
+// Called at the end of _gsRebuild if EXTRA.awards is empty, or manually via
+// the REMISES column ⟳ button as a fallback.
+function generateAwardsFromBlocks() {
+  if (typeof blocks === 'undefined' || !blocks || blocks.length === 0) {
+    console.warn('[gen awards] no blocks to generate from');
+    return 0;
+  }
+
+  // Extract level number from cat like "N1 12-" or "TR - N3" -> 1 or 3
+  function _levelFromCat(cat) {
+    var m = (cat || '').match(/N(\d+)/);
+    if (m) return parseInt(m[1]);
+    if (/junior/i.test(cat||'')) return 8;
+    if (/senior/i.test(cat||'')) return 9;
+    if (/novice/i.test(cat||'')) return 0;
+    return 99;
+  }
+
+  // Strip the app prefix from cat: "TR - N3" -> "N3"
+  function _shortCat(cat) {
+    return (cat || '').replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '').trim();
+  }
+
+  // Bucket key: app + level. Example: "TR|1", "DM|3"
+  // Synchro blocks (is_trs) get their own bucket: "TRS|1"
+  var buckets = {}; // key -> { app, level, cats:Set, latestEnd:number }
+
+  blocks.forEach(function(b) {
+    if (!b || b.type === 'break') return;
+    if (!b.cats || b.cats.length === 0) return;
+
+    // Determine award app: synchro → 'TRS', else the plateau app (TR2 → TR)
+    var awApp;
+    if (b.is_trs || b.app === 'TRS') awApp = 'TRS';
+    else if (b.app === 'TR2') awApp = 'TR';
+    else awApp = b.app;
+
+    b.cats.forEach(function(cat) {
+      var level = _levelFromCat(cat);
+      var key = awApp + '|' + level;
+      if (!buckets[key]) {
+        buckets[key] = {
+          app: awApp,
+          level: level,
+          cats: {},
+          latestEnd: 0
+        };
+      }
+      buckets[key].cats[cat] = true;
+      if (b.cp_end > buckets[key].latestEnd) {
+        buckets[key].latestEnd = b.cp_end;
+      }
+    });
+  });
+
+  // Clear current awards
+  awBlocks.length = 0;
+
+  // Create one award per bucket, ordered by end time
+  var bucketList = Object.values(buckets).sort(function(a, b) {
+    return a.latestEnd - b.latestEnd;
+  });
+
+  var awI = 0;
+  bucketList.forEach(function(bk) {
+    // Start 5 min after competition ends (snap to 5)
+    var start = Math.ceil((bk.latestEnd + 5) / 5) * 5;
+    var aw = {
+      id: 'aw_' + awI,
+      app: bk.app,
+      level: bk.level,
+      cats: Object.keys(bk.cats).sort(),
+      start_m: start,
+      end_m: start + 5,
+      athletes: []
+    };
+    // Populate athletes via existing helper
+    try { aw.athletes = getAthletesForAward(aw); } catch(e) { aw.athletes = []; }
+    awBlocks.push(aw);
+    awI++;
+  });
+
+  // Also update EXTRA.awards so subsequent rebuilds preserve them (until rebuilt)
+  if (typeof EXTRA !== 'undefined' && EXTRA) {
+    EXTRA.awards = awBlocks.map(function(aw) {
+      return {
+        app: aw.app,
+        level: aw.level,
+        cats: aw.cats.slice(),
+        start: toT(aw.start_m),
+        end: toT(aw.end_m)
+      };
+    });
+  }
+
+  console.log('[gen awards] Created ' + awBlocks.length + ' remises from ' + blocks.length + ' blocks');
+  return awBlocks.length;
+}
+
 // ── Auto-schedule all awards: each award at earliest slot after its category ends,
 //    no award-award overlap, no athlete conflict with any apparatus ──
 function autoScheduleAwards(bgMode) {
@@ -12265,7 +12409,7 @@ function resolveAwardConflicts() {
 // ROSTER COLUMNS — athlete names beside each block
 // ══════════════════════════════════════════════════════════════
 function renderRosterCols() {
-  const APPS = ['TR','TR2','DM','TU','TRS'];
+  const APPS = ['TR','TR2','DM','TU','AW'];
   const athIdx = buildAthIndex();
   const conflictsMap = getConflicts(athIdx);
   const conflictKeys = new Set(Object.keys(conflictsMap));
@@ -12674,7 +12818,17 @@ function renderRosterCols() {
 function createEmptyBlock(app) {
   const wu = 5;
   const CP_dur = _ceil5(10);
-  const appBlocks = blocks.filter(b => b.app === app || (app === 'TR' && b.app === 'TRS'));
+  // v092: Synchro blocks (TRS) must live in TR or TR2 columns (with is_trs:true),
+  // not in the col-AW (REMISES) column which is for awards only.
+  // Pick the TR plateau with fewer blocks to balance load.
+  var _isSynchro = (app === 'TRS');
+  var _actualApp = app;
+  if (_isSynchro) {
+    var _nTR  = blocks.filter(function(b){ return b.app === 'TR';  }).length;
+    var _nTR2 = blocks.filter(function(b){ return b.app === 'TR2'; }).length;
+    _actualApp = (_nTR2 < _nTR) ? 'TR2' : 'TR';
+  }
+  const appBlocks = blocks.filter(b => b.app === _actualApp);
   let wu_start = DAY_START;
   if (appBlocks.length) wu_start = Math.max(...appBlocks.map(b => b.cp_end));
   wu_start = _ceil5(wu_start);
@@ -12687,8 +12841,8 @@ function createEmptyBlock(app) {
   });
   const newId = 'prov_' + (_maxIdNum + 1);
   blocks.push({
-    id: newId, app, label: '(vide)', cats: [],
-    athletes: [], n: 0, is_trs: app === 'TRS', level: 0,
+    id: newId, app: _actualApp, label: _isSynchro ? '(Synchro vide)' : '(vide)', cats: [],
+    athletes: [], n: 0, is_trs: _isSynchro, level: 0,
     wu_start, wu_end: wu_start + wu,
     cp_start: wu_start + wu, cp_end: wu_start + wu + CP_dur});
 
@@ -12704,13 +12858,13 @@ function createEmptyBlock(app) {
   updateDayBounds();
   setupGrid();
   render();
-  // Scroll the new block into view
-  var col = document.getElementById('col-' + app);
+  // v092: Scroll the new block into view — use the ACTUAL app column
+  var col = document.getElementById('col-' + _actualApp);
   if (col) {
     var blkEl = col.querySelector('[data-bid="' + newId + '"]');
     if (blkEl) blkEl.scrollIntoView({behavior:'smooth', block:'center'});
   }
-  console.log('Created empty', app, 'block #' + newId, 'at', toT(wu_start));
+  console.log('Created empty', _actualApp, (_isSynchro ? 'SYNCHRO' : ''), 'block #' + newId, 'at', toT(wu_start));
   scheduleSave();
 }
 
@@ -13823,6 +13977,7 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 .col-hdr.DM{color:var(--R2-text);border-bottom:2px solid var(--R2)}
 .col-hdr.TU{color:var(--R3-text);border-bottom:2px solid var(--R3)}
 .col-hdr.TRS{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
+.col-hdr.AW{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
 /* TRS keeps gold since synchro spans levels */
 .col-hdr-corner{background:var(--xl-gray2);color:var(--xl-gray5);font-size:9px}
 
@@ -14362,7 +14517,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-091</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-093</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -14505,7 +14660,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-091</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-093</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -14575,7 +14730,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
         <div class="col-hdr roster-hdr DM" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes DM<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('DM')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔</button></div>
         <div class="col-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;"><span>TUMBLING (TU)</span><span style="display:flex;align-items:center;gap:3px;"><button class="col-add-btn" onclick="showAddMenu(this,'TU')" title="Ajouter…">＋</button><button class="col-autofit-btn-inline" onclick="autoFitCol(3)" title="Ajuster à la largeur du contenu">⇔</button></span></div>
         <div class="col-hdr roster-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes TU<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('TU')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔</button></div>
-        <div class="col-hdr TRS" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="autoScheduleAwards()" title="Repositionner toutes les remises automatiquement">⟳</button> <button class="col-autofit-btn-inline" onclick="autoFitTRSCol()" title="Ajuster à la largeur du contenu">⇔</button></div>
+        <div class="col-hdr AW" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="(function(){if(awBlocks.length===0)generateAwardsFromBlocks();autoScheduleAwards();renderAwardBlocks();renderRemisesTab();})()" title="Générer/repositionner toutes les remises automatiquement">⟳</button> <button class="col-autofit-btn-inline" onclick="autoFitAwCol()" title="Ajuster à la largeur du contenu">⇔</button></div>
         </div>
         <div id="grid-container">
           <div class="time-col" id="time-col"></div>
@@ -14587,7 +14742,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
           <div class="roster-col" id="roster-DM"></div>
           <div class="app-col" id="col-TU" data-app="TU"></div>
           <div class="roster-col" id="roster-TU"></div>
-          <div class="app-col" id="col-TRS" data-app="TRS"></div>
+          <div class="app-col" id="col-AW" data-app="AW"></div>
         </div>
       </div>
     </div>
@@ -15189,6 +15344,7 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 .col-hdr.DM{color:var(--R2-text);border-bottom:2px solid var(--R2)}
 .col-hdr.TU{color:var(--R3-text);border-bottom:2px solid var(--R3)}
 .col-hdr.TRS{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
+.col-hdr.AW{color:var(--TRS-text);border-bottom:2px solid var(--TRS);background:var(--xl-gray1)}
 /* TRS keeps gold since synchro spans levels */
 .col-hdr-corner{background:var(--xl-gray2);color:var(--xl-gray5);font-size:9px}
 
@@ -15656,7 +15812,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-091<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-093<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -15766,7 +15922,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-091<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-093<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15816,7 +15972,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
         <div class="col-hdr roster-hdr DM" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes DM<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('DM')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔<${'/'}button><${'/'}div>
         <div class="col-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;"><span>TUMBLING (TU)<${'/'}span><span style="display:flex;align-items:center;gap:3px;"><button class="col-add-btn" onclick="showAddMenu(this,'TU')" title="Ajouter…">＋<${'/'}button><button class="col-autofit-btn-inline" onclick="autoFitCol(2)" title="Ajuster à la largeur du contenu">⇔<${'/'}button><${'/'}span><${'/'}div>
         <div class="col-hdr roster-hdr TU" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">Athlètes TU<button class="col-autofit-btn-inline" onclick="autoFitRosterCol('TU')" title="Ajuster à la largeur du contenu" style="font-size:10px;padding:0 3px;">⇔<${'/'}button><${'/'}div>
-        <div class="col-hdr TRS" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="autoScheduleAwards()" title="Repositionner toutes les remises automatiquement">⟳<${'/'}button> <button class="col-autofit-btn-inline" onclick="autoFitTRSCol()" title="Ajuster à la largeur du contenu">⇔<${'/'}button><${'/'}div>
+        <div class="col-hdr AW" style="display:flex;justify-content:space-between;align-items:center;padding:0 6px;">REMISES<button class="col-autofit-btn-inline" onclick="(function(){if(awBlocks.length===0)generateAwardsFromBlocks();autoScheduleAwards();renderAwardBlocks();renderRemisesTab();})()" title="Générer/repositionner toutes les remises automatiquement">⟳<${'/'}button> <button class="col-autofit-btn-inline" onclick="autoFitAwCol()" title="Ajuster à la largeur du contenu">⇔<${'/'}button><${'/'}div>
         <${'/'}div>
         <div id="grid-container">
           <div class="time-col" id="time-col"><${'/'}div>
@@ -15828,7 +15984,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
           <div class="roster-col" id="roster-DM"><${'/'}div>
           <div class="app-col" id="col-TU" data-app="TU"><${'/'}div>
           <div class="roster-col" id="roster-TU"><${'/'}div>
-          <div class="app-col" id="col-TRS" data-app="TRS"><${'/'}div>
+          <div class="app-col" id="col-AW" data-app="AW"><${'/'}div>
         <${'/'}div>
       <${'/'}div>
     <${'/'}div>
@@ -19534,7 +19690,7 @@ function _gsRebuild(athletes) {
   // ── Layout: stack blocks per app per day ──────────────────
   function _layout(dayBlks, startM) {
     var GAP=0; // pas de gap (règle GymQC)
-    ['TR','TR2','DM','TU','TRS'].forEach(function(app){
+    ['TR','TR2','DM','TU','AW'].forEach(function(app){
       var ab=dayBlks.filter(function(b){return b.app===app;});
       ab.sort(function(a,b){
         if(a.passType!==b.passType) return a.passType==='PRELIM'?-1:1;
@@ -19552,7 +19708,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-091)
+  // NOUVEAU ALGO (v2026-04-09-093)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -20039,7 +20195,7 @@ function _gsRebuild(athletes) {
     _samOptimized = false;
 
     // Clear old grid
-    ['TR','TR2','DM','TU','TRS'].forEach(function(app){
+    ['TR','TR2','DM','TU','AW'].forEach(function(app){
       var col=document.getElementById('col-'+app);
       if(col) col.querySelectorAll('.grid-line,.block').forEach(function(el){el.remove();});
     });
@@ -20068,6 +20224,9 @@ function _gsRebuild(athletes) {
       // prelim/finale block structure must be preserved
       _samOptimized = true;
       setTimeout(function(){
+        // v093: migrate legacy TRS blocks and generate awards from blocks
+        try { _migrateTRSBlocks(); } catch(e){ console.warn('migrate:', e); }
+        try { generateAwardsFromBlocks(); } catch(e){ console.warn('gen awards:', e); }
         try { autoScheduleAwards(); } catch(e){}
         // v065: dispatcher correctement selon currentDay. L'ancien filter vidait
         // _blocks_sam (ou laissait _blocks_dim stale) quand on rebuildait depuis
@@ -20245,7 +20404,7 @@ function getConflicts(athIdx) {
 // ── Grid Setup ────────────────────────────────────
 function setupGrid() {
   const timeCol = document.getElementById('time-col');
-  const cols = ['TR','TR2','DM','TU','TRS'].map(a=>document.getElementById('col-'+a));
+  const cols = ['TR','TR2','DM','TU','AW'].map(a=>document.getElementById('col-'+a));
   const totalH = TOTAL_H;
 
   // Clear old time labels and grid lines
@@ -20657,7 +20816,7 @@ function cycleJudgePanel(bid) {
 
 
 function renderBlocks(conflicts) {
-  ['TR','TR2','DM','TU','TRS'].forEach(app => {
+  ['TR','TR2','DM','TU','AW'].forEach(app => {
     const col = document.getElementById('col-'+app);
     if (!col) return;
     // Remove old blocks only
@@ -22734,7 +22893,7 @@ function renderRemisesTab() {
 function getColWidths() {
   // Single source of truth: read actual pixel widths from the DOM
   const timeW = document.getElementById('time-col').getBoundingClientRect().width || 52;
-  const apps = ['TR','TR2','DM','TU','TRS'];
+  const apps = ['TR','TR2','DM','TU','AW'];
   const appWs = apps.map(a => { const el = document.getElementById('col-'+a); return el ? el.getBoundingClientRect().width || 200 : 200; });
   return { timeW, appWs };
 }
@@ -22781,7 +22940,7 @@ function measureColFitWidth(appIdx) {
   //   Block:  left:2 + right:2 (margins) + padding 4+4 (ech/comp) = 12 px
   //   Award:  left:2 + right:2 (margins) + padding 5+5 (inner)    = 14 px
 
-  const APPS      = ['TR','TR2','DM','TU','TRS'];
+  const APPS      = ['TR','TR2','DM','TU','AW'];
   const app       = APPS[appIdx];
   const BLOCK_PAD = 12;
   const AW_PAD    = 14;
@@ -22804,8 +22963,8 @@ function measureColFitWidth(appIdx) {
 
   let maxW = 60;
 
-  if (appIdx === 3) {
-    // ── TRS awards: widest individual span sets minimum column width ─────
+  if (appIdx === 4) {
+    // v093: ── AW awards: widest individual span sets minimum column width ─────
     // The inner block uses overflow:hidden so each span clips independently.
     // Measure both current day and other day awards.
     const allAwards = [...awBlocks];
@@ -22895,7 +23054,9 @@ function autoFitCol(appIdx) {
 }
 
 // Keep backward-compat alias
-function autoFitTRSCol() { autoFitCol(4); }
+function autoFitAwCol() { autoFitCol(4); }
+// v093: Backward-compat alias
+function autoFitTRSCol() { autoFitAwCol(); }
 
 function autoFitRosterCol(app) {
   rosterWidths[app] = measureRosterWidth(app);
@@ -23623,7 +23784,7 @@ function _cpDur(n, app) {
 
 function reoptimizeSchedule() {
   const DS = DAY_START;
-  const APPS = ['TR','TR2','DM','TU','TRS'];
+  const APPS = ['TR','TR2','DM','TU','AW'];
 
   // ── PASS 0: Consolidate — each category goes to ONE primary block ──
   for (const app of APPS) {
@@ -24126,7 +24287,12 @@ function _initDimAwardsBackground() {
 }
 
 // Awards: schedule on startup using the same single code path as ⟳
+// v093: generate awards from blocks if none exist yet + migrate legacy TRS
 setTimeout(function() {
+  try { _migrateTRSBlocks(); } catch(e){}
+  if (typeof awBlocks !== 'undefined' && awBlocks.length === 0 && blocks && blocks.length > 0) {
+    try { generateAwardsFromBlocks(); } catch(e){ console.warn('gen awards startup:', e); }
+  }
   autoScheduleAwards();
   _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
   scheduleSave();
@@ -24736,7 +24902,7 @@ function buildPrintRosterForBlocks(c, dayLabel, dayBlocksToUse) {
 function initColReorder() {
   const headerRow = document.getElementById('col-headers');
   const appHdrs = [...headerRow.querySelectorAll('.col-hdr:not(.col-hdr-corner)')];
-  const apps = ['TR','TR2','DM','TU','TRS'];
+  const apps = ['TR','TR2','DM','TU','AW'];
 
   appHdrs.forEach((hdr, i) => {
     hdr.setAttribute('draggable', 'true');
@@ -24799,7 +24965,7 @@ function swapAppColumns(appA, appB) {
 }
 
 // ══════════════════════════════════════════════════════════
-// AWARD BLOCKS (REMISES column = col-TRS)
+// v093: AWARD BLOCKS (REMISES column = col-AW)
 // ══════════════════════════════════════════════════════════
 
 function getAwardConflicts(aw) {
@@ -24834,7 +25000,7 @@ function getAwardTimingViolation(aw) {
 }
 
 function renderAwardBlocks() {
-  const col = document.getElementById('col-TRS');
+  const col = document.getElementById('col-AW');
   if (!col) return;
   col.querySelectorAll('.aw-block').forEach(el => el.remove());
 
@@ -25494,6 +25660,138 @@ function resolveAwardOverlaps(droppedId) {
 }
 
 
+// v093: Migrate any blocks that have app === 'TRS' (legacy) to app === 'TR'
+// with is_trs:true. The col-TRS column has been renamed to col-AW (awards only),
+// so synchro blocks must live in the TR/TR2 plateaus.
+function _migrateTRSBlocks() {
+  if (typeof blocks === 'undefined' || !blocks) return 0;
+  var migrated = 0;
+  blocks.forEach(function(b) {
+    if (b && b.app === 'TRS') {
+      b.app = 'TR';
+      b.is_trs = true;
+      migrated++;
+    }
+  });
+  // Same for cached days
+  ['_blocks_sam','_blocks_dim','_blocks_ven'].forEach(function(k) {
+    var arr = window[k];
+    if (Array.isArray(arr)) {
+      arr.forEach(function(b) {
+        if (b && b.app === 'TRS') {
+          b.app = 'TR';
+          b.is_trs = true;
+          migrated++;
+        }
+      });
+    }
+  });
+  if (migrated > 0) console.log('[v093] Migrated ' + migrated + " TRS blocks to TR/is_trs:true");
+  return migrated;
+}
+
+// v093: Auto-generate awards (remises) from the current blocks.
+// Creates one award per unique (app, level) bucket, scheduled 5 min after
+// the latest competition of that bucket ends. Awards are 5 min each.
+// Called at the end of _gsRebuild if EXTRA.awards is empty, or manually via
+// the REMISES column ⟳ button as a fallback.
+function generateAwardsFromBlocks() {
+  if (typeof blocks === 'undefined' || !blocks || blocks.length === 0) {
+    console.warn('[gen awards] no blocks to generate from');
+    return 0;
+  }
+
+  // Extract level number from cat like "N1 12-" or "TR - N3" -> 1 or 3
+  function _levelFromCat(cat) {
+    var m = (cat || '').match(/N(\d+)/);
+    if (m) return parseInt(m[1]);
+    if (/junior/i.test(cat||'')) return 8;
+    if (/senior/i.test(cat||'')) return 9;
+    if (/novice/i.test(cat||'')) return 0;
+    return 99;
+  }
+
+  // Strip the app prefix from cat: "TR - N3" -> "N3"
+  function _shortCat(cat) {
+    return (cat || '').replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '').trim();
+  }
+
+  // Bucket key: app + level. Example: "TR|1", "DM|3"
+  // Synchro blocks (is_trs) get their own bucket: "TRS|1"
+  var buckets = {}; // key -> { app, level, cats:Set, latestEnd:number }
+
+  blocks.forEach(function(b) {
+    if (!b || b.type === 'break') return;
+    if (!b.cats || b.cats.length === 0) return;
+
+    // Determine award app: synchro → 'TRS', else the plateau app (TR2 → TR)
+    var awApp;
+    if (b.is_trs || b.app === 'TRS') awApp = 'TRS';
+    else if (b.app === 'TR2') awApp = 'TR';
+    else awApp = b.app;
+
+    b.cats.forEach(function(cat) {
+      var level = _levelFromCat(cat);
+      var key = awApp + '|' + level;
+      if (!buckets[key]) {
+        buckets[key] = {
+          app: awApp,
+          level: level,
+          cats: {},
+          latestEnd: 0
+        };
+      }
+      buckets[key].cats[cat] = true;
+      if (b.cp_end > buckets[key].latestEnd) {
+        buckets[key].latestEnd = b.cp_end;
+      }
+    });
+  });
+
+  // Clear current awards
+  awBlocks.length = 0;
+
+  // Create one award per bucket, ordered by end time
+  var bucketList = Object.values(buckets).sort(function(a, b) {
+    return a.latestEnd - b.latestEnd;
+  });
+
+  var awI = 0;
+  bucketList.forEach(function(bk) {
+    // Start 5 min after competition ends (snap to 5)
+    var start = Math.ceil((bk.latestEnd + 5) / 5) * 5;
+    var aw = {
+      id: 'aw_' + awI,
+      app: bk.app,
+      level: bk.level,
+      cats: Object.keys(bk.cats).sort(),
+      start_m: start,
+      end_m: start + 5,
+      athletes: []
+    };
+    // Populate athletes via existing helper
+    try { aw.athletes = getAthletesForAward(aw); } catch(e) { aw.athletes = []; }
+    awBlocks.push(aw);
+    awI++;
+  });
+
+  // Also update EXTRA.awards so subsequent rebuilds preserve them (until rebuilt)
+  if (typeof EXTRA !== 'undefined' && EXTRA) {
+    EXTRA.awards = awBlocks.map(function(aw) {
+      return {
+        app: aw.app,
+        level: aw.level,
+        cats: aw.cats.slice(),
+        start: toT(aw.start_m),
+        end: toT(aw.end_m)
+      };
+    });
+  }
+
+  console.log('[gen awards] Created ' + awBlocks.length + ' remises from ' + blocks.length + ' blocks');
+  return awBlocks.length;
+}
+
 // ── Auto-schedule all awards: each award at earliest slot after its category ends,
 //    no award-award overlap, no athlete conflict with any apparatus ──
 function autoScheduleAwards(bgMode) {
@@ -25952,7 +26250,7 @@ function resolveAwardConflicts() {
 // ROSTER COLUMNS — athlete names beside each block
 // ══════════════════════════════════════════════════════════════
 function renderRosterCols() {
-  const APPS = ['TR','TR2','DM','TU','TRS'];
+  const APPS = ['TR','TR2','DM','TU','AW'];
   const athIdx = buildAthIndex();
   const conflictsMap = getConflicts(athIdx);
   const conflictKeys = new Set(Object.keys(conflictsMap));
@@ -26361,7 +26659,17 @@ function renderRosterCols() {
 function createEmptyBlock(app) {
   const wu = 5;
   const CP_dur = _ceil5(10);
-  const appBlocks = blocks.filter(b => b.app === app || (app === 'TR' && b.app === 'TRS'));
+  // v092: Synchro blocks (TRS) must live in TR or TR2 columns (with is_trs:true),
+  // not in the col-AW (REMISES) column which is for awards only.
+  // Pick the TR plateau with fewer blocks to balance load.
+  var _isSynchro = (app === 'TRS');
+  var _actualApp = app;
+  if (_isSynchro) {
+    var _nTR  = blocks.filter(function(b){ return b.app === 'TR';  }).length;
+    var _nTR2 = blocks.filter(function(b){ return b.app === 'TR2'; }).length;
+    _actualApp = (_nTR2 < _nTR) ? 'TR2' : 'TR';
+  }
+  const appBlocks = blocks.filter(b => b.app === _actualApp);
   let wu_start = DAY_START;
   if (appBlocks.length) wu_start = Math.max(...appBlocks.map(b => b.cp_end));
   wu_start = _ceil5(wu_start);
@@ -26374,8 +26682,8 @@ function createEmptyBlock(app) {
   });
   const newId = 'prov_' + (_maxIdNum + 1);
   blocks.push({
-    id: newId, app, label: '(vide)', cats: [],
-    athletes: [], n: 0, is_trs: app === 'TRS', level: 0,
+    id: newId, app: _actualApp, label: _isSynchro ? '(Synchro vide)' : '(vide)', cats: [],
+    athletes: [], n: 0, is_trs: _isSynchro, level: 0,
     wu_start, wu_end: wu_start + wu,
     cp_start: wu_start + wu, cp_end: wu_start + wu + CP_dur});
 
@@ -26391,13 +26699,13 @@ function createEmptyBlock(app) {
   updateDayBounds();
   setupGrid();
   render();
-  // Scroll the new block into view
-  var col = document.getElementById('col-' + app);
+  // v092: Scroll the new block into view — use the ACTUAL app column
+  var col = document.getElementById('col-' + _actualApp);
   if (col) {
     var blkEl = col.querySelector('[data-bid="' + newId + '"]');
     if (blkEl) blkEl.scrollIntoView({behavior:'smooth', block:'center'});
   }
-  console.log('Created empty', app, 'block #' + newId, 'at', toT(wu_start));
+  console.log('Created empty', _actualApp, (_isSynchro ? 'SYNCHRO' : ''), 'block #' + newId, 'at', toT(wu_start));
   scheduleSave();
 }
 
