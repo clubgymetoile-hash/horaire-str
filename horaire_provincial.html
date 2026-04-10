@@ -612,8 +612,8 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 
 /* ── Floating conflict badge ─────────────────────── */
 #conflict-badge{
-  /* v096: positioned just above the sb-float-btn (Filtre par athlète) on right edge */
-  position:fixed;top:auto;bottom:calc(50% + 30px);right:0;z-index:10050;
+  /* v097: positioned dynamically by _positionSbFloatBtn to sit just above sb-float-btn */
+  position:fixed;top:0;left:0;right:auto;bottom:auto;z-index:10050;
   border-radius:12px 0 0 12px;
   display:none;
   background:#dc2626;color:#fff;
@@ -633,7 +633,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-100</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -776,7 +776,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-100</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1928,7 +1928,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-100<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2038,7 +2038,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-100<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -5770,7 +5770,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-096)
+  // NOUVEAU ALGO (v2026-04-09-100)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -7367,6 +7367,20 @@ function makeDraggable(el, block) {
     // v083: capture original wu_start + day for undo snapshot + cascade delta
     var _dragOrigWuStart = dragBlock.wu_start;
     var _dragOrigDay = dragBlock.day || 'sam';
+    // v100: capture COMPLETE pre-drag state for accurate undo (esp. group cross-day)
+    var _dragStartSnap = null;
+    try {
+      _dragStartSnap = {
+        label: 'Drag ' + (dragBlock.label || 'bloc'),
+        ts: Date.now(),
+        currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+        blocks: JSON.parse(JSON.stringify(blocks)),
+        awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+        sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+        dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+        ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+      };
+    } catch(_e){ _dragStartSnap = null; }
 
     startY = e.clientY;
     window._dragStartX = e.clientX;
@@ -7419,36 +7433,48 @@ function makeDraggable(el, block) {
       if (e.pointerType === 'touch') return;
       lastClientY = e.clientY;
 
-      // v077: Cross-day drag — detect hover over a day tab (only for single-block drag).
-      // When detected, swap the internal state to the new day and re-acquire the
-      // dragged element. The pointer keeps "holding" the block.
-      if (!isDragGroup) {
-        var dayTabs = document.querySelectorAll('.day-tab');
-        for (var ti = 0; ti < dayTabs.length; ti++) {
-          var tab = dayTabs[ti];
-          if (tab.style.display === 'none') continue;
-          var tabRect = tab.getBoundingClientRect();
-          if (e.clientX >= tabRect.left && e.clientX <= tabRect.right &&
-              e.clientY >= tabRect.top  && e.clientY <= tabRect.bottom) {
-            var newDay = tab.dataset.day;
-            if (newDay && newDay !== dragBlock.day) {
-              try {
+      // v077: Cross-day drag — detect hover over a day tab.
+      // v098: also works for group drags (families: prélim+finale collées)
+      var dayTabs = document.querySelectorAll('.day-tab');
+      for (var ti = 0; ti < dayTabs.length; ti++) {
+        var tab = dayTabs[ti];
+        if (tab.style.display === 'none') continue;
+        var tabRect = tab.getBoundingClientRect();
+        if (e.clientX >= tabRect.left && e.clientX <= tabRect.right &&
+            e.clientY >= tabRect.top  && e.clientY <= tabRect.bottom) {
+          var newDay = tab.dataset.day;
+          if (newDay && newDay !== dragBlock.day) {
+            try {
+              if (isDragGroup) {
+                // v098: group cross-day swap (family)
+                var swapG = _crossDayDragSwitchGroup(groupData, newDay, dragBlock.id);
+                if (swapG && swapG.dragBlock && swapG.dragEl) {
+                  groupData = swapG.groupData;
+                  dragBlock = swapG.dragBlock;
+                  dragEl = swapG.dragEl;
+                  scroller = document.getElementById('sheet-scroll');
+                  startY = e.clientY;
+                  startTop = parseFloat(dragEl.style.top);
+                  startScrollTop = scroller ? scroller.scrollTop : 0;
+                  try { dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId); } catch(_){}
+                  // Keep selectedBids in sync — the IDs are unchanged but worth refreshing
+                  // (the blocks now exist in the new day's `blocks` array)
+                }
+              } else {
                 var swap = _crossDayDragSwitch(dragBlock, newDay);
                 if (swap && swap.el && swap.block) {
                   dragBlock = swap.block;
                   dragEl = swap.el;
                   scroller = document.getElementById('sheet-scroll');
-                  // Re-anchor so further movement is relative to current pointer
                   startY = e.clientY;
                   startTop = parseFloat(dragEl.style.top);
                   startScrollTop = scroller ? scroller.scrollTop : 0;
-                  // Re-capture pointer on new element
                   try { dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId); } catch(_){}
                 }
-              } catch(err) { console.warn('[v077] cross-day drag failed:', err); }
-            }
-            break;
+              }
+            } catch(err) { console.warn('[cross-day] failed:', err); }
           }
+          break;
         }
       }
 
@@ -7543,23 +7569,15 @@ function makeDraggable(el, block) {
       var _posChanged = (dragBlock.wu_start !== _dragOrigWuStart) || ((dragBlock.day||'sam') !== _dragOrigDay);
       var _dragDelta = dragBlock.wu_start - _dragOrigWuStart;
 
-      // v083: snapshot BEFORE the drop's cascade so Ctrl+Z reverts everything
-      if (_posChanged && !_undoSuspend) {
-        // Undo the drop temporarily to snapshot the pre-drop state
-        var _newWu = dragBlock.wu_start, _newCs = dragBlock.cp_start, _newCe = dragBlock.cp_end;
-        var _newDay = dragBlock.day, _newApp = dragBlock.app;
-        var _echDur2 = dragBlock.cp_start - dragBlock.wu_start;
-        var _dur2 = dragBlock.cp_end - dragBlock.wu_start;
-        dragBlock.wu_start = _dragOrigWuStart;
-        dragBlock.cp_start = _dragOrigWuStart + _echDur2;
-        dragBlock.cp_end = _dragOrigWuStart + _dur2;
-        dragBlock.day = _dragOrigDay;
-        _snapshotState('Drag ' + (dragBlock.label||'bloc'));
-        // Restore the new position
-        dragBlock.wu_start = _newWu;
-        dragBlock.cp_start = _newCs;
-        dragBlock.cp_end = _newCe;
-        dragBlock.day = _newDay;
+      // v100: push the pre-drag complete snapshot to undo stack so Ctrl+Z reverts EVERYTHING,
+      // including all blocks of a group drag and any cross-day moves.
+      if (_posChanged && !_undoSuspend && _dragStartSnap) {
+        try {
+          _undoStack.push(_dragStartSnap);
+          if (_undoStack.length > _UNDO_MAX) _undoStack.shift();
+          _redoStack = [];
+          if (typeof _updateUndoButtons === 'function') _updateUndoButtons();
+        } catch(_e){ console.warn('[snapshot drop]', _e); }
       }
 
       // Resolve overlaps after release, pushing to later time
@@ -7577,6 +7595,14 @@ function makeDraggable(el, block) {
           }
           _cascadeAfterDrop(droppedList, _dragDelta);
         } catch(e) { console.warn('[cascade]', e); }
+      }
+
+      // v099: re-glue prelim+finale families after a group drop (cross-day or in-day).
+      // Without this the 2 blocks of a family can end up visually stacked because
+      // the snapshot preserves absolute times that may have drifted during the drag,
+      // and resolveOverlapsOnDrop doesn't enforce the prelim→finale glue invariant.
+      if (isDragGroup) {
+        try { _gluePrelimFinale(blocks); } catch(e) { console.warn('[glue post-drop]', e); }
       }
 
       // Sync app change to _blocks_sam/_blocks_dim/_blocks_ven
@@ -7809,6 +7835,8 @@ function liveConflictHighlight(draggedBid) {
       badge.textContent = `△ ${totalWarns} serré${totalWarns>1?'s':''}`;
       badge.className = 'warn';
     }
+    // v097: reposition above sb-float-btn
+    try { _positionSbFloatBtn(); } catch(e) {}
   }
 
   // ── Update roster column rows live ────────────────────────
@@ -8026,6 +8054,8 @@ function updateTopbar(nConflicts) {
       badge.textContent = `⚠ ${nConflicts} conflit${nConflicts>1?'s':''} d'horaire`;
       badge.className = '';
     }
+    // v097: reposition above sb-float-btn
+    try { _positionSbFloatBtn(); } catch(e) {}
   }
   const sbEl = document.getElementById('sb-conflicts');
   if (sbEl) sbEl.textContent = '';
@@ -10256,6 +10286,90 @@ function _crossDayDragSwitch(dragBlock, newDay) {
   // Return the NEW live block reference from the `blocks` array + new element
   var liveBlock = blocks.find(function(x){ return x.id === dragBlock.id; });
   return { block: liveBlock, el: newEl };
+}
+
+// v098: cross-day drag for GROUPS (families = prélim+finale, or any multi-selection).
+// Same logic as _crossDayDragSwitch but moves an array of blocks together.
+// Returns updated groupData with refreshed block refs and DOM elements,
+// plus the new dragBlock + dragEl for the leader (first block in groupData).
+function _crossDayDragSwitchGroup(groupData, newDay, leaderId) {
+  if (!groupData || groupData.length === 0) return null;
+  // If all blocks are already on newDay, nothing to do
+  var allOnNewDay = groupData.every(function(gd){ return gd.b.day === newDay; });
+  if (allOnNewDay) return null;
+
+  // Collect IDs of all dragged blocks
+  var draggedIds = {};
+  groupData.forEach(function(gd){ draggedIds[gd.b.id] = true; });
+
+  // Save current day state EXCLUDING all dragged blocks
+  var currentSave = JSON.parse(JSON.stringify(
+    blocks.filter(function(x){ return !draggedIds[x.id]; })
+  ));
+  if (currentDay === 'sam')      _blocks_sam = currentSave;
+  else if (currentDay === 'ven') _blocks_ven = currentSave;
+  else                           _blocks_dim = currentSave;
+
+  // Snapshot all dragged blocks with their CURRENT drag positions, set new day
+  var blockSnaps = groupData.map(function(gd) {
+    var snap = JSON.parse(JSON.stringify(gd.b));
+    snap.day = newDay;
+    return snap;
+  });
+
+  // Switch to new day — load target day's saved blocks
+  currentDay = newDay;
+  if (newDay === 'sam')      blocks = _blocks_sam ? JSON.parse(JSON.stringify(_blocks_sam)) : [];
+  else if (newDay === 'ven') blocks = _blocks_ven ? JSON.parse(JSON.stringify(_blocks_ven)) : [];
+  else                       blocks = _blocks_dim ? JSON.parse(JSON.stringify(_blocks_dim)) : [];
+
+  // Insert all dragged blocks into new day
+  blockSnaps.forEach(function(snap){ blocks.push(snap); });
+
+  // Update day-tab active state visually
+  document.querySelectorAll('.day-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.day === newDay);
+  });
+
+  // Update status date
+  var cfg = (typeof EXTRA !== 'undefined' && EXTRA.competition) || {};
+  var dateEl = document.querySelector('#status-bar .status-item');
+  if (dateEl) {
+    dateEl.textContent = newDay==='sam' ? (cfg.date_sam||'Samedi')
+                        : newDay==='ven' ? (cfg.date_ven||'Vendredi')
+                        : (cfg.date_dim||'Dimanche');
+  }
+
+  // Re-render
+  try { render(); } catch(e) {}
+
+  // Rebuild groupData with new live block refs + DOM elements
+  var newGroupData = [];
+  var newDragBlock = null, newDragEl = null;
+  for (var i = 0; i < groupData.length; i++) {
+    var oldGd = groupData[i];
+    var liveBlock = blocks.find(function(x){ return x.id === oldGd.b.id; });
+    var newEl = document.querySelector('.block[data-bid="' + oldGd.b.id + '"]');
+    if (!liveBlock || !newEl) continue;
+    newEl.classList.add('dragging');
+    newGroupData.push({
+      b: liveBlock,
+      bEl: newEl,
+      startTop: parseFloat(newEl.style.top),
+      duration: liveBlock.cp_end - liveBlock.wu_start,
+      echDur: liveBlock.cp_start - liveBlock.wu_start
+    });
+    if (liveBlock.id === leaderId) {
+      newDragBlock = liveBlock;
+      newDragEl = newEl;
+    }
+  }
+  // Fallback: if leader not found, use first block
+  if (!newDragBlock && newGroupData.length > 0) {
+    newDragBlock = newGroupData[0].b;
+    newDragEl = newGroupData[0].bEl;
+  }
+  return { groupData: newGroupData, dragBlock: newDragBlock, dragEl: newDragEl };
 }
 
 function switchDay(day) {
@@ -13434,6 +13548,16 @@ function _positionSbFloatBtn() {
   btn.style.left  = (vpOffsetLeft + vpWidth - btn.offsetWidth) + 'px';
   btn.style.right = 'auto';
 
+  // v097: position conflict-badge just above sb-float-btn, right-aligned
+  var cb = document.getElementById('conflict-badge');
+  if (cb && cb.style.display !== 'none') {
+    var GAP = 6;
+    var cbH = cb.offsetHeight || 24;
+    cb.style.top  = (fbRect.top + vpOffsetTop - cbH - GAP) + 'px';
+    cb.style.left = (vpOffsetLeft + vpWidth - cb.offsetWidth) + 'px';
+    cb.style.right = 'auto';
+    cb.style.bottom = 'auto';
+  }
 }
 window.addEventListener('load', _positionSbFloatBtn);
 window.addEventListener('resize', _positionSbFloatBtn);
@@ -14545,8 +14669,8 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 
 /* ── Floating conflict badge ─────────────────────── */
 #conflict-badge{
-  /* v096: positioned just above the sb-float-btn (Filtre par athlète) on right edge */
-  position:fixed;top:auto;bottom:calc(50% + 30px);right:0;z-index:10050;
+  /* v097: positioned dynamically by _positionSbFloatBtn to sit just above sb-float-btn */
+  position:fixed;top:0;left:0;right:auto;bottom:auto;z-index:10050;
   border-radius:12px 0 0 12px;
   display:none;
   background:#dc2626;color:#fff;
@@ -14566,7 +14690,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-100</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -14709,7 +14833,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-100</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15861,7 +15985,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-100<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -15971,7 +16095,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-100<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -19757,7 +19881,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-096)
+  // NOUVEAU ALGO (v2026-04-09-100)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -21255,6 +21379,20 @@ function makeDraggable(el, block) {
     // v083: capture original wu_start + day for undo snapshot + cascade delta
     var _dragOrigWuStart = dragBlock.wu_start;
     var _dragOrigDay = dragBlock.day || 'sam';
+    // v100: capture COMPLETE pre-drag state for accurate undo (esp. group cross-day)
+    var _dragStartSnap = null;
+    try {
+      _dragStartSnap = {
+        label: 'Drag ' + (dragBlock.label || 'bloc'),
+        ts: Date.now(),
+        currentDay: typeof currentDay !== 'undefined' ? currentDay : 'sam',
+        blocks: JSON.parse(JSON.stringify(blocks)),
+        awBlocks: (typeof awBlocks !== 'undefined') ? JSON.parse(JSON.stringify(awBlocks)) : [],
+        sam: (typeof _blocks_sam !== 'undefined' && _blocks_sam) ? JSON.parse(JSON.stringify(_blocks_sam)) : null,
+        dim: (typeof _blocks_dim !== 'undefined' && _blocks_dim) ? JSON.parse(JSON.stringify(_blocks_dim)) : null,
+        ven: (typeof _blocks_ven !== 'undefined' && _blocks_ven) ? JSON.parse(JSON.stringify(_blocks_ven)) : null
+      };
+    } catch(_e){ _dragStartSnap = null; }
 
     startY = e.clientY;
     window._dragStartX = e.clientX;
@@ -21307,36 +21445,48 @@ function makeDraggable(el, block) {
       if (e.pointerType === 'touch') return;
       lastClientY = e.clientY;
 
-      // v077: Cross-day drag — detect hover over a day tab (only for single-block drag).
-      // When detected, swap the internal state to the new day and re-acquire the
-      // dragged element. The pointer keeps "holding" the block.
-      if (!isDragGroup) {
-        var dayTabs = document.querySelectorAll('.day-tab');
-        for (var ti = 0; ti < dayTabs.length; ti++) {
-          var tab = dayTabs[ti];
-          if (tab.style.display === 'none') continue;
-          var tabRect = tab.getBoundingClientRect();
-          if (e.clientX >= tabRect.left && e.clientX <= tabRect.right &&
-              e.clientY >= tabRect.top  && e.clientY <= tabRect.bottom) {
-            var newDay = tab.dataset.day;
-            if (newDay && newDay !== dragBlock.day) {
-              try {
+      // v077: Cross-day drag — detect hover over a day tab.
+      // v098: also works for group drags (families: prélim+finale collées)
+      var dayTabs = document.querySelectorAll('.day-tab');
+      for (var ti = 0; ti < dayTabs.length; ti++) {
+        var tab = dayTabs[ti];
+        if (tab.style.display === 'none') continue;
+        var tabRect = tab.getBoundingClientRect();
+        if (e.clientX >= tabRect.left && e.clientX <= tabRect.right &&
+            e.clientY >= tabRect.top  && e.clientY <= tabRect.bottom) {
+          var newDay = tab.dataset.day;
+          if (newDay && newDay !== dragBlock.day) {
+            try {
+              if (isDragGroup) {
+                // v098: group cross-day swap (family)
+                var swapG = _crossDayDragSwitchGroup(groupData, newDay, dragBlock.id);
+                if (swapG && swapG.dragBlock && swapG.dragEl) {
+                  groupData = swapG.groupData;
+                  dragBlock = swapG.dragBlock;
+                  dragEl = swapG.dragEl;
+                  scroller = document.getElementById('sheet-scroll');
+                  startY = e.clientY;
+                  startTop = parseFloat(dragEl.style.top);
+                  startScrollTop = scroller ? scroller.scrollTop : 0;
+                  try { dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId); } catch(_){}
+                  // Keep selectedBids in sync — the IDs are unchanged but worth refreshing
+                  // (the blocks now exist in the new day's `blocks` array)
+                }
+              } else {
                 var swap = _crossDayDragSwitch(dragBlock, newDay);
                 if (swap && swap.el && swap.block) {
                   dragBlock = swap.block;
                   dragEl = swap.el;
                   scroller = document.getElementById('sheet-scroll');
-                  // Re-anchor so further movement is relative to current pointer
                   startY = e.clientY;
                   startTop = parseFloat(dragEl.style.top);
                   startScrollTop = scroller ? scroller.scrollTop : 0;
-                  // Re-capture pointer on new element
                   try { dragEl.setPointerCapture && dragEl.setPointerCapture(e.pointerId); } catch(_){}
                 }
-              } catch(err) { console.warn('[v077] cross-day drag failed:', err); }
-            }
-            break;
+              }
+            } catch(err) { console.warn('[cross-day] failed:', err); }
           }
+          break;
         }
       }
 
@@ -21431,23 +21581,15 @@ function makeDraggable(el, block) {
       var _posChanged = (dragBlock.wu_start !== _dragOrigWuStart) || ((dragBlock.day||'sam') !== _dragOrigDay);
       var _dragDelta = dragBlock.wu_start - _dragOrigWuStart;
 
-      // v083: snapshot BEFORE the drop's cascade so Ctrl+Z reverts everything
-      if (_posChanged && !_undoSuspend) {
-        // Undo the drop temporarily to snapshot the pre-drop state
-        var _newWu = dragBlock.wu_start, _newCs = dragBlock.cp_start, _newCe = dragBlock.cp_end;
-        var _newDay = dragBlock.day, _newApp = dragBlock.app;
-        var _echDur2 = dragBlock.cp_start - dragBlock.wu_start;
-        var _dur2 = dragBlock.cp_end - dragBlock.wu_start;
-        dragBlock.wu_start = _dragOrigWuStart;
-        dragBlock.cp_start = _dragOrigWuStart + _echDur2;
-        dragBlock.cp_end = _dragOrigWuStart + _dur2;
-        dragBlock.day = _dragOrigDay;
-        _snapshotState('Drag ' + (dragBlock.label||'bloc'));
-        // Restore the new position
-        dragBlock.wu_start = _newWu;
-        dragBlock.cp_start = _newCs;
-        dragBlock.cp_end = _newCe;
-        dragBlock.day = _newDay;
+      // v100: push the pre-drag complete snapshot to undo stack so Ctrl+Z reverts EVERYTHING,
+      // including all blocks of a group drag and any cross-day moves.
+      if (_posChanged && !_undoSuspend && _dragStartSnap) {
+        try {
+          _undoStack.push(_dragStartSnap);
+          if (_undoStack.length > _UNDO_MAX) _undoStack.shift();
+          _redoStack = [];
+          if (typeof _updateUndoButtons === 'function') _updateUndoButtons();
+        } catch(_e){ console.warn('[snapshot drop]', _e); }
       }
 
       // Resolve overlaps after release, pushing to later time
@@ -21465,6 +21607,14 @@ function makeDraggable(el, block) {
           }
           _cascadeAfterDrop(droppedList, _dragDelta);
         } catch(e) { console.warn('[cascade]', e); }
+      }
+
+      // v099: re-glue prelim+finale families after a group drop (cross-day or in-day).
+      // Without this the 2 blocks of a family can end up visually stacked because
+      // the snapshot preserves absolute times that may have drifted during the drag,
+      // and resolveOverlapsOnDrop doesn't enforce the prelim→finale glue invariant.
+      if (isDragGroup) {
+        try { _gluePrelimFinale(blocks); } catch(e) { console.warn('[glue post-drop]', e); }
       }
 
       // Sync app change to _blocks_sam/_blocks_dim/_blocks_ven
@@ -21697,6 +21847,8 @@ function liveConflictHighlight(draggedBid) {
       badge.textContent = `△ ${totalWarns} serré${totalWarns>1?'s':''}`;
       badge.className = 'warn';
     }
+    // v097: reposition above sb-float-btn
+    try { _positionSbFloatBtn(); } catch(e) {}
   }
 
   // ── Update roster column rows live ────────────────────────
@@ -21914,6 +22066,8 @@ function updateTopbar(nConflicts) {
       badge.textContent = `⚠ ${nConflicts} conflit${nConflicts>1?'s':''} d'horaire`;
       badge.className = '';
     }
+    // v097: reposition above sb-float-btn
+    try { _positionSbFloatBtn(); } catch(e) {}
   }
   const sbEl = document.getElementById('sb-conflicts');
   if (sbEl) sbEl.textContent = '';
@@ -24144,6 +24298,90 @@ function _crossDayDragSwitch(dragBlock, newDay) {
   // Return the NEW live block reference from the `blocks` array + new element
   var liveBlock = blocks.find(function(x){ return x.id === dragBlock.id; });
   return { block: liveBlock, el: newEl };
+}
+
+// v098: cross-day drag for GROUPS (families = prélim+finale, or any multi-selection).
+// Same logic as _crossDayDragSwitch but moves an array of blocks together.
+// Returns updated groupData with refreshed block refs and DOM elements,
+// plus the new dragBlock + dragEl for the leader (first block in groupData).
+function _crossDayDragSwitchGroup(groupData, newDay, leaderId) {
+  if (!groupData || groupData.length === 0) return null;
+  // If all blocks are already on newDay, nothing to do
+  var allOnNewDay = groupData.every(function(gd){ return gd.b.day === newDay; });
+  if (allOnNewDay) return null;
+
+  // Collect IDs of all dragged blocks
+  var draggedIds = {};
+  groupData.forEach(function(gd){ draggedIds[gd.b.id] = true; });
+
+  // Save current day state EXCLUDING all dragged blocks
+  var currentSave = JSON.parse(JSON.stringify(
+    blocks.filter(function(x){ return !draggedIds[x.id]; })
+  ));
+  if (currentDay === 'sam')      _blocks_sam = currentSave;
+  else if (currentDay === 'ven') _blocks_ven = currentSave;
+  else                           _blocks_dim = currentSave;
+
+  // Snapshot all dragged blocks with their CURRENT drag positions, set new day
+  var blockSnaps = groupData.map(function(gd) {
+    var snap = JSON.parse(JSON.stringify(gd.b));
+    snap.day = newDay;
+    return snap;
+  });
+
+  // Switch to new day — load target day's saved blocks
+  currentDay = newDay;
+  if (newDay === 'sam')      blocks = _blocks_sam ? JSON.parse(JSON.stringify(_blocks_sam)) : [];
+  else if (newDay === 'ven') blocks = _blocks_ven ? JSON.parse(JSON.stringify(_blocks_ven)) : [];
+  else                       blocks = _blocks_dim ? JSON.parse(JSON.stringify(_blocks_dim)) : [];
+
+  // Insert all dragged blocks into new day
+  blockSnaps.forEach(function(snap){ blocks.push(snap); });
+
+  // Update day-tab active state visually
+  document.querySelectorAll('.day-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.day === newDay);
+  });
+
+  // Update status date
+  var cfg = (typeof EXTRA !== 'undefined' && EXTRA.competition) || {};
+  var dateEl = document.querySelector('#status-bar .status-item');
+  if (dateEl) {
+    dateEl.textContent = newDay==='sam' ? (cfg.date_sam||'Samedi')
+                        : newDay==='ven' ? (cfg.date_ven||'Vendredi')
+                        : (cfg.date_dim||'Dimanche');
+  }
+
+  // Re-render
+  try { render(); } catch(e) {}
+
+  // Rebuild groupData with new live block refs + DOM elements
+  var newGroupData = [];
+  var newDragBlock = null, newDragEl = null;
+  for (var i = 0; i < groupData.length; i++) {
+    var oldGd = groupData[i];
+    var liveBlock = blocks.find(function(x){ return x.id === oldGd.b.id; });
+    var newEl = document.querySelector('.block[data-bid="' + oldGd.b.id + '"]');
+    if (!liveBlock || !newEl) continue;
+    newEl.classList.add('dragging');
+    newGroupData.push({
+      b: liveBlock,
+      bEl: newEl,
+      startTop: parseFloat(newEl.style.top),
+      duration: liveBlock.cp_end - liveBlock.wu_start,
+      echDur: liveBlock.cp_start - liveBlock.wu_start
+    });
+    if (liveBlock.id === leaderId) {
+      newDragBlock = liveBlock;
+      newDragEl = newEl;
+    }
+  }
+  // Fallback: if leader not found, use first block
+  if (!newDragBlock && newGroupData.length > 0) {
+    newDragBlock = newGroupData[0].b;
+    newDragEl = newGroupData[0].bEl;
+  }
+  return { groupData: newGroupData, dragBlock: newDragBlock, dragEl: newDragEl };
 }
 
 function switchDay(day) {
@@ -27322,6 +27560,16 @@ function _positionSbFloatBtn() {
   btn.style.left  = (vpOffsetLeft + vpWidth - btn.offsetWidth) + 'px';
   btn.style.right = 'auto';
 
+  // v097: position conflict-badge just above sb-float-btn, right-aligned
+  var cb = document.getElementById('conflict-badge');
+  if (cb && cb.style.display !== 'none') {
+    var GAP = 6;
+    var cbH = cb.offsetHeight || 24;
+    cb.style.top  = (fbRect.top + vpOffsetTop - cbH - GAP) + 'px';
+    cb.style.left = (vpOffsetLeft + vpWidth - cb.offsetWidth) + 'px';
+    cb.style.right = 'auto';
+    cb.style.bottom = 'auto';
+  }
 }
 window.addEventListener('load', _positionSbFloatBtn);
 window.addEventListener('resize', _positionSbFloatBtn);
