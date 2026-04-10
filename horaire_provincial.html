@@ -633,7 +633,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -751,6 +751,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
     <div id="ribbon-affichage" style="display:none;align-items:center;gap:8px;padding:0 12px;flex:1">
       <button class="rbtn" onclick="_splitTR()" title="Rééquilibrer les blocs TR entre Tapis A et B&#10;&#10;Redistribue automatiquement tous les blocs TR de la journée courante entre Tapis A et Tapis B, en remplissant le tapis le plus libre en premier.&#10;&#10;Utile si tu as bougé des blocs manuellement et que les deux tapis sont déséquilibrés." style="background:rgba(2,132,199,0.25);border:1px solid rgba(2,132,199,0.5)"><span class="ico">&#8644;</span><span class="lbl">Rééquil. TR</span></button>
       <button class="rbtn" onclick="_autoGenerate()" title="Re-générer les blocs depuis les inscriptions" style="background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.5)"><span class="ico">&#127959;</span><span class="lbl">Générer</span></button>
+      <button class="rbtn" id="btn-toggle-cascade" onclick="_toggleAutoCascadeOnDrop()" title="Cascade ON — déplacer un bloc déplace aussi les autres en conflit" style="background:rgba(34,197,94,0.25);border:1px solid rgba(34,197,94,0.6)"><span class="ico">&#8635;</span><span class="lbl">Cascade ON</span></button>
       <button class="rbtn" onclick="exportHTML()" title="Exporter une copie HTML"><span class="ico">&#128190;</span><span class="lbl">Enregistrer</span></button>
       <button class="rbtn" onclick="importScheduleFromFile()" title="Importer l'horaire d'un autre fichier" style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.4)"><span class="ico">&#128194;</span><span class="lbl">Importer</span></button>
       <button class="rbtn" onclick="_gsRefreshData()" title="Rafraîchir les données sans toucher aux blocs" style="background:rgba(34,197,94,0.25);border:1px solid rgba(34,197,94,0.5)"><span class="ico">&#128260;</span><span class="lbl">Rafraîchir</span></button>
@@ -776,7 +777,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1245,6 +1246,8 @@ function _updateUndoButtons() {
 // chevauchement. Les familles prélim+finale collées bougent ensemble.
 // v086: droppedInput peut être un bloc ou un tableau de blocs (pour group drag).
 function _cascadeAfterDrop(droppedInput, dragDelta) {
+  // v120: gated by user toggle — when OFF, drag drop only moves the dragged block
+  if (typeof _autoCascadeOnDrop !== 'undefined' && _autoCascadeOnDrop === false) return;
   if (!droppedInput || !dragDelta) return;
   var droppedArr = Array.isArray(droppedInput) ? droppedInput : [droppedInput];
   if (droppedArr.length === 0) return;
@@ -1966,7 +1969,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2076,7 +2079,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -3619,6 +3622,47 @@ function _gsRebuildPartnerMap(athletes) {
 
 // ── Competition type ────────────────────────────────────────────
 var _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
+
+// v120: Toggle pour la cascade automatique après drag-drop manuel.
+// Quand OFF: un drag-drop ne déplace QUE le bloc déplacé. Aucun autre bloc
+// n'est bougé en cascade pour conflits d'athlètes ou de juges.
+// Le check de chevauchement physique (resolveOverlapsOnDrop) reste actif.
+var _autoCascadeOnDrop = true;
+try {
+  var _stored_acd = localStorage.getItem('horaire_provincial_autoCascadeOnDrop');
+  if (_stored_acd !== null) _autoCascadeOnDrop = (_stored_acd === 'true');
+} catch(e) {}
+
+function _toggleAutoCascadeOnDrop() {
+  _autoCascadeOnDrop = !_autoCascadeOnDrop;
+  try { localStorage.setItem('horaire_provincial_autoCascadeOnDrop', _autoCascadeOnDrop ? 'true' : 'false'); } catch(e) {}
+  _updateCascadeBtn();
+}
+
+function _updateCascadeBtn() {
+  var btn = document.getElementById('btn-toggle-cascade');
+  if (!btn) return;
+  if (_autoCascadeOnDrop) {
+    btn.style.background = 'rgba(34,197,94,0.25)';
+    btn.style.border = '1px solid rgba(34,197,94,0.6)';
+    btn.title = 'Cascade ON — déplacer un bloc déplace aussi les autres en conflit (athlètes / juges). Cliquer pour désactiver.';
+    var lbl = btn.querySelector('.lbl'); if (lbl) lbl.textContent = 'Cascade ON';
+    var ico = btn.querySelector('.ico'); if (ico) ico.textContent = '\u21BB';
+  } else {
+    btn.style.background = 'rgba(220,38,38,0.25)';
+    btn.style.border = '1px solid rgba(220,38,38,0.6)';
+    btn.title = 'Cascade OFF — un drag manuel ne déplace QUE le bloc déplacé. Aucune cascade. Cliquer pour réactiver.';
+    var lbl2 = btn.querySelector('.lbl'); if (lbl2) lbl2.textContent = 'Cascade OFF';
+    var ico2 = btn.querySelector('.ico'); if (ico2) ico2.textContent = '\u2715';
+  }
+}
+
+// Update on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _updateCascadeBtn);
+} else {
+  setTimeout(_updateCascadeBtn, 0);
+}
 
 // v111: sync the dropdown to the baked _COMP_TYPE on load
 (function _syncCompTypeSel(){
@@ -6086,7 +6130,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-118)
+  // NOUVEAU ALGO (v2026-04-09-120)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -6474,6 +6518,11 @@ function _gsRebuild(athletes) {
     _fixOverlaps(dimBlks);
     _gluePrelimFinale(satBlks);
     _gluePrelimFinale(dimBlks);
+    // v119: dernier nettoyage anti back-to-back dans _relayoutPair
+    _avoidBackToBackSameAthlete(satBlks);
+    _avoidBackToBackSameAthlete(dimBlks);
+    _gluePrelimFinale(satBlks);
+    _gluePrelimFinale(dimBlks);
   }
 
   // v071: tri de priorité pour choisir quelle finale déplacer vers dimanche.
@@ -6548,6 +6597,16 @@ function _gsRebuild(athletes) {
   }
 
   // Auto-spillover désactivé — tout reste sur la même journée
+
+  // v119: PASSE FINALE ULTIME anti back-to-back, juste avant le snapshot.
+  // À ce stade tous les autres correcteurs ont fini et plus rien ne peut
+  // réintroduire de conflits collés sur la colonne unifiée.
+  _avoidBackToBackSameAthlete(satBlocks);
+  _avoidBackToBackSameAthlete(dimBlocks);
+  _avoidBackToBackSameAthlete(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
 
@@ -15185,7 +15244,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -15303,6 +15362,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
     <div id="ribbon-affichage" style="display:none;align-items:center;gap:8px;padding:0 12px;flex:1">
       <button class="rbtn" onclick="_splitTR()" title="Rééquilibrer les blocs TR entre Tapis A et B&#10;&#10;Redistribue automatiquement tous les blocs TR de la journée courante entre Tapis A et Tapis B, en remplissant le tapis le plus libre en premier.&#10;&#10;Utile si tu as bougé des blocs manuellement et que les deux tapis sont déséquilibrés." style="background:rgba(2,132,199,0.25);border:1px solid rgba(2,132,199,0.5)"><span class="ico">&#8644;</span><span class="lbl">Rééquil. TR</span></button>
       <button class="rbtn" onclick="_autoGenerate()" title="Re-générer les blocs depuis les inscriptions" style="background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.5)"><span class="ico">&#127959;</span><span class="lbl">Générer</span></button>
+      <button class="rbtn" id="btn-toggle-cascade" onclick="_toggleAutoCascadeOnDrop()" title="Cascade ON — déplacer un bloc déplace aussi les autres en conflit" style="background:rgba(34,197,94,0.25);border:1px solid rgba(34,197,94,0.6)"><span class="ico">&#8635;</span><span class="lbl">Cascade ON</span></button>
       <button class="rbtn" onclick="exportHTML()" title="Exporter une copie HTML"><span class="ico">&#128190;</span><span class="lbl">Enregistrer</span></button>
       <button class="rbtn" onclick="importScheduleFromFile()" title="Importer l'horaire d'un autre fichier" style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.4)"><span class="ico">&#128194;</span><span class="lbl">Importer</span></button>
       <button class="rbtn" onclick="_gsRefreshData()" title="Rafraîchir les données sans toucher aux blocs" style="background:rgba(34,197,94,0.25);border:1px solid rgba(34,197,94,0.5)"><span class="ico">&#128260;</span><span class="lbl">Rafraîchir</span></button>
@@ -15328,7 +15388,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15797,6 +15857,8 @@ function _updateUndoButtons() {
 // chevauchement. Les familles prélim+finale collées bougent ensemble.
 // v086: droppedInput peut être un bloc ou un tableau de blocs (pour group drag).
 function _cascadeAfterDrop(droppedInput, dragDelta) {
+  // v120: gated by user toggle — when OFF, drag drop only moves the dragged block
+  if (typeof _autoCascadeOnDrop !== 'undefined' && _autoCascadeOnDrop === false) return;
   if (!droppedInput || !dragDelta) return;
   var droppedArr = Array.isArray(droppedInput) ? droppedInput : [droppedInput];
   if (droppedArr.length === 0) return;
@@ -16518,7 +16580,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-120<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -16628,7 +16690,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-120<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -18168,6 +18230,13 @@ function _gsRebuildPartnerMap(athletes) {
 
 // ── Competition type ────────────────────────────────────────────
 _COMP_TYPE = 'coupeQc'; // 'coupeQc' | 'chQc'
+
+// v120: cascade toggle global (re-init in script 1 in case localStorage updated)
+if (typeof _autoCascadeOnDrop === 'undefined') _autoCascadeOnDrop = true;
+try {
+  var _stored_acd2 = localStorage.getItem('horaire_provincial_autoCascadeOnDrop');
+  if (_stored_acd2 !== null) _autoCascadeOnDrop = (_stored_acd2 === 'true');
+} catch(e) {}
 
 function onCompType(val) {
   var prev = _COMP_TYPE;
@@ -20676,7 +20745,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-118)
+  // NOUVEAU ALGO (v2026-04-09-120)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -21064,6 +21133,11 @@ function _gsRebuild(athletes) {
     _fixOverlaps(dimBlks);
     _gluePrelimFinale(satBlks);
     _gluePrelimFinale(dimBlks);
+    // v119: dernier nettoyage anti back-to-back dans _relayoutPair
+    _avoidBackToBackSameAthlete(satBlks);
+    _avoidBackToBackSameAthlete(dimBlks);
+    _gluePrelimFinale(satBlks);
+    _gluePrelimFinale(dimBlks);
   }
 
   // v071: tri de priorité pour choisir quelle finale déplacer vers dimanche.
@@ -21138,6 +21212,16 @@ function _gsRebuild(athletes) {
   }
 
   // Auto-spillover désactivé — tout reste sur la même journée
+
+  // v119: PASSE FINALE ULTIME anti back-to-back, juste avant le snapshot.
+  // À ce stade tous les autres correcteurs ont fini et plus rien ne peut
+  // réintroduire de conflits collés sur la colonne unifiée.
+  _avoidBackToBackSameAthlete(satBlocks);
+  _avoidBackToBackSameAthlete(dimBlocks);
+  _avoidBackToBackSameAthlete(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
 
