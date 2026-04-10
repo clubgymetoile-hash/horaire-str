@@ -612,7 +612,9 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 
 /* ── Floating conflict badge ─────────────────────── */
 #conflict-badge{
-  position:fixed;top:114px;right:12px;z-index:10050;
+  /* v096: positioned just above the sb-float-btn (Filtre par athlète) on right edge */
+  position:fixed;top:auto;bottom:calc(50% + 30px);right:0;z-index:10050;
+  border-radius:12px 0 0 12px;
   display:none;
   background:#dc2626;color:#fff;
   font-size:11px;font-weight:700;font-family:Calibri,sans-serif;
@@ -631,7 +633,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-094</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -774,7 +776,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-094</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1926,7 +1928,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-094<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2036,7 +2038,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-094<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -5768,7 +5770,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-094)
+  // NOUVEAU ALGO (v2026-04-09-096)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -12871,11 +12873,25 @@ function createEmptyBlock(app) {
   setupGrid();
   render();
   // v092: Scroll the new block into view — use the ACTUAL app column
+  // v094: scroll within the sheet-scroll container only, NOT the document body
+  // (scrollIntoView on body would push #app behind the fixed title-bar)
   var col = document.getElementById('col-' + _actualApp);
   if (col) {
     var blkEl = col.querySelector('[data-bid="' + newId + '"]');
-    if (blkEl) blkEl.scrollIntoView({behavior:'smooth', block:'center'});
+    if (blkEl) {
+      var sheetScroll = document.getElementById('sheet-scroll');
+      if (sheetScroll) {
+        var blkRect = blkEl.getBoundingClientRect();
+        var scRect = sheetScroll.getBoundingClientRect();
+        var targetScroll = sheetScroll.scrollTop + (blkRect.top - scRect.top) - (scRect.height / 2) + (blkRect.height / 2);
+        sheetScroll.scrollTop = Math.max(0, targetScroll);
+      } else {
+        blkEl.scrollIntoView({block:'center'});
+      }
+    }
   }
+  // Failsafe: ensure body itself didn't scroll
+  if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
   console.log('Created empty', _actualApp, (_isSynchro ? 'SYNCHRO' : ''), 'block #' + newId, 'at', toT(wu_start));
   scheduleSave();
 }
@@ -13023,7 +13039,18 @@ function createBreakInternal(app) {
   scheduleSave();
 
   var el = document.querySelector('[data-bid="' + baseId + '"]');
-  if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  // v094: scroll within sheet-scroll only, never on body
+  if (el) {
+    var sheetScroll2 = document.getElementById('sheet-scroll');
+    if (sheetScroll2) {
+      var elRect = el.getBoundingClientRect();
+      var scRect2 = sheetScroll2.getBoundingClientRect();
+      sheetScroll2.scrollTop = Math.max(0, sheetScroll2.scrollTop + (elRect.top - scRect2.top) - (scRect2.height / 2) + (elRect.height / 2));
+    } else {
+      el.scrollIntoView({block:'center'});
+    }
+  }
+  if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
   console.log('Created break in', app, 'at', toT(startMin));
 }
 
@@ -13506,6 +13533,10 @@ function _splitTR() {
 // elements in the live body. This cleanup removes them on DOM ready.
 (function() {
   function _cleanupBakedGarbage() {
+    // v094: Reset body scroll — overflow-y:hidden allows scroll via JS
+    // (e.g., scrollIntoView in createEmptyBlock) which pushes #app behind title-bar.
+    if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+    if (document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0;
     var bodyKids = Array.from(document.body.children);
     var garbageStart = -1;
     for (var i = 0; i < bodyKids.length; i++) {
@@ -13541,6 +13572,10 @@ function _splitTR() {
   } else {
     _cleanupBakedGarbage();
   }
+  // v094: failsafe — body scroll listener that resets to 0 on any scroll attempt
+  document.body.addEventListener('scroll', function() {
+    if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+  }, {passive: true});
 })();
 
 </script>
@@ -14510,7 +14545,9 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 
 /* ── Floating conflict badge ─────────────────────── */
 #conflict-badge{
-  position:fixed;top:114px;right:12px;z-index:10050;
+  /* v096: positioned just above the sb-float-btn (Filtre par athlète) on right edge */
+  position:fixed;top:auto;bottom:calc(50% + 30px);right:0;z-index:10050;
+  border-radius:12px 0 0 12px;
   display:none;
   background:#dc2626;color:#fff;
   font-size:11px;font-weight:700;font-family:Calibri,sans-serif;
@@ -14529,7 +14566,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-094</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -14672,7 +14709,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-094</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -15824,7 +15861,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-094<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-096<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -15934,7 +15971,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-094<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-096<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -19720,7 +19757,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-094)
+  // NOUVEAU ALGO (v2026-04-09-096)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -26724,11 +26761,25 @@ function createEmptyBlock(app) {
   setupGrid();
   render();
   // v092: Scroll the new block into view — use the ACTUAL app column
+  // v094: scroll within the sheet-scroll container only, NOT the document body
+  // (scrollIntoView on body would push #app behind the fixed title-bar)
   var col = document.getElementById('col-' + _actualApp);
   if (col) {
     var blkEl = col.querySelector('[data-bid="' + newId + '"]');
-    if (blkEl) blkEl.scrollIntoView({behavior:'smooth', block:'center'});
+    if (blkEl) {
+      var sheetScroll = document.getElementById('sheet-scroll');
+      if (sheetScroll) {
+        var blkRect = blkEl.getBoundingClientRect();
+        var scRect = sheetScroll.getBoundingClientRect();
+        var targetScroll = sheetScroll.scrollTop + (blkRect.top - scRect.top) - (scRect.height / 2) + (blkRect.height / 2);
+        sheetScroll.scrollTop = Math.max(0, targetScroll);
+      } else {
+        blkEl.scrollIntoView({block:'center'});
+      }
+    }
   }
+  // Failsafe: ensure body itself didn't scroll
+  if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
   console.log('Created empty', _actualApp, (_isSynchro ? 'SYNCHRO' : ''), 'block #' + newId, 'at', toT(wu_start));
   scheduleSave();
 }
@@ -26876,7 +26927,18 @@ function createBreakInternal(app) {
   scheduleSave();
 
   var el = document.querySelector('[data-bid="' + baseId + '"]');
-  if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  // v094: scroll within sheet-scroll only, never on body
+  if (el) {
+    var sheetScroll2 = document.getElementById('sheet-scroll');
+    if (sheetScroll2) {
+      var elRect = el.getBoundingClientRect();
+      var scRect2 = sheetScroll2.getBoundingClientRect();
+      sheetScroll2.scrollTop = Math.max(0, sheetScroll2.scrollTop + (elRect.top - scRect2.top) - (scRect2.height / 2) + (elRect.height / 2));
+    } else {
+      el.scrollIntoView({block:'center'});
+    }
+  }
+  if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
   console.log('Created break in', app, 'at', toT(startMin));
 }
 
@@ -27359,6 +27421,10 @@ function _splitTR() {
 // elements in the live body. This cleanup removes them on DOM ready.
 (function() {
   function _cleanupBakedGarbage() {
+    // v094: Reset body scroll — overflow-y:hidden allows scroll via JS
+    // (e.g., scrollIntoView in createEmptyBlock) which pushes #app behind title-bar.
+    if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+    if (document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0;
     var bodyKids = Array.from(document.body.children);
     var garbageStart = -1;
     for (var i = 0; i < bodyKids.length; i++) {
@@ -27394,6 +27460,10 @@ function _splitTR() {
   } else {
     _cleanupBakedGarbage();
   }
+  // v094: failsafe — body scroll listener that resets to 0 on any scroll attempt
+  document.body.addEventListener('scroll', function() {
+    if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+  }, {passive: true});
 })();
 
 </script>
