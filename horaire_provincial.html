@@ -633,7 +633,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-117</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -776,7 +776,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-117</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -1966,7 +1966,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-117<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -2076,7 +2076,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-117<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4023,6 +4023,11 @@ function _autoGenerate() {
       _enforceDmTuPanel(newDim);
       _fixOverlaps(newSam);
       _fixOverlaps(newDim);
+      _gluePrelimFinale(newSam);
+      _gluePrelimFinale(newDim);
+      // v118: re-vérifier back-to-back même athlète après chaque passe chQc
+      _avoidBackToBackSameAthlete(newSam);
+      _avoidBackToBackSameAthlete(newDim);
       _gluePrelimFinale(newSam);
       _gluePrelimFinale(newDim);
     }
@@ -6081,7 +6086,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-117)
+  // NOUVEAU ALGO (v2026-04-09-118)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -6366,6 +6371,13 @@ function _gsRebuild(athletes) {
       _gluePrelimFinale(satBlocks);
       _gluePrelimFinale(dimBlocks);
       _gluePrelimFinale(venBlocks);
+      // v118: re-vérifier back-to-back même athlète après chaque passe chQc
+      _avoidBackToBackSameAthlete(satBlocks);
+      _avoidBackToBackSameAthlete(dimBlocks);
+      _avoidBackToBackSameAthlete(venBlocks);
+      _gluePrelimFinale(satBlocks);
+      _gluePrelimFinale(dimBlocks);
+      _gluePrelimFinale(venBlocks);
     }
   }
 
@@ -6382,6 +6394,13 @@ function _gsRebuild(athletes) {
   _tightenCrossAppConflicts(satBlocks);
   _tightenCrossAppConflicts(dimBlocks);
   _tightenCrossAppConflicts(venBlocks);
+  // v118: passe finale anti back-to-back après tous les correcteurs
+  _avoidBackToBackSameAthlete(satBlocks);
+  _avoidBackToBackSameAthlete(dimBlocks);
+  _avoidBackToBackSameAthlete(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
   _fixOverlaps(satBlocks);
   _fixOverlaps(dimBlocks);
   _fixOverlaps(venBlocks);
@@ -15166,7 +15185,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-117</span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118</span>
     <button onclick="openHelp()"
       id="aide-float-btn"
       style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;
@@ -15309,7 +15328,7 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;</span><span class="lbl">Imprimer</span></button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner</span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"></span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-117</span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118</span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs</span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -16499,7 +16518,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
   <!-- Title Bar -->
   <div id="title-bar">
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
-    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-117<${'/'}span>
+    <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-09-118<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
   <${'/'}div>
 
@@ -16609,7 +16628,7 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
       <button class="rbtn" onclick="printSchedule()" title="Imprimer l'horaire (liste complète si listes ON, horaire seul si listes OFF)"><span class="ico">&#128424;<${'/'}span><span class="lbl">Imprimer<${'/'}span><${'/'}button>
       <span style="font-size:10px;color:var(--xl-gray5);margin-left:8px;align-self:flex-end;padding-bottom:14px">Glisser les en-têtes pour réordonner<${'/'}span>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 4px"><${'/'}span>
-      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-117<${'/'}span>
+      <span style="font-size:9px;color:var(--xl-gray4);align-self:flex-end;padding-bottom:14px;white-space:nowrap;letter-spacing:.3px">v2026-04-09-118<${'/'}span>
       <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px">
         <span style="font-size:9px;font-weight:700;color:var(--xl-gray5);text-transform:uppercase;letter-spacing:.5px">Tri des blocs<${'/'}span>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -18538,6 +18557,11 @@ function _autoGenerate() {
       _enforceDmTuPanel(newDim);
       _fixOverlaps(newSam);
       _fixOverlaps(newDim);
+      _gluePrelimFinale(newSam);
+      _gluePrelimFinale(newDim);
+      // v118: re-vérifier back-to-back même athlète après chaque passe chQc
+      _avoidBackToBackSameAthlete(newSam);
+      _avoidBackToBackSameAthlete(newDim);
       _gluePrelimFinale(newSam);
       _gluePrelimFinale(newDim);
     }
@@ -20652,7 +20676,7 @@ function _gsRebuild(athletes) {
   // Smart split: assign TR blocks to TR-A or TR-B using two-server greedy scheduling
   function _smartSplitTR(dayBlks, startM) {
   // ─────────────────────────────────────────────────────────────
-  // NOUVEAU ALGO (v2026-04-09-117)
+  // NOUVEAU ALGO (v2026-04-09-118)
   // Tri à 3 priorités:
   // P1: Séparer les mêmes niveaux dans le temps cross-appareils
   //     (donner du repos aux athlètes multi-appareils)
@@ -20937,6 +20961,13 @@ function _gsRebuild(athletes) {
       _gluePrelimFinale(satBlocks);
       _gluePrelimFinale(dimBlocks);
       _gluePrelimFinale(venBlocks);
+      // v118: re-vérifier back-to-back même athlète après chaque passe chQc
+      _avoidBackToBackSameAthlete(satBlocks);
+      _avoidBackToBackSameAthlete(dimBlocks);
+      _avoidBackToBackSameAthlete(venBlocks);
+      _gluePrelimFinale(satBlocks);
+      _gluePrelimFinale(dimBlocks);
+      _gluePrelimFinale(venBlocks);
     }
   }
 
@@ -20953,6 +20984,13 @@ function _gsRebuild(athletes) {
   _tightenCrossAppConflicts(satBlocks);
   _tightenCrossAppConflicts(dimBlocks);
   _tightenCrossAppConflicts(venBlocks);
+  // v118: passe finale anti back-to-back après tous les correcteurs
+  _avoidBackToBackSameAthlete(satBlocks);
+  _avoidBackToBackSameAthlete(dimBlocks);
+  _avoidBackToBackSameAthlete(venBlocks);
+  _gluePrelimFinale(satBlocks);
+  _gluePrelimFinale(dimBlocks);
+  _gluePrelimFinale(venBlocks);
   _fixOverlaps(satBlocks);
   _fixOverlaps(dimBlocks);
   _fixOverlaps(venBlocks);
