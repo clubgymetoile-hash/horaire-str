@@ -34,6 +34,14 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 #title-bar .file-name{font-size:12px;color:#fff;font-weight:600;opacity:0.95;letter-spacing:0.2px}
 #title-bar .app-name{font-size:11px;color:rgba(255,255,255,0.55)}
 .title-btns{margin-left:auto;display:flex;gap:2px}
+/* ── Fichier dropdown (Excel-style File menu) ─── */
+.file-menu-wrap{position:relative;z-index:10002}
+.file-menu-btn{background:#217346;color:#fff;border:none;padding:0 14px;height:26px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;margin-left:-12px;transition:background .15s}
+.file-menu-btn:hover{background:#185c37}
+#file-dropdown{position:absolute;top:26px;left:0;min-width:240px;background:#fff;border:1px solid #d0d0d0;box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:10003;padding:4px 0;font-size:12px;font-family:inherit}
+.file-dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 18px;cursor:pointer;color:#1f1f1f;white-space:nowrap}
+.file-dropdown-item:hover{background:#e8f0fe}
+.file-dropdown-sep{height:1px;background:#e0e0e0;margin:4px 12px}
 .title-btn{width:22px;height:22px;border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;border-radius:2px;display:flex;align-items:center;justify-content:center}
 .title-btn:hover{background:rgba(255,255,255,0.15)}
 
@@ -632,6 +640,26 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 <div id="app">
   <!-- Title Bar -->
   <div id="title-bar">
+    <div class="file-menu-wrap"><button class="file-menu-btn" onclick="toggleFileMenu(event)">Fichier</button><div id="file-dropdown" style="display:none">
+      <div class="file-dropdown-item" onclick="exportHTML();closeFileMenu()">&#128190; Enregistrer</div>
+      <div class="file-dropdown-item" onclick="importScheduleFromFile();closeFileMenu()">&#128194; Importer</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="printSchedule();closeFileMenu()">&#128424; Imprimer l'horaire</div>
+      <div class="file-dropdown-item" onclick="printAthleteList();closeFileMenu()">&#128424; Imprimer les athl&#232;tes</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="_gsRefreshData();closeFileMenu()">&#128260; Rafra&#238;chir donn&#233;es</div>
+      <div class="file-dropdown-item" onclick="_splitTR();closeFileMenu()">&#8644; R&#233;&#233;quil. TR</div>
+      <div class="file-dropdown-item" id="fm-cascade" onclick="_toggleAutoCascadeOnDrop();closeFileMenu()">&#8635; Cascade ON</div>
+      <div class="file-dropdown-item" onclick="reoptimizeSchedule();closeFileMenu()">&#9654; Trier les blocs</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="autoFitCols();closeFileMenu()">&#10231; Auto-ajuster colonnes</div>
+      <div class="file-dropdown-item" onclick="resetColWidths();closeFileMenu()">&#8634; R&#233;initialiser largeurs</div>
+      <div class="file-dropdown-item" onclick="toggleRosters();closeFileMenu()">&#128101; Listes athl&#232;tes ON/OFF</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="switchRibbonTab('Affichage',document.querySelector('[onclick*=Affichage]'));closeFileMenu()">&#9881; Param&#232;tres (ruban)</div>
+      <div class="file-dropdown-item" onclick="clearSavedState();closeFileMenu()">&#8634; R&#233;initialiser tout</div>
+      <div class="file-dropdown-item" onclick="openHelp();closeFileMenu()">&#10067; Aide</div>
+    </div></div>
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
     <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-137</span>
     <button onclick="openHelp()"
@@ -667,6 +695,12 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <select id="comp-type-sel" onchange="onCompType(this.value)" title="Coupe QC : N1/N2 → dimanche, N3+ → samedi&#10;Champ. QC : prélims → samedi, finales → dimanche" style="font-family:inherit;font-size:11px;font-weight:700;background:rgba(0,0,0,0.25);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:3px;padding:2px 6px;cursor:pointer;outline:none"><option value="coupeQc">Coupe QC</option><option value="chQc">Champ. QC</option></select>
       <span id="comp-type-badge" style="font-size:9px;font-weight:700;color:var(--xl-green-dark,#14532d);background:#86efac;padding:1px 6px;border-radius:10px;white-space:nowrap">Coupe QC</span>
       <span id="color-mode-toggle" onclick="if(typeof toggleColorMode!=='undefined')toggleColorMode()" style="cursor:pointer;padding:2px 7px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;user-select:none;white-space:nowrap" title="Basculer Niveaux / Juges">🎨 Niveaux</span>
+      <select id="judge-panel-sel" onchange="setJudgePanels(+this.value)" title="Nombre de panels de juges" style="font-family:inherit;font-size:10px;font-weight:700;background:rgba(0,0,0,0.25);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:3px;padding:1px 4px;cursor:pointer;outline:none">
+        <option value="0">Juges: Auto</option>
+        <option value="2">2 panels</option>
+        <option value="3">3 panels</option>
+        <option value="4">4 panels</option>
+      </select>
       <button id="btn-undo" onclick="if(typeof _undo!=='undefined')_undo()" disabled style="margin-left:6px;padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Annuler (Ctrl+Z)">↶ Annuler</button>
       <button id="btn-redo" onclick="if(typeof _redo!=='undefined')_redo()" disabled style="padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
       <span style="flex:1"></span>
@@ -764,10 +798,12 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
         <div style="display:flex;gap:6px;align-items:center;">
           <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">Nom</label>
           <input id="cfg-nom" type="text" oninput="EXTRA.competition.nom=this.value;var _t=this.value||'Compétition';_t+=' - Horaire';document.title=_t;var _ts=document.querySelector('#title-bar .app-name');if(_ts)_ts.textContent=_t;scheduleSave();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:180px;" placeholder="Nom de la compétition">
+          <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">&#128197; Ven</label>
+          <input id="cfg-date-ven" type="text" oninput="EXTRA.competition.date_ven=this.value;if(currentDay==='ven'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();if(typeof renderAthletesTab==='function'&&activeTab==='Athlètes')renderAthletesTab();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 13 mars 2026">
           <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">&#128197; Sam</label>
-          <input id="cfg-date-sam" type="text" oninput="EXTRA.competition.date_sam=this.value;if(currentDay==='sam'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 14 mars 2026">
+          <input id="cfg-date-sam" type="text" oninput="EXTRA.competition.date_sam=this.value;if(currentDay==='sam'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();if(typeof renderAthletesTab==='function'&&activeTab==='Athlètes')renderAthletesTab();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 14 mars 2026">
           <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">&#128197; Dim</label>
-          <input id="cfg-date-dim" type="text" oninput="EXTRA.competition.date_dim=this.value;if(currentDay==='dim'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 15 mars 2026">
+          <input id="cfg-date-dim" type="text" oninput="EXTRA.competition.date_dim=this.value;if(currentDay==='dim'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();if(typeof renderAthletesTab==='function'&&activeTab==='Athlètes')renderAthletesTab();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 15 mars 2026">
         </div>
       </div>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 6px"></span>
@@ -1444,6 +1480,14 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 #title-bar .file-name{font-size:12px;color:#fff;font-weight:600;opacity:0.95;letter-spacing:0.2px}
 #title-bar .app-name{font-size:11px;color:rgba(255,255,255,0.55)}
 .title-btns{margin-left:auto;display:flex;gap:2px}
+/* ── Fichier dropdown (Excel-style File menu) ─── */
+.file-menu-wrap{position:relative;z-index:10002}
+.file-menu-btn{background:#217346;color:#fff;border:none;padding:0 14px;height:26px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;margin-left:-12px;transition:background .15s}
+.file-menu-btn:hover{background:#185c37}
+#file-dropdown{position:absolute;top:26px;left:0;min-width:240px;background:#fff;border:1px solid #d0d0d0;box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:10003;padding:4px 0;font-size:12px;font-family:inherit}
+.file-dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 18px;cursor:pointer;color:#1f1f1f;white-space:nowrap}
+.file-dropdown-item:hover{background:#e8f0fe}
+.file-dropdown-sep{height:1px;background:#e0e0e0;margin:4px 12px}
 .title-btn{width:22px;height:22px;border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;border-radius:2px;display:flex;align-items:center;justify-content:center}
 .title-btn:hover{background:rgba(255,255,255,0.15)}
 
@@ -1968,6 +2012,26 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
 <div id="app">
   <!-- Title Bar -->
   <div id="title-bar">
+    <div class="file-menu-wrap"><button class="file-menu-btn" onclick="toggleFileMenu(event)">Fichier<${'/'}button><div id="file-dropdown" style="display:none">
+      <div class="file-dropdown-item" onclick="exportHTML();closeFileMenu()">&#128190; Enregistrer<${'/'}div>
+      <div class="file-dropdown-item" onclick="importScheduleFromFile();closeFileMenu()">&#128194; Importer<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="printSchedule();closeFileMenu()">&#128424; Imprimer l'horaire<${'/'}div>
+      <div class="file-dropdown-item" onclick="printAthleteList();closeFileMenu()">&#128424; Imprimer les athl&#232;tes<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="_gsRefreshData();closeFileMenu()">&#128260; Rafra&#238;chir donn&#233;es<${'/'}div>
+      <div class="file-dropdown-item" onclick="_splitTR();closeFileMenu()">&#8644; R&#233;&#233;quil. TR<${'/'}div>
+      <div class="file-dropdown-item" id="fm-cascade" onclick="_toggleAutoCascadeOnDrop();closeFileMenu()">&#8635; Cascade ON<${'/'}div>
+      <div class="file-dropdown-item" onclick="reoptimizeSchedule();closeFileMenu()">&#9654; Trier les blocs<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="autoFitCols();closeFileMenu()">&#10231; Auto-ajuster colonnes<${'/'}div>
+      <div class="file-dropdown-item" onclick="resetColWidths();closeFileMenu()">&#8634; R&#233;initialiser largeurs<${'/'}div>
+      <div class="file-dropdown-item" onclick="toggleRosters();closeFileMenu()">&#128101; Listes athl&#232;tes ON/OFF<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="switchRibbonTab('Affichage',document.querySelector('[onclick*=Affichage]'));closeFileMenu()">&#9881; Param&#232;tres (ruban)<${'/'}div>
+      <div class="file-dropdown-item" onclick="clearSavedState();closeFileMenu()">&#8634; R&#233;initialiser tout<${'/'}div>
+      <div class="file-dropdown-item" onclick="openHelp();closeFileMenu()">&#10067; Aide<${'/'}div>
+    <${'/'}div><${'/'}div>
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
     <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-137<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
@@ -3014,13 +3078,15 @@ function _gsLoadMeta(sid) {
   }
 
 
-  // ── Formulaire tab — extract competition name, club name and date ──
+  // ── Formulaire tab — extract competition name and club name only ──
+  // Date is NOT auto-detected on the provincial sheet: the Formulaire tab no
+  // longer has a dedicated date cell and scanning cells for a month name was
+  // matching athlete entries like "Marseille Alicia 2011" (mars + a year) and
+  // leaking garbage into the status bar. The user types the dates manually in
+  // the Compétition parameters (cfg-date-sam/dim/ven).
   fetchTab('Formulaire', function(rows, cols) {
     var compName = '';
-    var compDate = '';
     var clubName = '';
-    var MONTH_RE = /janvier|f\u00e9vrier|mars|avril|mai|juin|juillet|ao\u00fbt|septembre|octobre|novembre|d\u00e9cembre/i;
-    var SKIP_RE  = /nom|club|tel|adresse|num|courriel|maximum|retourner|envoyer|avec|date limite|aucune|accomp|personne|ressource|virement/i;
 
     console.log('Formulaire cols:', JSON.stringify((cols||[]).slice(0,8)));
     console.log('Formulaire row 0:', JSON.stringify((rows[0]||[]).slice(0,6)));
@@ -3037,22 +3103,13 @@ function _gsLoadMeta(sid) {
           var after = v.replace(/^.*nom\s+du\s+club\s*:\s*/i,'').trim();
           clubName = after || (row[ci+1]||'').toString().trim();
         }
-        if (!compDate && MONTH_RE.test(v) && /\d/.test(v)) compDate = v;
       });
-      if (!compDate) {
-        for (var ci = 0; ci < row.length - 1; ci++) {
-          var a = (row[ci]||'').toString().trim();
-          var b = (row[ci+1]||'').toString().trim();
-          if (MONTH_RE.test(a) && /^\d{4}$/.test(b)) { compDate = a + ' ' + b; break; }
-        }
-      }
     });
 
-    console.log('Formulaire result: compName=', compName, 'clubName=', clubName, 'date=', compDate);
+    console.log('Formulaire result: compName=', compName, 'clubName=', clubName);
     if (compName) _gsCompMeta.nom  = compName;
     if (clubName) _gsCompMeta.club = clubName;
-    if (compDate) _gsCompMeta.date = compDate;
-    if (compName || clubName || compDate) _gsApplyMeta();
+    if (compName || clubName) _gsApplyMeta();
   });
 
   // ── Infos tab — year ──
@@ -3079,28 +3136,23 @@ function _gsApplyMeta() {
                   document.querySelector('#title-bar span');
   if (titleSpan) titleSpan.textContent = fullTitle;
 
-  // Competition config in EXTRA
+  // Competition config in EXTRA — name only. Dates are typed manually in the
+  // Compétition params (cfg-date-sam / cfg-date-dim / cfg-date-ven) because
+  // the provincial registration sheet no longer exposes a date cell.
   if (typeof EXTRA !== 'undefined' && EXTRA.competition) {
     EXTRA.competition.nom = m.nom || EXTRA.competition.nom;
-    if (m.date) {
-      // Try to split date into sam/dim (e.g. "14-15 février 2026")
-      var dateMatch = m.date.match(/(\d{1,2})-(\d{1,2})\s+(janvier|f\u00e9vrier|mars|avril|mai|juin|juillet|ao\u00fbt|septembre|octobre|novembre|d\u00e9cembre)/i);
-      if (dateMatch) {
-        var monthYear = dateMatch[3];
-        EXTRA.competition.date_sam = dateMatch[1] + ' ' + monthYear;
-        EXTRA.competition.date_dim = dateMatch[2] + ' ' + monthYear;
-      } else {
-        EXTRA.competition.date_sam = m.date;
-      }
-    }
   }
 
-  // Status bar date
+  // Status bar date — only show what the user typed in the params; never fall
+  // back to _gsCompMeta.date (it can be polluted by athlete names containing
+  // "mars" etc. on the Formulaire tab).
   var dateEl = document.querySelector('#status-bar .status-item');
   if (dateEl && EXTRA.competition) {
-    dateEl.textContent = (typeof currentDay !== 'undefined' && currentDay === 'dim')
-      ? (EXTRA.competition.date_dim || m.date)
-      : (EXTRA.competition.date_sam || m.date);
+    var _cur = (typeof currentDay !== 'undefined') ? currentDay : 'sam';
+    var _label = _cur === 'dim' ? (EXTRA.competition.date_dim || 'Dimanche')
+               : _cur === 'ven' ? (EXTRA.competition.date_ven || 'Vendredi')
+               :                  (EXTRA.competition.date_sam || 'Samedi');
+    dateEl.textContent = _label;
   }
 
   // Config inputs
@@ -3110,6 +3162,8 @@ function _gsApplyMeta() {
   if (cfgSam && EXTRA.competition && EXTRA.competition.date_sam) cfgSam.value = EXTRA.competition.date_sam;
   var cfgDim = document.getElementById('cfg-date-dim');
   if (cfgDim && EXTRA.competition && EXTRA.competition.date_dim) cfgDim.value = EXTRA.competition.date_dim;
+  var cfgVen = document.getElementById('cfg-date-ven');
+  if (cfgVen && EXTRA.competition && EXTRA.competition.date_ven) cfgVen.value = EXTRA.competition.date_ven;
 }
 
 function _gsStatus(type, msg) {
@@ -3792,19 +3846,27 @@ function _toggleAutoCascadeOnDrop() {
 
 function _updateCascadeBtn() {
   var btn = document.getElementById('btn-toggle-cascade');
-  if (!btn) return;
-  if (_autoCascadeOnDrop) {
-    btn.style.background = 'rgba(34,197,94,0.25)';
-    btn.style.border = '1px solid rgba(34,197,94,0.6)';
-    btn.title = 'Cascade ON — déplacer un bloc déplace aussi les autres en conflit (athlètes / juges). Cliquer pour désactiver.';
-    var lbl = btn.querySelector('.lbl'); if (lbl) lbl.textContent = 'Cascade ON';
-    var ico = btn.querySelector('.ico'); if (ico) ico.textContent = '\u21BB';
-  } else {
-    btn.style.background = 'rgba(220,38,38,0.25)';
-    btn.style.border = '1px solid rgba(220,38,38,0.6)';
-    btn.title = 'Cascade OFF — un drag manuel ne déplace QUE le bloc déplacé. Aucune cascade. Cliquer pour réactiver.';
-    var lbl2 = btn.querySelector('.lbl'); if (lbl2) lbl2.textContent = 'Cascade OFF';
-    var ico2 = btn.querySelector('.ico'); if (ico2) ico2.textContent = '\u2715';
+  var fm = document.getElementById('fm-cascade');
+  var onLabel = 'Cascade ON', offLabel = 'Cascade OFF';
+  if (btn) {
+    if (_autoCascadeOnDrop) {
+      btn.style.background = 'rgba(34,197,94,0.25)';
+      btn.style.border = '1px solid rgba(34,197,94,0.6)';
+      btn.title = 'Cascade ON — déplacer un bloc déplace aussi les autres en conflit (athlètes / juges). Cliquer pour désactiver.';
+      var lbl = btn.querySelector('.lbl'); if (lbl) lbl.textContent = onLabel;
+      var ico = btn.querySelector('.ico'); if (ico) ico.textContent = '\u21BB';
+    } else {
+      btn.style.background = 'rgba(220,38,38,0.25)';
+      btn.style.border = '1px solid rgba(220,38,38,0.6)';
+      btn.title = 'Cascade OFF — un drag manuel ne déplace QUE le bloc déplacé. Aucune cascade. Cliquer pour réactiver.';
+      var lbl2 = btn.querySelector('.lbl'); if (lbl2) lbl2.textContent = offLabel;
+      var ico2 = btn.querySelector('.ico'); if (ico2) ico2.textContent = '\u2715';
+    }
+  }
+  if (fm) {
+    fm.innerHTML = _autoCascadeOnDrop
+      ? '&#8635; <b style="color:#16a34a">Cascade ON</b>'
+      : '&#10005; <b style="color:#dc2626">Cascade OFF</b>';
   }
 }
 
@@ -3936,10 +3998,11 @@ var FMT = {
     // PR-2025-2026_V03 §8.2.5 — FORMAT DE COMPÉTITION – CHAMPIONNATS QUÉBÉCOIS
     TR: {
       // v065: Routage Dynamix — N1 & N5+/SR finales samedi (collées), N2-N4 finales dimanche
-      'N1 12-':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N1 13+':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N2 13-':   {prelim:2,finale:1,finN:10,finDay:'dim'},
-      'N2 14+':   {prelim:2,finale:1,finN:10,finDay:'dim'},
+      // v122: finN=8 partout (PR-2025-2026 §8.2.5). Le finN=10 etait pour le Champ. de l'Est, pas ChQc.
+      'N1 12-':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N1 13+':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N2 13-':   {prelim:2,finale:1,finN:8,finDay:'dim'},
+      'N2 14+':   {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N3':       {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N4':       {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N5 16-':   {prelim:2,finale:1,finN:8,finDay:'sam'},
@@ -3966,10 +4029,11 @@ var FMT = {
     },
     TU: {
       // v065: Routage Dynamix — N1 & N5+/SR finales samedi (collées), N2-N4 finales dimanche
-      'N1 12-':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N1 13+':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N2 13-':   {prelim:2,finale:1,finN:10,finDay:'dim'},
-      'N2 14+':   {prelim:2,finale:1,finN:10,finDay:'dim'},
+      // v122: finN=8 partout (PR-2025-2026 §8.2.5). Le finN=10 etait pour le Champ. de l'Est, pas ChQc.
+      'N1 12-':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N1 13+':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N2 13-':   {prelim:2,finale:1,finN:8,finDay:'dim'},
+      'N2 14+':   {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N3':       {prelim:2,finale:2,finN:8,finDay:'dim'},
       'N4':       {prelim:2,finale:2,finN:8,finDay:'dim'},
       'N5 16-':   {prelim:2,finale:2,finN:8,finDay:'sam'},
@@ -5988,6 +6052,402 @@ function _insertJudgeBreak(dayBlks) {
   });
 }
 
+// ══════════════════════════════════════════════════════════════════
+// v122: CONSTRAINT SOLVER — _validateDay, _enforceHardConstraints, _optimizeSoft
+// Replaces the whack-a-mole pipeline of 9 functions called 75+ times.
+// ══════════════════════════════════════════════════════════════════
+
+function _moveBlock(b, newWuStart) {
+  var wuDur = b.cp_start - b.wu_start;
+  var cpDur = b.cp_end - b.cp_start;
+  b.wu_start = newWuStart;
+  b.cp_start = newWuStart + wuDur;
+  b.cp_end = b.cp_start + cpDur;
+}
+
+function _shiftBlockToCpStart(b, newCpStart) {
+  var wuDur = b.cp_start - b.wu_start;
+  var cpDur = b.cp_end - b.cp_start;
+  b.cp_start = newCpStart;
+  b.wu_start = newCpStart - wuDur;
+  b.cp_end = newCpStart + cpDur;
+}
+
+function _snap5(m) { return Math.ceil(m / 5) * 5; }
+
+function _findMatchingPrelim(fin, dayBlks) {
+  var finSexe = (fin.athletes && fin.athletes[0] && fin.athletes[0].sexe) || '';
+  var finCats = (fin.cats || []).slice().sort();
+  var finCatsKey = finCats.join('|');
+  var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+  var allCompatible = blks.filter(function(p) {
+    if (p.passType !== 'PRELIM') return false;
+    if (p.app !== fin.app) return false;
+    var pSexe = (p.athletes && p.athletes[0] && p.athletes[0].sexe) || '';
+    if (pSexe !== finSexe) return false;
+    return (p.cats || []).some(function(c) { return finCats.indexOf(c) >= 0; });
+  });
+  if (allCompatible.length === 0) return null;
+  var exactMatches = allCompatible.filter(function(p) {
+    return (p.cats || []).slice().sort().join('|') === finCatsKey;
+  });
+  var matches = exactMatches.length > 0 ? exactMatches : allCompatible;
+  matches.sort(function(a, b) { return b.cp_end - a.cp_end; });
+  return matches[0];
+}
+
+function _findGluedFinale(prelim, dayBlks) {
+  if (!prelim || prelim.passType !== 'PRELIM') return null;
+  var pSexe = (prelim.athletes && prelim.athletes[0] && prelim.athletes[0].sexe) || '';
+  return dayBlks.find(function(f) {
+    if (f.passType !== 'FINALE' || f.type === 'break') return false;
+    if (f.app !== prelim.app) return false;
+    if (Math.abs(f.wu_start - prelim.cp_end) > 1) return false;
+    var fSexe = (f.athletes && f.athletes[0] && f.athletes[0].sexe) || '';
+    if (fSexe !== pSexe) return false;
+    return (prelim.cats || []).some(function(c) { return (f.cats || []).indexOf(c) >= 0; });
+  }) || null;
+}
+
+function _buildAthleteIndex(dayBlks) {
+  var idx = {};
+  dayBlks.forEach(function(b) {
+    if (b.type === 'break') return;
+    (b.athletes || []).forEach(function(a) {
+      var k = (a.nom || '') + '|' + (a.prenom || '');
+      if (!idx[k]) idx[k] = [];
+      idx[k].push(b);
+    });
+  });
+  Object.keys(idx).forEach(function(k) {
+    idx[k].sort(function(a, b) { return a.wu_start - b.wu_start; });
+  });
+  return idx;
+}
+
+function _buildFamilies(dayBlks) {
+  var families = [];
+  var seen = {};
+  var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+  blks.forEach(function(b) {
+    if (seen[b.id]) return;
+    var fam = {blocks: [b], app: b.app};
+    seen[b.id] = true;
+    if (b.passType === 'PRELIM') {
+      var fin = _findGluedFinale(b, blks);
+      if (fin) { fam.blocks.push(fin); seen[fin.id] = true; }
+    } else if (b.passType === 'FINALE') {
+      var pre = _findMatchingPrelim(b, blks);
+      if (pre && Math.abs(b.wu_start - pre.cp_end) <= 1 && !seen[pre.id]) {
+        fam.blocks.unshift(pre); seen[pre.id] = true;
+      }
+    }
+    fam.wuStart = Math.min.apply(null, fam.blocks.map(function(x) { return x.wu_start; }));
+    fam.cpEnd = Math.max.apply(null, fam.blocks.map(function(x) { return x.cp_end; }));
+    fam.athleteKeys = {};
+    fam.blocks.forEach(function(x) {
+      (x.athletes || []).forEach(function(a) {
+        fam.athleteKeys[(a.nom || '') + '|' + (a.prenom || '')] = true;
+      });
+    });
+    families.push(fam);
+  });
+  return families;
+}
+
+function _savePositions(dayBlks) {
+  return dayBlks.map(function(b) {
+    return {id: b.id, app: b.app, wu_start: b.wu_start, cp_start: b.cp_start, cp_end: b.cp_end};
+  });
+}
+function _restorePositions(dayBlks, snapshot) {
+  var map = {};
+  snapshot.forEach(function(s) { map[s.id] = s; });
+  dayBlks.forEach(function(b) {
+    var s = map[b.id];
+    if (s) { b.app = s.app; b.wu_start = s.wu_start; b.cp_start = s.cp_start; b.cp_end = s.cp_end; }
+  });
+}
+
+function _findJudgeGaps(dayBlks) {
+  var trAll = dayBlks.filter(function(b) {
+    return (b.app === 'TR' || b.app === 'TR2') && b.type !== 'break';
+  }).sort(function(a, b) { return a.cp_start - b.cp_start; });
+  var gaps = [];
+  for (var i = 0; i < trAll.length - 1; i++) {
+    var gapSize = trAll[i + 1].cp_start - trAll[i].cp_end;
+    if (gapSize >= 5) {
+      gaps.push({start: trAll[i].cp_end, end: trAll[i + 1].cp_start, size: gapSize});
+    }
+  }
+  return gaps;
+}
+
+function _validateDay(dayBlks) {
+  var violations = [];
+  var penalties = [];
+  var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+
+  ['TR', 'TR2', 'DM', 'TU'].forEach(function(app) {
+    var col = blks.filter(function(b) { return b.app === app; })
+      .sort(function(a, b) { return a.wu_start - b.wu_start; });
+    for (var i = 1; i < col.length; i++) {
+      if (col[i].wu_start < col[i - 1].cp_end) {
+        violations.push({type: 'C1', app: app, blocks: [col[i - 1], col[i]],
+          overlap: col[i - 1].cp_end - col[i].wu_start});
+      }
+    }
+  });
+
+  var trAll = blks.filter(function(b) { return b.app === 'TR' || b.app === 'TR2'; })
+    .sort(function(a, b) { return a.cp_start - b.cp_start; });
+  for (var i = 1; i < trAll.length; i++) {
+    if (trAll[i].cp_start < trAll[i - 1].cp_end) {
+      violations.push({type: 'C2', blocks: [trAll[i - 1], trAll[i]],
+        overlap: trAll[i - 1].cp_end - trAll[i].cp_start});
+    }
+  }
+
+  var _needDmTu = (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc')
+    || (typeof _judgePanelOverride !== 'undefined' && _judgePanelOverride === 2);
+  if (_needDmTu) {
+    var dmtu = blks.filter(function(b) { return b.app === 'DM' || b.app === 'TU'; })
+      .sort(function(a, b) { return a.cp_start - b.cp_start; });
+    for (var i = 1; i < dmtu.length; i++) {
+      if (dmtu[i].cp_start < dmtu[i - 1].cp_end) {
+        violations.push({type: 'C3', blocks: [dmtu[i - 1], dmtu[i]],
+          overlap: dmtu[i - 1].cp_end - dmtu[i].cp_start});
+      }
+    }
+  }
+
+  blks.filter(function(b) { return b.passType === 'FINALE'; }).forEach(function(fin) {
+    var prelim = _findMatchingPrelim(fin, blks);
+    if (prelim) {
+      var gap = Math.abs(fin.wu_start - prelim.cp_end);
+      if (gap > 1) {
+        violations.push({type: 'C5', blocks: [prelim, fin], gap: fin.wu_start - prelim.cp_end});
+      }
+    }
+  });
+
+  blks.forEach(function(b) {
+    if (b.cp_end > 1260) {
+      violations.push({type: 'C6', block: b, excess: b.cp_end - 1260});
+    }
+  });
+
+  var athIdx = _buildAthleteIndex(dayBlks);
+  var s1Deficit = 0;
+  Object.keys(athIdx).forEach(function(k) {
+    var ab = athIdx[k];
+    for (var i = 1; i < ab.length; i++) {
+      if (ab[i].app === ab[i - 1].app) continue;
+      var gap = ab[i].wu_start - ab[i - 1].cp_end;
+      if (gap < 15) { s1Deficit += (15 - gap); penalties.push({type: 'S1', ath: k, gap: gap}); }
+    }
+  });
+
+  var s2Count = 0;
+  var trUni = blks.filter(function(b) { return b.app === 'TR' || b.app === 'TR2'; })
+    .sort(function(a, b) { return a.wu_start - b.wu_start; });
+  for (var i = 0; i < trUni.length - 1; i++) {
+    if (trUni[i + 1].wu_start > trUni[i].cp_end) continue;
+    var set1 = {};
+    (trUni[i].athletes || []).forEach(function(a) { set1[(a.nom || '') + '|' + (a.prenom || '')] = true; });
+    var hasCommon = (trUni[i + 1].athletes || []).some(function(a) {
+      return set1[(a.nom || '') + '|' + (a.prenom || '')];
+    });
+    if (hasCommon) { penalties.push({type: 'S2'}); s2Count++; }
+  }
+
+  var s3Gap = 0;
+  for (var i = 0; i < trAll.length - 1; i++) {
+    var g = trAll[i + 1].cp_start - trAll[i].cp_end;
+    if (g > 0) s3Gap += g;
+  }
+  if (s3Gap > 0) penalties.push({type: 'S3', totalGap: s3Gap});
+
+  [{name:'A', filter: function(b){return b.app==='TR'||b.app==='TR2';}},
+   {name:'B', filter: function(b){return b.app==='DM'||b.app==='TU';}}
+  ].forEach(function(panel) {
+    var pb = blks.filter(panel.filter).sort(function(a,b){return a.cp_start-b.cp_start;});
+    var hasBreak = false, cursor = 690;
+    pb.forEach(function(b) {
+      if (b.cp_end <= 690 || b.cp_start >= 810) return;
+      var bs = Math.max(b.cp_start, 690);
+      if (bs > cursor && (bs - cursor) >= 20) hasBreak = true;
+      if (b.cp_end > cursor) cursor = b.cp_end;
+    });
+    if (cursor < 810 && (810 - cursor) >= 20) hasBreak = true;
+    var breakExists = dayBlks.some(function(b) { return b.type === 'break' && b.panelName === panel.name; });
+    if (!hasBreak && !breakExists) penalties.push({type: 'S4', panel: panel.name});
+  });
+
+  var cost = violations.length * 10000 + s2Count * 100
+    + penalties.filter(function(p){return p.type==='S4';}).length * 50
+    + s1Deficit * 10 + s3Gap;
+  return {hardViolations: violations, softPenalties: penalties, cost: cost};
+}
+
+function _enforceHardConstraints(dayBlks) {
+  var MAX_ITER = 20;
+  var changed = false;
+  var _needDmTu = (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc')
+    || (typeof _judgePanelOverride !== 'undefined' && _judgePanelOverride === 2);
+  for (var iter = 0; iter < MAX_ITER; iter++) {
+    var report = _validateDay(dayBlks);
+    var hv = report.hardViolations;
+    if (hv.length === 0) break;
+    var didFix = false;
+    var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+    hv.filter(function(v){return v.type==='C5';}).forEach(function(v) {
+      _moveBlock(v.blocks[1], v.blocks[0].cp_end); didFix = true;
+    });
+    blks.filter(function(b){return b.passType==='FINALE';}).forEach(function(fin) {
+      var prelim = _findMatchingPrelim(fin, blks);
+      if (!prelim) {
+        var dur = _calcDur(fin.app, fin.n || ((fin.athletes||[]).length));
+        var currentWu = fin.cp_start - fin.wu_start;
+        if (dur.wu > currentWu) { fin.wu_start = fin.cp_start - dur.wu; didFix = true; }
+      }
+    });
+    hv.filter(function(v){return v.type==='C2';}).forEach(function(v) {
+      _shiftBlockToCpStart(v.blocks[1], _snap5(v.blocks[0].cp_end));
+      var gf = _findGluedFinale(v.blocks[1], blks);
+      if (gf) _moveBlock(gf, v.blocks[1].cp_end);
+      didFix = true;
+    });
+    if (_needDmTu) {
+      hv.filter(function(v){return v.type==='C3';}).forEach(function(v) {
+        _shiftBlockToCpStart(v.blocks[1], _snap5(v.blocks[0].cp_end));
+        var gf = _findGluedFinale(v.blocks[1], blks);
+        if (gf) _moveBlock(gf, v.blocks[1].cp_end);
+        didFix = true;
+      });
+    }
+    hv.filter(function(v){return v.type==='C1';}).forEach(function(v) {
+      _moveBlock(v.blocks[1], _snap5(v.blocks[0].cp_end));
+      var gf = _findGluedFinale(v.blocks[1], blks);
+      if (gf) _moveBlock(gf, v.blocks[1].cp_end);
+      didFix = true;
+    });
+    if (!didFix) break;
+    changed = true;
+  }
+  return {changed: changed};
+}
+
+function _optimizeSoft(dayBlks) {
+  var MAX_ITER = 50;
+  var improved = false;
+  function applySwap(famA, famB) {
+    var delta = famB.blocks[0].wu_start - famA.blocks[0].wu_start;
+    famA.blocks.forEach(function(b){b.wu_start+=delta;b.cp_start+=delta;b.cp_end+=delta;});
+    famB.blocks.forEach(function(b){b.wu_start-=delta;b.cp_start-=delta;b.cp_end-=delta;});
+  }
+  function applyShift(fam, delta) {
+    fam.blocks.forEach(function(b){b.wu_start+=delta;b.cp_start+=delta;b.cp_end+=delta;});
+  }
+  function applyRelocate(fam, newCpStart, newApp) {
+    var firstWuDur = fam.blocks[0].cp_start - fam.blocks[0].wu_start;
+    var newWuStart = newCpStart - firstWuDur;
+    var shift = newWuStart - fam.blocks[0].wu_start;
+    fam.blocks.forEach(function(b){b.app=newApp;b.wu_start+=shift;b.cp_start+=shift;b.cp_end+=shift;});
+  }
+  function sameFormat(fA, fB) {
+    if (fA.blocks.length !== fB.blocks.length) return false;
+    for (var i=0;i<fA.blocks.length;i++) {
+      var a=fA.blocks[i],b=fB.blocks[i];
+      if (a.passType!==b.passType) return false;
+      if (a.app!==b.app&&!((a.app==='TR'||a.app==='TR2')&&(b.app==='TR'||b.app==='TR2'))) return false;
+      if ((a.cp_start-a.wu_start)!==(b.cp_start-b.wu_start)) return false;
+      if ((a.cp_end-a.cp_start)!==(b.cp_end-b.cp_start)) return false;
+    }
+    return true;
+  }
+  for (var iter = 0; iter < MAX_ITER; iter++) {
+    var baseCost = _validateDay(dayBlks).cost;
+    if (baseCost === 0) break;
+    var families = _buildFamilies(dayBlks);
+    var bestMove = null, bestCost = baseCost;
+    var snapshot = _savePositions(dayBlks);
+    for (var fi=0;fi<families.length;fi++) {
+      for (var fj=fi+1;fj<families.length;fj++) {
+        if (families[fi].app!==families[fj].app) continue;
+        if (!sameFormat(families[fi],families[fj])) continue;
+        applySwap(families[fi],families[fj]);
+        var r=_validateDay(dayBlks);
+        if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'swap',fi:fi,fj:fj};}
+        _restorePositions(dayBlks,snapshot);
+      }
+    }
+    var deltas=[5,10,15,20,30,45,60,90,-5,-10,-15,-20,-30,-45,-60];
+    for (var fi=0;fi<families.length;fi++) {
+      for (var di=0;di<deltas.length;di++) {
+        applyShift(families[fi],deltas[di]);
+        var r=_validateDay(dayBlks);
+        if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'shift',fi:fi,delta:deltas[di]};}
+        _restorePositions(dayBlks,snapshot);
+      }
+    }
+    // Move 3: relocate TR/TR2 families into judge gaps
+    var gaps=_findJudgeGaps(dayBlks);
+    for (var fi=0;fi<families.length;fi++) {
+      if (families[fi].app!=='TR'&&families[fi].app!=='TR2') continue;
+      for (var gi=0;gi<gaps.length;gi++) {
+        var apps=['TR','TR2'];
+        for (var ai=0;ai<apps.length;ai++) {
+          applyRelocate(families[fi],gaps[gi].start,apps[ai]);
+          var r=_validateDay(dayBlks);
+          if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'relocate',fi:fi,cpStart:gaps[gi].start,app:apps[ai]};}
+          _restorePositions(dayBlks,snapshot);
+        }
+      }
+    }
+    // Move 4: findFreeSlot — scan day for best position for ANY family with athlete conflicts
+    // Uses enforcement during speculative eval to handle cascading effects
+    for (var fi=0;fi<families.length;fi++) {
+      var fam=families[fi];
+      // Only try if this family has cross-app athlete conflicts (S1 penalties)
+      var famKeys=fam.athleteKeys;
+      var hasConflict=false;
+      var athIdx=_buildAthleteIndex(dayBlks);
+      Object.keys(famKeys).forEach(function(k) {
+        var ab=athIdx[k];
+        if (!ab||ab.length<2) return;
+        for (var ai=1;ai<ab.length;ai++) {
+          if (ab[ai].app===ab[ai-1].app) continue;
+          if (ab[ai].wu_start-ab[ai-1].cp_end<15) hasConflict=true;
+        }
+      });
+      if (!hasConflict) continue;
+      var famDur=fam.cpEnd-fam.wuStart;
+      var DS=420,DE=1260;
+      for (var t=DS;t+famDur<=DE;t+=10) {
+        var shDelta=t-fam.wuStart;
+        if (Math.abs(shDelta)<10) continue;
+        applyShift(fam,shDelta);
+        _enforceHardConstraints(dayBlks);
+        var r=_validateDay(dayBlks);
+        if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'shift',fi:fi,delta:shDelta};}
+        _restorePositions(dayBlks,snapshot);
+      }
+    }
+    if (bestMove) {
+      var fams=_buildFamilies(dayBlks);
+      if (bestMove.type==='swap') applySwap(fams[bestMove.fi],fams[bestMove.fj]);
+      else if (bestMove.type==='shift') applyShift(fams[bestMove.fi],bestMove.delta);
+      else if (bestMove.type==='relocate') applyRelocate(fams[bestMove.fi],bestMove.cpStart,bestMove.app);
+      _enforceHardConstraints(dayBlks);
+      improved=true;
+      console.log('[Solver] iter '+iter+': cost '+baseCost+' -> '+bestCost+' ('+bestMove.type+')');
+    } else { break; }
+  }
+  if (improved) console.log('[Solver] _optimizeSoft converged after '+iter+' iteration(s)');
+  return {improved:improved};
+}
+
 
 
 function _gsRebuild(athletes) {
@@ -6230,13 +6690,14 @@ function _gsRebuild(athletes) {
       // 1 prélim block with timing for rule.prelim passes (NOT multiple blocks)
       var nPasses = rule.prelim || 1;
       var dur = _calcDur(g.app, aths.length, nPasses);
-      // v058: en chQc, router petits groupes N3-N5 NON splittés vers vendredi PM
-      // (catégories complètes, pas de split Gr.1 ven / Gr.2 sam)
+      // v122: en chQc, router les PETITS GROUPES non splittés vers vendredi PM
+      // Critere: groupe non splitté (1 seul sous-groupe) ET taille <= seuil
       // TRS exclu (synchros restent dim)
+      // Ancien critere v058: hard-codé N[345] — remplacé par taille du groupe
       var blkDay = prelimDay;
-      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS' && grpAths.length === 1) {
-        var catLevel = (g.cat.match(/N[345]/) || [''])[0];
-        if (catLevel) blkDay = 'ven';
+      var _VEN_MAX_SIZE = 12; // seuil configurable: groupes <= 12 athletes → vendredi
+      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS' && grpAths.length === 1 && aths.length <= _VEN_MAX_SIZE) {
+        blkDay = 'ven';
       }
       var blk = {
         id: 'prov_'+(bid++),
@@ -6576,116 +7037,39 @@ function _gsRebuild(athletes) {
   _conflictAwareLayout(dimBlocks, athletes, 480);
   _conflictAwareLayout(venBlocks, athletes, 990);
 
-  // Safety net: fix any remaining overlaps on same column
-  _fixOverlaps(satBlocks);
-  _fixOverlaps(dimBlocks);
-  _fixOverlaps(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
+  // ══════════════════════════════════════════════════════════════
+  // v122: CONSTRAINT SOLVER PIPELINE (replaces ~75 old pipeline calls)
+  // Phase B: Hard constraints -> Phase C: Soft optimization
+  // ══════════════════════════════════════════════════════════════
+
+  // Phase B: Enforce hard constraints (C1-C5)
+  _enforceHardConstraints(satBlocks);
+  _enforceHardConstraints(dimBlocks);
+  _enforceHardConstraints(venBlocks);
+
+  // Phase C: Soft optimization (S1-S3)
+  _optimizeSoft(satBlocks);
+  _optimizeSoft(dimBlocks);
+  _optimizeSoft(venBlocks);
+
+  // Phase C.5: Insert judge breaks (sam+dim only, not ven PM -- too short)
   _insertJudgeBreak(satBlocks);
   _insertJudgeBreak(dimBlocks);
-  // Pas de pause des officiels sur vendredi PM (trop court, ~3h)
-  // Re-coller les paires que le break aurait pu décaler
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  // Optimisation finale: échanger des familles pour donner du répit aux athlètes multi-apparels
-  _swapForRest(satBlocks);
-  _swapForRest(dimBlocks);
-  _swapForRest(venBlocks);
-  // Re-coller au cas où les swaps auraient bougé qq chose
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  // Résoudre les conflits cross-apparels restants
-  _resolveCrossAppConflicts(satBlocks);
-  _resolveCrossAppConflicts(dimBlocks);
-  _resolveCrossAppConflicts(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  // v114: anti back-to-back même athlète sur colonne unifiée (TR+TR2)
-  _avoidBackToBackSameAthlete(satBlocks);
-  _avoidBackToBackSameAthlete(dimBlocks);
-  _avoidBackToBackSameAthlete(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  // Compactage final: éliminer les temps morts entre cp TR/TR2 (juges)
-  _compactJudgeCp(satBlocks);
-  _compactJudgeCp(dimBlocks);
-  _compactJudgeCp(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
+  // Re-enforce after break insertion (may have pushed blocks)
+  _enforceHardConstraints(satBlocks);
+  _enforceHardConstraints(dimBlocks);
+  // One more optimization pass to recover from break displacement
+  _optimizeSoft(satBlocks);
+  _optimizeSoft(dimBlocks);
 
-  // v061: DM+TU partagent un panel de juges en chQc — 3 passes pour stabilité
-  if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
-    for (var _dmtuPass = 0; _dmtuPass < 3; _dmtuPass++) {
-      _enforceDmTuPanel(satBlocks);
-      _enforceDmTuPanel(dimBlocks);
-      _enforceDmTuPanel(venBlocks);
-      _fixOverlaps(satBlocks);
-      _fixOverlaps(dimBlocks);
-      _fixOverlaps(venBlocks);
-      _gluePrelimFinale(satBlocks);
-      _gluePrelimFinale(dimBlocks);
-      _gluePrelimFinale(venBlocks);
-      // v118: re-vérifier back-to-back même athlète après chaque passe chQc
-      _avoidBackToBackSameAthlete(satBlocks);
-      _avoidBackToBackSameAthlete(dimBlocks);
-      _avoidBackToBackSameAthlete(venBlocks);
-      _gluePrelimFinale(satBlocks);
-      _gluePrelimFinale(dimBlocks);
-      _gluePrelimFinale(venBlocks);
-    }
-  }
+  console.log('[Solver] Phase B+C complete. Validation:',
+    'sam:', _validateDay(satBlocks).hardViolations.length, 'hard,', _validateDay(satBlocks).cost, 'cost',
+    'dim:', _validateDay(dimBlocks).hardViolations.length, 'hard,', _validateDay(dimBlocks).cost, 'cost',
+    'ven:', _validateDay(venBlocks).hardViolations.length, 'hard,', _validateDay(venBlocks).cost, 'cost');
 
-  // v064: Re-insert breaks AFTER all other algos so the panels are placed cleanly
-  // on the final schedule (compactJudgeCp may have pulled blocks back into break zone)
-  _insertJudgeBreak(satBlocks);
-  _insertJudgeBreak(dimBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-
-  // v069: tighten pass for small cross-app conflicts (< 30 min overlaps)
-  // that _resolveCrossAppConflicts couldn't handle with findFreeSlot
-  _tightenCrossAppConflicts(satBlocks);
-  _tightenCrossAppConflicts(dimBlocks);
-  _tightenCrossAppConflicts(venBlocks);
-  // v118: passe finale anti back-to-back après tous les correcteurs
-  _avoidBackToBackSameAthlete(satBlocks);
-  _avoidBackToBackSameAthlete(dimBlocks);
-  _avoidBackToBackSameAthlete(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  _fixOverlaps(satBlocks);
-  _fixOverlaps(dimBlocks);
-  _fixOverlaps(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-
-  // v073: extend warmup for finales NOT glued to their prelim
-  _adjustUngluedFinaleWarmup(satBlocks);
-  _adjustUngluedFinaleWarmup(dimBlocks);
-  _adjustUngluedFinaleWarmup(venBlocks);
-  _fixOverlaps(satBlocks);
-  _fixOverlaps(dimBlocks);
-  _fixOverlaps(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-
-  // ────────────────────────────────────────────────────────────
-  // v065: Overflow samedi → dimanche
-  // Si une colonne samedi (TR/TR2 groupés, DM, TU) dépasse 21h00,
-  // on déplace UNE finale à la fois vers dimanche (la plus basse en
-  // niveau d'abord : N1 avant N5 avant SR), uniquement sur l'appareil
-  // qui déborde, puis on re-layout et on re-vérifie. Max 10 passes.
-  // ────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════
+  // Phase D: Overflow management
+  // ══════════════════════════════════════════════════════════════
   var MAX_SAM_END = 1260; // 21h00
   function _maxEndByAppGroup(blks) {
     var maxTr = 0, maxDm = 0, maxTu = 0;
@@ -6697,132 +7081,122 @@ function _gsRebuild(athletes) {
     });
     return {TR: maxTr, DM: maxDm, TU: maxTu};
   }
+  // v122: Simplified sub-pipeline using constraint solver
   function _relayoutPair(satBlks, dimBlks) {
     _smartSplitTR(satBlks, 480);
     _smartSplitTR(dimBlks, 480);
     _conflictAwareLayout(satBlks, athletes, 480);
     _conflictAwareLayout(dimBlks, athletes, 480);
-    _fixOverlaps(satBlks);
-    _fixOverlaps(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
+    _enforceHardConstraints(satBlks);
+    _enforceHardConstraints(dimBlks);
+    _optimizeSoft(satBlks);
+    _optimizeSoft(dimBlks);
     _insertJudgeBreak(satBlks);
     _insertJudgeBreak(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
-    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
-      for (var _p = 0; _p < 3; _p++) {
-        _enforceDmTuPanel(satBlks);
-        _enforceDmTuPanel(dimBlks);
-        _fixOverlaps(satBlks);
-        _fixOverlaps(dimBlks);
-        _gluePrelimFinale(satBlks);
-        _gluePrelimFinale(dimBlks);
-      }
-    }
-    // v069: tighten pass after re-layout
-    _tightenCrossAppConflicts(satBlks);
-    _tightenCrossAppConflicts(dimBlks);
-    _fixOverlaps(satBlks);
-    _fixOverlaps(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
-    // v073: extend warmup for finales not glued to their prelim
-    _adjustUngluedFinaleWarmup(satBlks);
-    _adjustUngluedFinaleWarmup(dimBlks);
-    _fixOverlaps(satBlks);
-    _fixOverlaps(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
-    // v119: dernier nettoyage anti back-to-back dans _relayoutPair
-    _avoidBackToBackSameAthlete(satBlks);
-    _avoidBackToBackSameAthlete(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
+    _enforceHardConstraints(satBlks);
+    _enforceHardConstraints(dimBlks);
   }
 
-  // v071: tri de priorité pour choisir quelle finale déplacer vers dimanche.
-  // Ordre: N1 12- > N1 13+ > N5/N6/N7 > JR/SR. À égalité, la plus tardive.
+  // v071: tri de priorite pour choisir quelle finale deplacer vers dimanche.
   function _pickFinaleToMove(candidates) {
     candidates.sort(function(a, b) {
       var catA = (a.cats && a.cats[0]) || a.cat || '';
       var catB = (b.cats && b.cats[0]) || b.cat || '';
       var coA = _catOrder(catA);
       var coB = _catOrder(catB);
-      if (coA !== coB) return coA - coB; // niveau croissant (N1 avant N5)
-      // À niveau égal (ex. N1), préférer 12- avant 13+
+      if (coA !== coB) return coA - coB;
       var is12A = /12-/.test(catA), is12B = /12-/.test(catB);
       if (is12A !== is12B) return is12A ? -1 : 1;
-      return b.cp_end - a.cp_end; // à égalité finale: la plus tardive
+      return b.cp_end - a.cp_end;
     });
     return candidates[0];
   }
 
+  // Overflow sam -> dim
   for (var _ovPass = 0; _ovPass < 15; _ovPass++) {
     var maxBy = _maxEndByAppGroup(satBlocks);
     var target = null;
     var reason = '';
-    var targetEnd = 0;
-
-    // Règle 1 (v065): Colonne samedi > 21h00 → overflow hard
     ['TR','DM','TU'].forEach(function(app) {
       if (maxBy[app] > MAX_SAM_END && (!target || maxBy[app] > maxBy[target])) {
-        target = app;
-        reason = '> 21h00';
-        targetEnd = maxBy[app];
+        target = app; reason = '> 21h00';
       }
     });
-
-    // Règle 2 (v071): DM finit après TR samedi → DM est le goulot (panel DM+TU partagé)
-    // Déplacer une finale DM vers dimanche pour soulager
     if (!target && (maxBy.DM || 0) > (maxBy.TR || 0)) {
-      target = 'DM';
-      reason = 'DM > TR (' + Math.floor(maxBy.DM/60)+'h'+(maxBy.DM%60).toString().padStart(2,'0') +
-               ' > ' + Math.floor((maxBy.TR||0)/60)+'h'+((maxBy.TR||0)%60).toString().padStart(2,'0') + ')';
-      targetEnd = maxBy.DM;
+      target = 'DM'; reason = 'DM > TR';
     }
-
     if (!target) {
-      if (_ovPass > 0) console.log('[Prov] v071 overflow: stabilized after ' + _ovPass + ' pass(es)');
+      if (_ovPass > 0) console.log('[Solver] overflow sam->dim stabilized after ' + _ovPass + ' pass(es)');
       break;
     }
-
-    // Chercher une finale déplaçable sur l'appareil en cause
-    // (TR = TR+TR2 groupés pour règle 1 ; DM/TU = ce seul appareil)
     var candidates = satBlocks.filter(function(b) {
       if (b.passType !== 'FINALE' || b.type === 'break') return false;
       if (target === 'TR') return (b.app === 'TR' || b.app === 'TR2');
       return b.app === target;
     });
-    if (candidates.length === 0) {
-      console.warn('[Prov] v071 overflow: ' + target + ' ' + reason + ' mais aucune finale déplaçable');
-      break;
-    }
-
+    if (candidates.length === 0) { console.warn('[Solver] overflow: no movable finale for ' + target); break; }
     var toMove = _pickFinaleToMove(candidates);
-    var moveLabel = toMove.label || (toMove.app + ' ' + ((toMove.cats && toMove.cats[0]) || ''));
-    console.log('[Prov] v071 overflow pass ' + (_ovPass+1) + ': ' + target + ' ' + reason +
-      ' — déplace "' + moveLabel + '" vers dimanche');
-
+    console.log('[Solver] overflow pass ' + (_ovPass+1) + ': ' + target + ' ' + reason +
+      ' -- moving "' + (toMove.label||'') + '" to dim');
     toMove.day = 'dim';
     var idx = satBlocks.indexOf(toMove);
     if (idx >= 0) satBlocks.splice(idx, 1);
     dimBlocks.push(toMove);
-
     _relayoutPair(satBlocks, dimBlocks);
   }
 
-  // Auto-spillover désactivé — tout reste sur la même journée
+  // Overflow ven -> sam
+  var MAX_VEN_END = 1260;
+  function _relayoutVenSam() {
+    _smartSplitTR(venBlocks, 990);
+    _smartSplitTR(satBlocks, 480);
+    _conflictAwareLayout(venBlocks, athletes, 990);
+    _conflictAwareLayout(satBlocks, athletes, 480);
+    _enforceHardConstraints(venBlocks);
+    _enforceHardConstraints(satBlocks);
+    _optimizeSoft(venBlocks);
+    _optimizeSoft(satBlocks);
+  }
+  for (var _vOvPass = 0; _vOvPass < 15; _vOvPass++) {
+    var venMaxBy = _maxEndByAppGroup(venBlocks);
+    var venTarget = null;
+    ['TR','DM','TU'].forEach(function(app) {
+      if (venMaxBy[app] > MAX_VEN_END && (!venTarget || venMaxBy[app] > venMaxBy[venTarget])) {
+        venTarget = app;
+      }
+    });
+    if (!venTarget) {
+      if (_vOvPass > 0) console.log('[Solver] overflow ven->sam stabilized after ' + _vOvPass + ' pass(es)');
+      break;
+    }
+    var venCandidates = venBlocks.filter(function(b) {
+      if (b.type === 'break') return false;
+      if (venTarget === 'TR') return (b.app === 'TR' || b.app === 'TR2');
+      return b.app === venTarget;
+    });
+    if (venCandidates.length === 0) { console.warn('[Solver] ven overflow: no movable block'); break; }
+    venCandidates.sort(function(a, b) {
+      var aF = a.passType === 'FINALE' ? 1 : 0, bF = b.passType === 'FINALE' ? 1 : 0;
+      if (aF !== bF) return bF - aF;
+      return b.cp_end - a.cp_end;
+    });
+    var venToMove = venCandidates[0];
+    console.log('[Solver] ven overflow pass ' + (_vOvPass+1) + ': ' + venTarget + ' > 21h00 -- moving "' + (venToMove.label||'') + '" to sam');
+    venToMove.day = 'sam';
+    var venIdx = venBlocks.indexOf(venToMove);
+    if (venIdx >= 0) venBlocks.splice(venIdx, 1);
+    satBlocks.push(venToMove);
+    _relayoutVenSam();
+  }
 
-  // v119: PASSE FINALE ULTIME anti back-to-back, juste avant le snapshot.
-  // À ce stade tous les autres correcteurs ont fini et plus rien ne peut
-  // réintroduire de conflits collés sur la colonne unifiée.
-  _avoidBackToBackSameAthlete(satBlocks);
-  _avoidBackToBackSameAthlete(dimBlocks);
-  _avoidBackToBackSameAthlete(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
+  // Final validation pass
+  _enforceHardConstraints(satBlocks);
+  _enforceHardConstraints(dimBlocks);
+  _enforceHardConstraints(venBlocks);
+  console.log('[Solver] Final validation:',
+    'sam:', _validateDay(satBlocks).hardViolations.length, 'hard,', _validateDay(satBlocks).cost, 'cost',
+    'dim:', _validateDay(dimBlocks).hardViolations.length, 'hard,', _validateDay(dimBlocks).cost, 'cost',
+    'ven:', _validateDay(venBlocks).hardViolations.length, 'hard,', _validateDay(venBlocks).cost, 'cost');
 
   // v121: Cap ChQc finales à leur finN (top 8 finalistes typique).
   // No-op en coupeQc (early-return sur _COMP_TYPE). Doit être APRÈS glue
@@ -6834,14 +7208,32 @@ function _gsRebuild(athletes) {
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
 
-  // ── Update EXTRA / EXTRA_DIM ──────────────────────────────
+  // ── Update EXTRA / EXTRA_DIM / EXTRA_VEN ──────────────────────────────
+  // Normalize athletes so every entry exposes tr_cat/dm_cat/tu_cat/trs_cat,
+  // the field names the rest of the codebase (render, filters, sort) reads.
+  // Raw GS parsing gives us tr/dmt/tu/trs; we keep those and add the _cat aliases.
+  function _normCatRaw(c) {
+    return (c||'').toString().replace(/\(/g,'').replace(/\)/g,'').replace(/\s+/g,' ').trim();
+  }
+  var _athletesWithCats = athletes.map(function(a) {
+    return Object.assign({}, a, {
+      tr_cat:  _normCatRaw(a.tr),
+      dm_cat:  _normCatRaw(a.dmt),
+      tu_cat:  _normCatRaw(a.tu),
+      trs_cat: _normCatRaw(a.trs)
+    });
+  });
   if (typeof EXTRA !== 'undefined') {
-    EXTRA.athletes_full = athletes;
+    EXTRA.athletes_full = _athletesWithCats;
     EXTRA.awards = [];
   }
   if (typeof EXTRA_DIM !== 'undefined') {
-    EXTRA_DIM.athletes_full = athletes;
+    EXTRA_DIM.athletes_full = _athletesWithCats;
     EXTRA_DIM.awards = [];
+  }
+  if (typeof EXTRA_VEN !== 'undefined') {
+    EXTRA_VEN.athletes_full = _athletesWithCats;
+    EXTRA_VEN.awards = [];
   }
 
   var nSam = satBlocks.length, nDim = dimBlocks.length;
@@ -6941,6 +7333,13 @@ var _blocks_ven = null;
 var _awBlocks_sam = null;
 var _awBlocks_dim = null;
 var _awBlocks_ven = null;
+// Full-metadata awBlocks snapshots per day (for the cross-day Remises tab).
+// Position caches above only keep {id, start_m, end_m}; these keep the
+// complete objects (app, level, sexe, cats, athletes) so Remises can render
+// all three days at once without needing to switch tab.
+var _awBlocksFull_sam = null;
+var _awBlocksFull_dim = null;
+var _awBlocksFull_ven = null;
 var blocks = JSON.parse(JSON.stringify(RAW.blocks));
 // Expose state getter for console/copy
 window._getHoraireState = function() {
@@ -7040,6 +7439,40 @@ function buildAthIndex() {
       (idx[k] = idx[k]||[]).push({app:b.app, bid:b.id, wu_start:b.wu_start, cp_end:b.cp_end, cat:a.cat, club:a.club, level:b.level||1, day:b.day||'sam'});
     }
   }
+  return idx;
+}
+
+// Cross-day athlete index: iterates all day caches + the current day's live
+// `blocks` buffer so the Athletes tab can list every athlete once with a time
+// entry per apparatus tagged with its day (sam/dim/ven).
+function buildAthIndexAllDays() {
+  const idx = {};
+  const _push = (blks, day) => {
+    if (!blks || !blks.length) return;
+    for (const b of blks) {
+      if (!b || !b.athletes) continue;
+      for (const a of b.athletes) {
+        const k = a.nom+'|'+a.prenom;
+        (idx[k] = idx[k]||[]).push({
+          app:b.app, bid:b.id, wu_start:b.wu_start, cp_end:b.cp_end,
+          cat:a.cat, club:a.club, level:b.level||1, day:day,
+          // Athletes-tab cat column reads passType + blockCats to show
+          // "Prélim N1 12-" / "Finale N1 12-" per block membership.
+          passType: b.passType || '', blockCats: (b.cats || []),
+          // Synchro blocks get their `app` reassigned to TR/TR2 by
+          // _smartSplitTR (they physically run on a trampoline), so the
+          // TRS column can't filter on `app` — use `is_trs` instead.
+          is_trs: !!b.is_trs
+        });
+      }
+    }
+  };
+  // Current day uses the live buffer (may contain unsaved drags)
+  _push(blocks, currentDay);
+  // Other days pull from their cache; skip the current-day cache to avoid dupes
+  if (currentDay !== 'sam') _push(typeof _blocks_sam !== 'undefined' ? _blocks_sam : null, 'sam');
+  if (currentDay !== 'dim') _push(typeof _blocks_dim !== 'undefined' ? _blocks_dim : null, 'dim');
+  if (currentDay !== 'ven') _push(typeof _blocks_ven !== 'undefined' ? _blocks_ven : null, 'ven');
   return idx;
 }
 
@@ -7165,6 +7598,9 @@ function toggleColorMode() {
 function updateLegend() {
   var el = document.getElementById('legend-items');
   if (!el) return;
+  // Sync the judge panel selector with the current state
+  var _jpSel = document.getElementById('judge-panel-sel');
+  if (_jpSel) _jpSel.value = (typeof _judgePanelOverride !== 'undefined' && _judgePanelOverride) ? _judgePanelOverride : 0;
   if (COLOR_MODE === 'level') {
     // v105: rainbow ROYGBIV, 7 levels (novice=N5, junior=N6, senior=N7)
     el.innerHTML = [
@@ -7179,14 +7615,33 @@ function updateLegend() {
       return '<span class="leg-item" title="'+x.label+'"><span class="leg-swatch" style="background:'+x.c+'"></span>'+x.label+'</span>';
     }).join('');
   } else {
-    var _n = typeof _judgeNPanels !== 'undefined' ? _judgeNPanels : 4;
-    var _jL = {1:'TR-A',2:'TR-B',3:'DM',4:'TU'};
-    if (_n===3) _jL[1]='TR (A+B)';
-    var _items=[];
-    for(var _j=1;_j<=_n;_j++){
-      var _c=JUDGE_COLORS[_j];
-      _items.push('<span class="leg-item"><span class="leg-swatch" style="background:'+_c.bright+'"></span>P'+_j+' '+_jL[_j]+'</span>');
+    // Scan live blocks to build an accurate legend that reflects the real schedule.
+    // Each panel gets a label built from the apparatus names actually assigned to it.
+    var _panelApps = {};
+    var _allBlks = (typeof blocks !== 'undefined' ? blocks : [])
+      .concat(typeof _blocks_sam !== 'undefined' && _blocks_sam ? _blocks_sam : [])
+      .concat(typeof _blocks_dim !== 'undefined' && _blocks_dim ? _blocks_dim : [])
+      .concat(typeof _blocks_ven !== 'undefined' && _blocks_ven ? _blocks_ven : []);
+    _allBlks.forEach(function(b) {
+      if (!b || b.type === 'break') return;
+      var jp = b.judgePanel || (typeof DEFAULT_JUDGE_PANEL !== 'undefined' ? DEFAULT_JUDGE_PANEL[b.app] : 1) || 1;
+      if (!_panelApps[jp]) _panelApps[jp] = {};
+      var appLabel = (b.is_trs || b.app === 'TRS') ? 'TRS' : b.app;
+      _panelApps[jp][appLabel] = true;
+    });
+    var _panels = Object.keys(_panelApps).map(Number).sort(function(a,b){return a-b;});
+    if (_panels.length === 0) {
+      // Fallback: use _judgeNPanels static mapping
+      var _n = typeof _judgeNPanels !== 'undefined' ? _judgeNPanels : 4;
+      _panels = []; for (var _fi=1;_fi<=_n;_fi++) _panels.push(_fi);
     }
+    var _items = [];
+    _panels.forEach(function(jp) {
+      var _c = JUDGE_COLORS[jp] || JUDGE_COLORS[1];
+      var apps = _panelApps[jp] ? Object.keys(_panelApps[jp]).sort() : [];
+      var label = apps.length > 0 ? apps.join('+') : '?';
+      _items.push('<span class="leg-item"><span class="leg-swatch" style="background:'+_c.bright+'"></span>P'+jp+' '+label+'</span>');
+    });
     _items.push('<span style="font-size:9px;color:#94a3b8;margin-left:4px">— clic badge = changer panel</span>');
     el.innerHTML=_items.join('');
   }
@@ -7390,19 +7845,17 @@ function autoAssignJudgePanels() {
     }); });
     if (trOverlap) return 4;
 
-    // v069: en chQc, DM+TU partagent obligatoirement UN panel (règlement).
-    // _enforceDmTuPanel garantit déjà qu'ils ne se chevauchent pas en cp.
-    // On force 2 panels (TR+TR2=J1, DM+TU=J2) sans checker les chevauchements.
-    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') return 2;
-
-    // Check if DM and TU COMPETITION times overlap → need at least 3 panels
+    // v122: DM+TU panel detection — configurable pour les 2 formats.
+    // En chQc, _enforceDmTuPanel garantit deja pas d'overlap cp → Auto detecte 2.
+    // En CoupeQc, si DM/TU overlappent en cp → 3 panels; sinon 2 (partage OK).
+    // L'utilisateur peut forcer via le dropdown judge-panel-sel dans les 2 modes.
     var dmtuOverlap = false;
     dm.forEach(function(a) { tu.forEach(function(b) {
       if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) dmtuOverlap = true;
     }); });
     if (dmtuOverlap) return 3;
 
-    // 2 panels works fine
+    // 2 panels works fine (DM+TU cp ne se chevauchent pas)
     return 2;
   }
 
@@ -7442,6 +7895,46 @@ function autoAssignJudgePanels() {
   updateJudgeBadges();
   updateLegend();
   return _judgeNPanels;
+}
+
+// ── Manual judge panel override ──────────────────────────────────────────
+// 0 = auto-detect, 2/3/4 = force that many panels and reassign all blocks.
+var _judgePanelOverride = 0;
+
+function setJudgePanels(n) {
+  _judgePanelOverride = n;
+  if (n === 0) {
+    // Back to auto — clear all manual flags and re-detect
+    var _all = (blocks||[]).concat(_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]);
+    _all.forEach(function(b) { if (b) delete b._panelManual; });
+    autoAssignJudgePanels();
+  } else {
+    // Force n panels on all blocks (clear manual flags so assignDay takes effect)
+    var _map = {
+      2: {TR:1, TR2:1, DM:2, TU:2, TRS:1},
+      3: {TR:1, TR2:1, DM:2, TU:3, TRS:1},
+      4: {TR:1, TR2:2, DM:3, TU:4, TRS:1}
+    };
+    var map = _map[n] || _map[3];
+    var _all = (blocks||[]).concat(_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]);
+    _all.forEach(function(b) {
+      if (!b || b.type === 'break') return;
+      b.judgePanel = map[b.app] || 1;
+      delete b._panelManual;
+    });
+    _judgeNPanels = n;
+    updateJudgeBadges();
+    updateLegend();
+  }
+  // Auto-switch to Juges color mode so the change is immediately visible
+  if (COLOR_MODE !== 'judge') {
+    COLOR_MODE = 'judge';
+    var _cmBtn = document.getElementById('color-mode-toggle');
+    if (_cmBtn) _cmBtn.textContent = '🎨 Juges';
+    updateLegend();
+  }
+  renderBlocks();
+  scheduleSave();
 }
 
 // Cycle a block to the next judge panel (manual override)
@@ -7550,11 +8043,7 @@ function autoAssignJudgePanels() {
     }); });
     if (trOverlap) return 4;
 
-    // v069: en chQc, DM+TU partagent obligatoirement UN panel (règlement).
-    // _enforceDmTuPanel garantit déjà qu'ils ne se chevauchent pas en cp.
-    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') return 2;
-
-    // 3 panels si DM/TU se chevauchent en compétition
+    // v122: DM+TU panel detection — configurable pour les 2 formats.
     var dmtuOverlap = false;
     dm.forEach(function(a) { tu.forEach(function(b) {
       if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) dmtuOverlap = true;
@@ -9009,6 +9498,19 @@ function saveModal() {
   render();
 }
 
+// ── Fichier dropdown menu ──
+function toggleFileMenu(e) {
+  if (e) e.stopPropagation();
+  var dd = document.getElementById('file-dropdown');
+  if (!dd) return;
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+function closeFileMenu() {
+  var dd = document.getElementById('file-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+document.addEventListener('click', function() { closeFileMenu(); });
+
 function openHelp() {
   var ov = document.getElementById('help-overlay');
   // Toggle: close if already open
@@ -9209,12 +9711,13 @@ render();
 // Init competition config inputs + title bar + status bar from baked data
 (function(){
   const c = EXTRA.competition||{};
-  ['cfg-nom','cfg-date-sam','cfg-date-dim'].forEach(function(id){
+  ['cfg-nom','cfg-date-sam','cfg-date-dim','cfg-date-ven'].forEach(function(id){
     const el = document.getElementById(id);
     if(!el) return;
     if(id==='cfg-nom')      el.value = c.nom||'';
     if(id==='cfg-date-sam') el.value = c.date_sam||'';
     if(id==='cfg-date-dim') el.value = c.date_dim||'';
+    if(id==='cfg-date-ven') el.value = c.date_ven||'';
   });
   // Update title bar
   if (c.nom) {
@@ -9345,8 +9848,8 @@ document.querySelectorAll('.sheet-tab').forEach(btn => {
 });
 
 // ── Athlètes Tab ──────────────────────────────────────
-var athTabSort = [{col:'cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}]; // multi-priority sort
-var ATH_SORT_DEFAULT = [{col:'cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}];
+var athTabSort = [{col:'tr_cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}]; // multi-priority sort
+var ATH_SORT_DEFAULT = [{col:'tr_cat',dir:1},{col:'club',dir:1},{col:'nom',dir:1}];
 
 function sortAthTab(col) {
   const idx = athTabSort.findIndex(s => s.col === col);
@@ -9400,10 +9903,31 @@ function populateAthFullClub() {
 }
 
 function renderAthletesTab() {
-  const athIdx = buildAthIndex();
+  // All-days view: list every athlete once, with time entries tagged by day.
+  const athIdx = buildAthIndexAllDays();
   const conflicts = getConflicts(athIdx);
 
-  let aths = [...(currentDay==='dim' ? EXTRA_DIM : EXTRA).athletes_full];
+  // Merge SAT + DIM rosters, dedup by nom|prenom. Each day's athletes_full
+  // carries the complete cat columns (tr_cat / dm_cat / tu_cat / trs_cat) for
+  // its members, so dedup on identity is enough.
+  let aths = (() => {
+    const _seen = {};
+    const _merged = [];
+    const _addAll = (arr) => {
+      if (!arr) return;
+      for (const a of arr) {
+        const k = a.nom+'|'+a.prenom;
+        if (_seen[k]) continue;
+        _seen[k] = true;
+        _merged.push(a);
+      }
+    };
+    _addAll((typeof _SAT_EXTRA !== 'undefined' && _SAT_EXTRA) ? _SAT_EXTRA.athletes_full : null);
+    _addAll(typeof EXTRA !== 'undefined' ? EXTRA.athletes_full : null);
+    _addAll(typeof EXTRA_DIM !== 'undefined' ? EXTRA_DIM.athletes_full : null);
+    _addAll(typeof EXTRA_VEN !== 'undefined' ? EXTRA_VEN.athletes_full : null);
+    return _merged;
+  })();
   if (filterClub)  aths = aths.filter(a => a.club === filterClub);
   if (filterText)  aths = aths.filter(a => (a.nom+' '+a.prenom).toLowerCase().includes(filterText) || (a.club||'').toLowerCase().includes(filterText));
   if (filterCat) {
@@ -9450,7 +9974,17 @@ function renderAthletesTab() {
   const _sortTimes = {};
   for (const [k, entries] of Object.entries(liveAthIdx)) {
     _sortTimes[k] = {};
-    for (const e of entries) _sortTimes[k][e.app] = e.wu_start;
+    for (const e of entries) {
+      // TR2 shares the TR sort column (2 physical trampolines → 1 column in athletes tab).
+      // Synchro (is_trs) goes to the TRS sort column regardless of its reassigned app.
+      // Keep the earliest start time across days/platforms as the sort key.
+      let _sortApp;
+      if (e.is_trs) _sortApp = 'TRS';
+      else if (e.app === 'TR2') _sortApp = 'TR';
+      else _sortApp = e.app;
+      const _cur = _sortTimes[k][_sortApp];
+      if (_cur == null || e.wu_start < _cur) _sortTimes[k][_sortApp] = e.wu_start;
+    }
   }
   const _timeSort = {'tr_time':'TR','dm_time':'DM','tu_time':'TU','trs_time':'TRS'};
   // Pre-build award time lookup: key → { TR: start_m, DM:..., TU:..., TRS:... }
@@ -9512,15 +10046,25 @@ function renderAthletesTab() {
         if (cmp !== 0) return cmp;
       } else {
         // Smart sort for category columns (tr_cat, dm_cat, tu_cat, trs_cat)
-        // Extract R-level and age group numerically so R1 < R2, and 8 ans < 9-10 < 11-12 < 13-14 < 15+
+        // Provincial: Novice, N1-N7, Junior, Senior with age splits (12-, 13+, 15-16, 17+)
+        // Regional: R1-R9 with age groups (8 ans, 9-10, 11-12, 13-14, 15+)
         const _catCols = ['tr_cat','dm_cat','tu_cat','trs_cat'];
         if (_catCols.includes(col)) {
           const _catKey = s => {
             if (!s) return [99, 99];
-            const lm = s.match(/R(\d)/); const lvl = lm ? +lm[1] : 99;
-            const ages = [['8 ans',0],['9-10',1],['11-12',2],['13-14',3],['15+',4]];
-            for (const [ag,v] of ages) if (s.includes(ag)) return [lvl, v];
-            return [lvl, 99];
+            // Provincial levels: Novice < N1 < N2 < N3 < N4 < N5 < N6 < N7 < Junior < Senior
+            const _provLvls = [['novice',0],['n1',1],['n2',2],['n3',3],['n4',4],['n5',5],['n6',6],['n7',7],['junior',8],['senior',9]];
+            const sl = s.toLowerCase();
+            let lvl = 99;
+            for (const [k,v] of _provLvls) { if (sl.includes(k)) { lvl = v; break; } }
+            // Fallback: regional R-levels
+            if (lvl === 99) { const lm = s.match(/R(\d)/); if (lm) lvl = +lm[1]; }
+            // Age splits: 12- < 13+ < 15-16 < 16- < 17+ < 8 ans < 9-10 < 11-12 < 13-14 < 15+
+            const _ages = [['12-',0],['13+',1],['13-',1],['14+',2],['15-16',3],['16-',4],['17+',5],
+                           ['8 ans',10],['9-10',11],['11-12',12],['13-14',13],['15+',14]];
+            let age = 99;
+            for (const [k,v] of _ages) { if (s.includes(k)) { age = v; break; } }
+            return [lvl, age];
           };
           const [laA, aaA] = _catKey(a[col]||'');
           const [laB, aaB] = _catKey(b[col]||'');
@@ -9548,24 +10092,78 @@ function renderAthletesTab() {
 
     // Get live times from blocks (they may have been dragged)
     const liveApps = liveAthIdx[k]||[];
-    const getTimes = app => { const e=liveApps.find(x=>x.app===app); return e?`${toT(e.wu_start)}→${toT(e.cp_end)}`:''};
-    
-    // Compute span from live block times
-    const allTimes = liveApps.map(x => ({s: x.wu_start, e: x.cp_end}));
+    // ChQc/Coupe Qc multi-day: each entry carries a `day` (sam/dim/ven). Render one
+    // line per entry as "<date configurée> HH:MM→HH:MM", sorted by start time.
+    // The TR column unifies TR + TR2 (2 physical trampolines → 1 athletes-tab column).
+    const _comp = (typeof EXTRA !== 'undefined' && EXTRA.competition) ? EXTRA.competition : {};
+    const _dateFor = d => {
+      if (d === 'ven') return _comp.date_ven || 'Ven';
+      if (d === 'dim') return _comp.date_dim || 'Dim';
+      return _comp.date_sam || 'Sam';
+    };
+    // Column membership: synchro blocks have their `app` reassigned to TR/TR2
+    // by _smartSplitTR. Use `is_trs` as the discriminator so synchro always
+    // lands in the TRS column and never in the TR column.
+    const _inCol = (e, apps, wantTRS) => {
+      if (wantTRS) return !!e.is_trs;
+      if (e.is_trs) return false;
+      return apps.includes(e.app);
+    };
+    const renderSched = (apps, wantTRS) => {
+      const _es = liveApps.filter(x => _inCol(x, apps, wantTRS)).sort((a,b) => a.wu_start - b.wu_start);
+      return _es.map(e => `<div>${_dateFor(e.day)} ${toT(e.wu_start)}→${toT(e.cp_end)}<${'/'}div>`).join('');
+    };
+    const firstLvl = (apps, wantTRS) => { const e = liveApps.find(x => _inCol(x, apps, wantTRS)); return e ? 'R'+(e.level||1) : ''; };
+
+    // Span = longest single-day span. Cross-day min/max is meaningless on a 3-day comp.
     let liveSpan = 0;
-    if (allTimes.length > 0) {
-      const minS = Math.min(...allTimes.map(x=>x.s));
-      const maxE = Math.max(...allTimes.map(x=>x.e));
-      liveSpan = Math.round((maxE - minS) / 6) / 10; // in hours, 1 decimal
+    {
+      const _byDay = {};
+      for (const x of liveApps) {
+        const _d = x.day || 'sam';
+        (_byDay[_d] = _byDay[_d] || []).push(x);
+      }
+      for (const _d in _byDay) {
+        const _arr = _byDay[_d];
+        const _mn = Math.min(..._arr.map(x => x.wu_start));
+        const _mx = Math.max(..._arr.map(x => x.cp_end));
+        const _s = Math.round((_mx - _mn) / 6) / 10; // hours, 1 decimal
+        if (_s > liveSpan) liveSpan = _s;
+      }
     }
     const spanCls = liveSpan > 8 ? 'td-span-bad' : liveSpan > 6 ? 'td-span-warn' : 'td-span-ok';
-    const confCell = hasConflict ? `<span style="color:var(--conflict);font-weight:700">⚠ ${myConflicts.filter(c=>c.severity==='conflict').length}<${'/'}span>` 
+    const confCell = hasConflict ? `<span style="color:var(--conflict);font-weight:700">⚠ ${myConflicts.filter(c=>c.severity==='conflict').length}<${'/'}span>`
                    : hasWarn    ? `<span style="color:var(--warn)">△ ${myConflicts.length}<${'/'}span>`
                    : `<span style="color:var(--ok)">✓<${'/'}span>`;
 
-    const tr = getTimes('TR'), dm = getTimes('DM'), tu = getTimes('TU'), trs = getTimes('TRS');
-    const getLevel = app => { const e=liveApps.find(x=>x.app===app); return e?'R'+(e.level||1):''; };
-    const trL = getLevel('TR'), dmL = getLevel('DM'), tuL = getLevel('TU'), trsL = getLevel('TRS');
+    const tr  = renderSched(['TR','TR2'], false);
+    const dm  = renderSched(['DM'],       false);
+    const tu  = renderSched(['TU'],       false);
+    const trs = renderSched([],           true);
+    const trL  = firstLvl(['TR','TR2'], false);
+    const dmL  = firstLvl(['DM'],       false);
+    const tuL  = firstLvl(['TU'],       false);
+    const trsL = firstLvl([],           true);
+
+    // Build "Prélim/Finale <cat>" lines per apparatus column from live block
+    // membership. Synchro only renders in the TRS column (apps filter on
+    // b.app), never in the trampoline column, regardless of roster cat fields.
+    const _passLabel = pt => pt === 'PRELIM' ? 'Prélim' : pt === 'FINALE' ? 'Finale' : '';
+    const renderCat = (apps, wantTRS) => {
+      const _es = liveApps
+        .filter(x => _inCol(x, apps, wantTRS))
+        .sort((a,b) => a.wu_start - b.wu_start);
+      if (_es.length === 0) return '';
+      return _es.map(e => {
+        const _cat = (e.blockCats && e.blockCats[0]) || e.cat || '';
+        const _lbl = _passLabel(e.passType);
+        return `<div>${_lbl ? _lbl+' ' : ''}${_cat}<${'/'}div>`;
+      }).join('');
+    };
+    const trCat  = renderCat(['TR','TR2'], false) || (a.tr_cat  || '');
+    const dmCat  = renderCat(['DM'],       false) || (a.dm_cat  || '');
+    const tuCat  = renderCat(['TU'],       false) || (a.tu_cat  || '');
+    const trsCat = renderCat([],           true)  || (a.trs_cat || '');
 
     // Find award time per apparatus for this athlete
     const k2 = a.nom+'|'+a.prenom;
@@ -9587,26 +10185,39 @@ function renderAthletesTab() {
       <td>${a.prenom}<${'/'}td>
       <td class="acol-club" style="color:var(--xl-gray5)">${a.club}<${'/'}td>
       <td class="acol-TR ${tr?'td-lvl '+trL:''}">${tr}<${'/'}td>
-      <td class="acol-TR ${tr?'td-lvl '+trL:''}" style="font-size:9px">${a.tr_cat||''}<${'/'}td>
+      <td class="acol-TR ${tr?'td-lvl '+trL:''}" style="font-size:9px">${trCat}<${'/'}td>
       <td class="acol-TR" style="font-family:monospace;font-size:10px;color:var(--xl-gray5)">${awTR}<${'/'}td>
       <td class="acol-DM ${dm?'td-lvl '+dmL:''}">${dm}<${'/'}td>
-      <td class="acol-DM ${dm?'td-lvl '+dmL:''}" style="font-size:9px">${a.dm_cat||''}<${'/'}td>
+      <td class="acol-DM ${dm?'td-lvl '+dmL:''}" style="font-size:9px">${dmCat}<${'/'}td>
       <td class="acol-DM" style="font-family:monospace;font-size:10px;color:var(--xl-gray5)">${awDM}<${'/'}td>
       <td class="acol-TU ${tu?'td-lvl '+tuL:''}">${tu}<${'/'}td>
-      <td class="acol-TU ${tu?'td-lvl '+tuL:''}" style="font-size:9px">${a.tu_cat||''}<${'/'}td>
+      <td class="acol-TU ${tu?'td-lvl '+tuL:''}" style="font-size:9px">${tuCat}<${'/'}td>
       <td class="acol-TU" style="font-family:monospace;font-size:10px;color:var(--xl-gray5)">${awTU}<${'/'}td>
       <td class="acol-TRS ${trs?'td-lvl '+trsL:''}">${trs}<${'/'}td>
-      <td class="acol-TRS ${trs?'td-lvl '+trsL:''}" style="font-size:9px;font-weight:bold">${a.trs_cat||''}<${'/'}td>
+      <td class="acol-TRS ${trs?'td-lvl '+trsL:''}" style="font-size:9px;font-weight:bold">${trsCat}<${'/'}td>
       <td class="acol-TRS" style="font-size:9px;color:var(--xl-gray5)">${(()=>{
         const pk = PARTNER_MAP[a.nom+'|'+a.prenom];
         if (!pk) return a.trs_cat ? '<span style="color:#ef4444;font-weight:700">⚠ Aucun partenaire</span>' : '—';
-        const extra = currentDay==='dim' ? EXTRA_DIM : EXTRA;
-        const pAth = (extra.athletes_full||[]).find(x=>x.nom+'|'+x.prenom===pk);
+        // Cross-day partner lookup: ChQc/Coupe Qc lets athletes compete on any
+        // of Ven/Sam/Dim, so search all day rosters — not just the current day.
+        const _allAths = [].concat(
+          (typeof EXTRA     !== 'undefined' && EXTRA.athletes_full)     || [],
+          (typeof EXTRA_DIM !== 'undefined' && EXTRA_DIM.athletes_full) || [],
+          (typeof EXTRA_VEN !== 'undefined' && EXTRA_VEN.athletes_full) || []
+        );
+        const pAth = _allAths.find(x=>x.nom+'|'+x.prenom===pk);
         if (!pAth || !pAth.trs_cat) return a.trs_cat ? '<span style="color:#ef4444;font-weight:700">⚠ Partenaire absent</span>' : '—';
         if (!a.trs_cat) return '—';
         const [pn,pp] = pk.split('|');
         const athKey = a.nom+'|'+a.prenom;
-        const trsBlocks = blocks.filter(b => b.app === 'TRS' && b.athletes.some(x => x.nom+'|'+x.prenom === athKey));
+        // Same-block check also needs every day's blocks (current day is live `blocks`).
+        const _allBlocks = [].concat(
+          blocks,
+          (currentDay !== 'sam' && typeof _blocks_sam !== 'undefined' && _blocks_sam) ? _blocks_sam : [],
+          (currentDay !== 'dim' && typeof _blocks_dim !== 'undefined' && _blocks_dim) ? _blocks_dim : [],
+          (currentDay !== 'ven' && typeof _blocks_ven !== 'undefined' && _blocks_ven) ? _blocks_ven : []
+        );
+        const trsBlocks = _allBlocks.filter(b => b.app === 'TRS' && b.athletes.some(x => x.nom+'|'+x.prenom === athKey));
         const partnerSameBlock = trsBlocks.some(b => b.athletes.some(x => x.nom+'|'+x.prenom === pk));
         if (!partnerSameBlock && trsBlocks.length > 0) return '<span style="color:#f59e0b;font-weight:700">⚠ '+pp+' '+pn+' (autre bloc)</span>';
         return pp+' '+pn;
@@ -9695,20 +10306,58 @@ function renderRemisesTab() {
   const rows = document.getElementById('rem-rows');
   if (!rows) return;
   rows.innerHTML='';
-  // Use live awBlocks (respect drag positions) sorted by start time
-  const sorted = [...awBlocks].sort((a,b) => a.start_m - b.start_m);
-  let total = 0;
 
-  sorted.forEach(aw => {
-    const dur = aw.end_m - aw.start_m;
+  // Build the full 3-day list: current-day live awBlocks + cached snapshots
+  // from the other days. Cached entries carry the same shape as awBlocks
+  // because _awBlocksFull_<day> stores deep-copied objects.
+  const cfg = (typeof EXTRA !== 'undefined' && EXTRA.competition) || {};
+  const _dateFor = d => {
+    if (d === 'ven') return cfg.date_ven || 'Vendredi';
+    if (d === 'dim') return cfg.date_dim || 'Dimanche';
+    return cfg.date_sam || 'Samedi';
+  };
+  const _dayOrder = { ven: 0, sam: 1, dim: 2 };
+
+  const bundle = [];
+  const _pushDay = (aws, day) => {
+    if (!aws || !aws.length) return;
+    for (const aw of aws) bundle.push({ aw, day });
+  };
+  // Current day uses the live buffer (respects unsaved drags)
+  _pushDay(awBlocks, currentDay);
+  if (currentDay !== 'sam' && typeof _awBlocksFull_sam !== 'undefined' && _awBlocksFull_sam) _pushDay(_awBlocksFull_sam, 'sam');
+  if (currentDay !== 'dim' && typeof _awBlocksFull_dim !== 'undefined' && _awBlocksFull_dim) _pushDay(_awBlocksFull_dim, 'dim');
+  if (currentDay !== 'ven' && typeof _awBlocksFull_ven !== 'undefined' && _awBlocksFull_ven) _pushDay(_awBlocksFull_ven, 'ven');
+
+  // Sort by day then start time
+  bundle.sort((a, b) => {
+    const da = _dayOrder[a.day] ?? 9;
+    const db = _dayOrder[b.day] ?? 9;
+    if (da !== db) return da - db;
+    return (a.aw.start_m || 0) - (b.aw.start_m || 0);
+  });
+
+  let total = 0;
+  let lastDay = null;
+  bundle.forEach(({aw, day}) => {
+    if (day !== lastDay) {
+      // Insert a day separator row
+      const sep = document.createElement('div');
+      sep.className = 'rem-row rem-day-sep';
+      sep.style.cssText = 'background:#e0e7ff;border-top:2px solid #6366f1;font-weight:700;color:#3730a3;grid-column:1 / -1;padding:4px 10px;font-size:11px;letter-spacing:.3px;text-transform:uppercase;display:block';
+      sep.textContent = _dateFor(day);
+      rows.appendChild(sep);
+      lastDay = day;
+    }
+    const dur = (aw.end_m || 0) - (aw.start_m || 0);
     total += dur;
-    const cats = aw.cats.map(c=>c.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'')).join('  ·  ');
-    const row=document.createElement('div');
-    row.className='rem-row';
-    row.innerHTML=`
+    const cats = (aw.cats || []).map(c => c.replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '')).join('  ·  ');
+    const row = document.createElement('div');
+    row.className = 'rem-row';
+    row.innerHTML = `
       <div class="rem-cell"><span class="rem-app-badge ${aw.app} R${aw.level}">${aw.app}${aw.sexe?' '+aw.sexe.charAt(0):''} R${aw.level}<${'/'}span><${'/'}div>
       <div class="rem-cell" style="font-weight:700">R${aw.level}<${'/'}div>
-      <div class="rem-cell" style="font-family:monospace;font-size:11px;font-weight:600">${toT(aw.start_m)}<${'/'}div>
+      <div class="rem-cell" style="font-family:monospace;font-size:11px;font-weight:600">${_dateFor(day)} ${toT(aw.start_m)}<${'/'}div>
       <div class="rem-cell" style="font-family:monospace;font-size:11px">${toT(aw.end_m)}<${'/'}div>
       <div class="rem-cell rem-cats">${cats}<${'/'}div>
     `;
@@ -10494,23 +11143,16 @@ function importScheduleFromFile() {
           c.nom = _gsCompMeta.nom;
           EXTRA.competition.nom = _gsCompMeta.nom;
         }
-        if (!c.date_sam && _gsCompMeta && _gsCompMeta.date) {
-          var dm = _gsCompMeta.date.match(/(\d{1,2})-(\d{1,2})\s+(janvier|f\u00e9vrier|mars|avril|mai|juin|juillet|ao\u00fbt|septembre|octobre|novembre|d\u00e9cembre)/i);
-          if (dm) {
-            c.date_sam = dm[1] + ' ' + dm[3];
-            c.date_dim = dm[2] + ' ' + dm[3];
-          } else {
-            c.date_sam = _gsCompMeta.date;
-          }
-          EXTRA.competition.date_sam = c.date_sam;
-          EXTRA.competition.date_dim = c.date_dim || '';
-        }
+        // Dates come from the imported file only — never from _gsCompMeta.date,
+        // which can be polluted by athlete names on the Formulaire tab.
         var cfgNom = document.getElementById('cfg-nom');
         if (cfgNom) cfgNom.value = c.nom || '';
         var cfgSam = document.getElementById('cfg-date-sam');
         if (cfgSam) cfgSam.value = c.date_sam || '';
         var cfgDim = document.getElementById('cfg-date-dim');
         if (cfgDim) cfgDim.value = c.date_dim || '';
+        var cfgVen = document.getElementById('cfg-date-ven');
+        if (cfgVen) cfgVen.value = c.date_ven || '';
         if (c.nom) {
           var t = c.nom + ' - Horaire';
           document.title = t;
@@ -11049,15 +11691,19 @@ function switchDay(day) {
   const _firstVisitDim = (day === 'dim' && _awBlocks_dim === null);
   const _firstVisitSam = (day === 'sam' && _awBlocks_sam === null);
   // Save current day state BEFORE switching
+  const _fullAwSnap = awBlocks.map(aw => JSON.parse(JSON.stringify(aw)));
   if (currentDay === 'sam') {
-    _blocks_sam   = JSON.parse(JSON.stringify(blocks));
-    _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _blocks_sam       = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_sam     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_sam = _fullAwSnap;
   } else if (currentDay === 'ven') {
-    _blocks_ven   = JSON.parse(JSON.stringify(blocks));
-    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _blocks_ven       = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_ven     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_ven = _fullAwSnap;
   } else {
-    _blocks_dim   = JSON.parse(JSON.stringify(blocks));
-    _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _blocks_dim       = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_dim     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_dim = _fullAwSnap;
   }
   currentDay = day;
   if (day === 'sam') {
@@ -11092,7 +11738,7 @@ function switchDay(day) {
   // Update status date
   const cfg = EXTRA.competition || {};
   const dateEl = document.querySelector('#status-bar .status-item');
-  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||_gsCompMeta.date||'Samedi') : (day==='ven' ? (cfg.date_ven||'Vendredi') : (cfg.date_dim||_gsCompMeta.date||'Dimanche'));
+  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||'Samedi') : (day==='ven' ? (cfg.date_ven||'Vendredi') : (cfg.date_dim||'Dimanche'));
   // Update age filter
   const ageSel = document.getElementById('age-filter');
   if (ageSel) {
@@ -11144,12 +11790,16 @@ function switchDay(day) {
   }
   autoScheduleAwards();
   try { renderAwardBlocks(); } catch(e){ console.warn('switchDay: renderAwardBlocks:', e); }
+  const _fullAwSnap2 = awBlocks.map(aw => JSON.parse(JSON.stringify(aw)));
   if (day === 'dim') {
-    _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocks_dim     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_dim = _fullAwSnap2;
   } else if (day === 'ven') {
-    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocks_ven     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_ven = _fullAwSnap2;
   } else {
-    _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocks_sam     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_sam = _fullAwSnap2;
   }
   scheduleSave();
   requestAnimationFrame(function() { try { autoFitCols(); } catch(e) {} });
@@ -12109,8 +12759,10 @@ function printAthleteList() {
   const club   = (document.getElementById('ath-full-club')||{value:''}).value||'';
   const cfg = EXTRA.competition || {};
   const dayLabel = currentDay === 'dim'
-    ? 'Dimanche ' + (cfg.date_dim || _gsCompMeta.date || '')
-    : 'Samedi ' + (cfg.date_sam || _gsCompMeta.date || '');
+    ? 'Dimanche ' + (cfg.date_dim || '')
+    : currentDay === 'ven'
+      ? 'Vendredi ' + (cfg.date_ven || '')
+      : 'Samedi ' + (cfg.date_sam || '');
   const extra = currentDay === 'dim' ? EXTRA_DIM : EXTRA;
   const athIdx = buildAthIndex();
   const conflicts = getConflicts(athIdx);
@@ -14998,6 +15650,14 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 #title-bar .file-name{font-size:12px;color:#fff;font-weight:600;opacity:0.95;letter-spacing:0.2px}
 #title-bar .app-name{font-size:11px;color:rgba(255,255,255,0.55)}
 .title-btns{margin-left:auto;display:flex;gap:2px}
+/* ── Fichier dropdown (Excel-style File menu) ─── */
+.file-menu-wrap{position:relative;z-index:10002}
+.file-menu-btn{background:#217346;color:#fff;border:none;padding:0 14px;height:26px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;margin-left:-12px;transition:background .15s}
+.file-menu-btn:hover{background:#185c37}
+#file-dropdown{position:absolute;top:26px;left:0;min-width:240px;background:#fff;border:1px solid #d0d0d0;box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:10003;padding:4px 0;font-size:12px;font-family:inherit}
+.file-dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 18px;cursor:pointer;color:#1f1f1f;white-space:nowrap}
+.file-dropdown-item:hover{background:#e8f0fe}
+.file-dropdown-sep{height:1px;background:#e0e0e0;margin:4px 12px}
 .title-btn{width:22px;height:22px;border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;border-radius:2px;display:flex;align-items:center;justify-content:center}
 .title-btn:hover{background:rgba(255,255,255,0.15)}
 
@@ -15596,6 +16256,26 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
 <div id="app">
   <!-- Title Bar -->
   <div id="title-bar">
+    <div class="file-menu-wrap"><button class="file-menu-btn" onclick="toggleFileMenu(event)">Fichier</button><div id="file-dropdown" style="display:none">
+      <div class="file-dropdown-item" onclick="exportHTML();closeFileMenu()">&#128190; Enregistrer</div>
+      <div class="file-dropdown-item" onclick="importScheduleFromFile();closeFileMenu()">&#128194; Importer</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="printSchedule();closeFileMenu()">&#128424; Imprimer l'horaire</div>
+      <div class="file-dropdown-item" onclick="printAthleteList();closeFileMenu()">&#128424; Imprimer les athl&#232;tes</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="_gsRefreshData();closeFileMenu()">&#128260; Rafra&#238;chir donn&#233;es</div>
+      <div class="file-dropdown-item" onclick="_splitTR();closeFileMenu()">&#8644; R&#233;&#233;quil. TR</div>
+      <div class="file-dropdown-item" id="fm-cascade" onclick="_toggleAutoCascadeOnDrop();closeFileMenu()">&#8635; Cascade ON</div>
+      <div class="file-dropdown-item" onclick="reoptimizeSchedule();closeFileMenu()">&#9654; Trier les blocs</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="autoFitCols();closeFileMenu()">&#10231; Auto-ajuster colonnes</div>
+      <div class="file-dropdown-item" onclick="resetColWidths();closeFileMenu()">&#8634; R&#233;initialiser largeurs</div>
+      <div class="file-dropdown-item" onclick="toggleRosters();closeFileMenu()">&#128101; Listes athl&#232;tes ON/OFF</div>
+      <div class="file-dropdown-sep"></div>
+      <div class="file-dropdown-item" onclick="switchRibbonTab('Affichage',document.querySelector('[onclick*=Affichage]'));closeFileMenu()">&#9881; Param&#232;tres (ruban)</div>
+      <div class="file-dropdown-item" onclick="clearSavedState();closeFileMenu()">&#8634; R&#233;initialiser tout</div>
+      <div class="file-dropdown-item" onclick="openHelp();closeFileMenu()">&#10067; Aide</div>
+    </div></div>
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Provincial/National — STR</span>
     <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-137</span>
     <button onclick="openHelp()"
@@ -15631,6 +16311,12 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
       <select id="comp-type-sel" onchange="onCompType(this.value)" title="Coupe QC : N1/N2 → dimanche, N3+ → samedi&#10;Champ. QC : prélims → samedi, finales → dimanche" style="font-family:inherit;font-size:11px;font-weight:700;background:rgba(0,0,0,0.25);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:3px;padding:2px 6px;cursor:pointer;outline:none"><option value="coupeQc">Coupe QC</option><option value="chQc">Champ. QC</option></select>
       <span id="comp-type-badge" style="font-size:9px;font-weight:700;color:var(--xl-green-dark,#14532d);background:#86efac;padding:1px 6px;border-radius:10px;white-space:nowrap">Coupe QC</span>
       <span id="color-mode-toggle" onclick="if(typeof toggleColorMode!=='undefined')toggleColorMode()" style="cursor:pointer;padding:2px 7px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;user-select:none;white-space:nowrap" title="Basculer Niveaux / Juges">🎨 Niveaux</span>
+      <select id="judge-panel-sel" onchange="setJudgePanels(+this.value)" title="Nombre de panels de juges" style="font-family:inherit;font-size:10px;font-weight:700;background:rgba(0,0,0,0.25);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:3px;padding:1px 4px;cursor:pointer;outline:none">
+        <option value="0">Juges: Auto</option>
+        <option value="2">2 panels</option>
+        <option value="3">3 panels</option>
+        <option value="4">4 panels</option>
+      </select>
       <button id="btn-undo" onclick="if(typeof _undo!=='undefined')_undo()" disabled style="margin-left:6px;padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Annuler (Ctrl+Z)">↶ Annuler</button>
       <button id="btn-redo" onclick="if(typeof _redo!=='undefined')_redo()" disabled style="padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);font-size:10px;font-weight:700;background:rgba(0,0,0,0.2);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
       <span style="flex:1"></span>
@@ -15728,10 +16414,12 @@ body.hide-rosters .roster-resize-handle { display: none !important; }
         <div style="display:flex;gap:6px;align-items:center;">
           <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">Nom</label>
           <input id="cfg-nom" type="text" oninput="EXTRA.competition.nom=this.value;var _t=this.value||'Compétition';_t+=' - Horaire';document.title=_t;var _ts=document.querySelector('#title-bar .app-name');if(_ts)_ts.textContent=_t;scheduleSave();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:180px;" placeholder="Nom de la compétition">
+          <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">&#128197; Ven</label>
+          <input id="cfg-date-ven" type="text" oninput="EXTRA.competition.date_ven=this.value;if(currentDay==='ven'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();if(typeof renderAthletesTab==='function'&&activeTab==='Athlètes')renderAthletesTab();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 13 mars 2026">
           <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">&#128197; Sam</label>
-          <input id="cfg-date-sam" type="text" oninput="EXTRA.competition.date_sam=this.value;if(currentDay==='sam'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 14 mars 2026">
+          <input id="cfg-date-sam" type="text" oninput="EXTRA.competition.date_sam=this.value;if(currentDay==='sam'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();if(typeof renderAthletesTab==='function'&&activeTab==='Athlètes')renderAthletesTab();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 14 mars 2026">
           <label style="font-size:9px;color:var(--xl-gray5);white-space:nowrap;">&#128197; Dim</label>
-          <input id="cfg-date-dim" type="text" oninput="EXTRA.competition.date_dim=this.value;if(currentDay==='dim'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 15 mars 2026">
+          <input id="cfg-date-dim" type="text" oninput="EXTRA.competition.date_dim=this.value;if(currentDay==='dim'){var el=document.querySelector('#status-bar .status-item');if(el)el.textContent=this.value;}scheduleSave();if(typeof renderAthletesTab==='function'&&activeTab==='Athlètes')renderAthletesTab();" style="font-size:9px;padding:2px 5px;border:1px solid #ccc;border-radius:3px;width:110px;" placeholder="ex: 15 mars 2026">
         </div>
       </div>
       <span style="width:1px;background:var(--xl-border);align-self:stretch;margin:6px 6px"></span>
@@ -16408,6 +17096,14 @@ html,body{height:100%;overflow-x:auto;overflow-y:hidden;min-width:1400px;backgro
 #title-bar .file-name{font-size:12px;color:#fff;font-weight:600;opacity:0.95;letter-spacing:0.2px}
 #title-bar .app-name{font-size:11px;color:rgba(255,255,255,0.55)}
 .title-btns{margin-left:auto;display:flex;gap:2px}
+/* ── Fichier dropdown (Excel-style File menu) ─── */
+.file-menu-wrap{position:relative;z-index:10002}
+.file-menu-btn{background:#217346;color:#fff;border:none;padding:0 14px;height:26px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;margin-left:-12px;transition:background .15s}
+.file-menu-btn:hover{background:#185c37}
+#file-dropdown{position:absolute;top:26px;left:0;min-width:240px;background:#fff;border:1px solid #d0d0d0;box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:10003;padding:4px 0;font-size:12px;font-family:inherit}
+.file-dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 18px;cursor:pointer;color:#1f1f1f;white-space:nowrap}
+.file-dropdown-item:hover{background:#e8f0fe}
+.file-dropdown-sep{height:1px;background:#e0e0e0;margin:4px 12px}
 .title-btn{width:22px;height:22px;border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;border-radius:2px;display:flex;align-items:center;justify-content:center}
 .title-btn:hover{background:rgba(255,255,255,0.15)}
 
@@ -16932,6 +17628,26 @@ body.hide-rosters .roster-col,body.hide-rosters .roster-hdr,body.hide-rosters .r
 <div id="app">
   <!-- Title Bar -->
   <div id="title-bar">
+    <div class="file-menu-wrap"><button class="file-menu-btn" onclick="toggleFileMenu(event)">Fichier<${'/'}button><div id="file-dropdown" style="display:none">
+      <div class="file-dropdown-item" onclick="exportHTML();closeFileMenu()">&#128190; Enregistrer<${'/'}div>
+      <div class="file-dropdown-item" onclick="importScheduleFromFile();closeFileMenu()">&#128194; Importer<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="printSchedule();closeFileMenu()">&#128424; Imprimer l'horaire<${'/'}div>
+      <div class="file-dropdown-item" onclick="printAthleteList();closeFileMenu()">&#128424; Imprimer les athl&#232;tes<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="_gsRefreshData();closeFileMenu()">&#128260; Rafra&#238;chir donn&#233;es<${'/'}div>
+      <div class="file-dropdown-item" onclick="_splitTR();closeFileMenu()">&#8644; R&#233;&#233;quil. TR<${'/'}div>
+      <div class="file-dropdown-item" id="fm-cascade" onclick="_toggleAutoCascadeOnDrop();closeFileMenu()">&#8635; Cascade ON<${'/'}div>
+      <div class="file-dropdown-item" onclick="reoptimizeSchedule();closeFileMenu()">&#9654; Trier les blocs<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="autoFitCols();closeFileMenu()">&#10231; Auto-ajuster colonnes<${'/'}div>
+      <div class="file-dropdown-item" onclick="resetColWidths();closeFileMenu()">&#8634; R&#233;initialiser largeurs<${'/'}div>
+      <div class="file-dropdown-item" onclick="toggleRosters();closeFileMenu()">&#128101; Listes athl&#232;tes ON/OFF<${'/'}div>
+      <div class="file-dropdown-sep"><${'/'}div>
+      <div class="file-dropdown-item" onclick="switchRibbonTab('Affichage',document.querySelector('[onclick*=Affichage]'));closeFileMenu()">&#9881; Param&#232;tres (ruban)<${'/'}div>
+      <div class="file-dropdown-item" onclick="clearSavedState();closeFileMenu()">&#8634; R&#233;initialiser tout<${'/'}div>
+      <div class="file-dropdown-item" onclick="openHelp();closeFileMenu()">&#10067; Aide<${'/'}div>
+    <${'/'}div><${'/'}div>
     <span class="app-name" style="font-size:12px;color:#fff;font-weight:600;opacity:0.95;flex:1">Horaire Compétition<${'/'}span>
     <span id="version-display" style="font-size:10px;color:#fff;opacity:0.75;margin-right:8px;letter-spacing:.3px;white-space:nowrap;">v2026-04-10-137<${'/'}span>
     <button onclick="openHelp()" id="aide-float-btn" style="flex-shrink:0;height:20px;padding:0 10px;margin-right:4px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">❓ Aide ?<${'/'}button>
@@ -17975,13 +18691,15 @@ function _gsLoadMeta(sid) {
   }
 
 
-  // ── Formulaire tab — extract competition name, club name and date ──
+  // ── Formulaire tab — extract competition name and club name only ──
+  // Date is NOT auto-detected on the provincial sheet: the Formulaire tab no
+  // longer has a dedicated date cell and scanning cells for a month name was
+  // matching athlete entries like "Marseille Alicia 2011" (mars + a year) and
+  // leaking garbage into the status bar. The user types the dates manually in
+  // the Compétition parameters (cfg-date-sam/dim/ven).
   fetchTab('Formulaire', function(rows, cols) {
     var compName = '';
-    var compDate = '';
     var clubName = '';
-    var MONTH_RE = /janvier|f\u00e9vrier|mars|avril|mai|juin|juillet|ao\u00fbt|septembre|octobre|novembre|d\u00e9cembre/i;
-    var SKIP_RE  = /nom|club|tel|adresse|num|courriel|maximum|retourner|envoyer|avec|date limite|aucune|accomp|personne|ressource|virement/i;
 
     console.log('Formulaire cols:', JSON.stringify((cols||[]).slice(0,8)));
     console.log('Formulaire row 0:', JSON.stringify((rows[0]||[]).slice(0,6)));
@@ -17998,22 +18716,13 @@ function _gsLoadMeta(sid) {
           var after = v.replace(/^.*nom\s+du\s+club\s*:\s*/i,'').trim();
           clubName = after || (row[ci+1]||'').toString().trim();
         }
-        if (!compDate && MONTH_RE.test(v) && /\d/.test(v)) compDate = v;
       });
-      if (!compDate) {
-        for (var ci = 0; ci < row.length - 1; ci++) {
-          var a = (row[ci]||'').toString().trim();
-          var b = (row[ci+1]||'').toString().trim();
-          if (MONTH_RE.test(a) && /^\d{4}$/.test(b)) { compDate = a + ' ' + b; break; }
-        }
-      }
     });
 
-    console.log('Formulaire result: compName=', compName, 'clubName=', clubName, 'date=', compDate);
+    console.log('Formulaire result: compName=', compName, 'clubName=', clubName);
     if (compName) _gsCompMeta.nom  = compName;
     if (clubName) _gsCompMeta.club = clubName;
-    if (compDate) _gsCompMeta.date = compDate;
-    if (compName || clubName || compDate) _gsApplyMeta();
+    if (compName || clubName) _gsApplyMeta();
   });
 
   // ── Infos tab — year ──
@@ -18040,28 +18749,23 @@ function _gsApplyMeta() {
                   document.querySelector('#title-bar span');
   if (titleSpan) titleSpan.textContent = fullTitle;
 
-  // Competition config in EXTRA
+  // Competition config in EXTRA — name only. Dates are typed manually in the
+  // Compétition params (cfg-date-sam / cfg-date-dim / cfg-date-ven) because
+  // the provincial registration sheet no longer exposes a date cell.
   if (typeof EXTRA !== 'undefined' && EXTRA.competition) {
     EXTRA.competition.nom = m.nom || EXTRA.competition.nom;
-    if (m.date) {
-      // Try to split date into sam/dim (e.g. "14-15 février 2026")
-      var dateMatch = m.date.match(/(\d{1,2})-(\d{1,2})\s+(janvier|f\u00e9vrier|mars|avril|mai|juin|juillet|ao\u00fbt|septembre|octobre|novembre|d\u00e9cembre)/i);
-      if (dateMatch) {
-        var monthYear = dateMatch[3];
-        EXTRA.competition.date_sam = dateMatch[1] + ' ' + monthYear;
-        EXTRA.competition.date_dim = dateMatch[2] + ' ' + monthYear;
-      } else {
-        EXTRA.competition.date_sam = m.date;
-      }
-    }
   }
 
-  // Status bar date
+  // Status bar date — only show what the user typed in the params; never fall
+  // back to _gsCompMeta.date (it can be polluted by athlete names containing
+  // "mars" etc. on the Formulaire tab).
   var dateEl = document.querySelector('#status-bar .status-item');
   if (dateEl && EXTRA.competition) {
-    dateEl.textContent = (typeof currentDay !== 'undefined' && currentDay === 'dim')
-      ? (EXTRA.competition.date_dim || m.date)
-      : (EXTRA.competition.date_sam || m.date);
+    var _cur = (typeof currentDay !== 'undefined') ? currentDay : 'sam';
+    var _label = _cur === 'dim' ? (EXTRA.competition.date_dim || 'Dimanche')
+               : _cur === 'ven' ? (EXTRA.competition.date_ven || 'Vendredi')
+               :                  (EXTRA.competition.date_sam || 'Samedi');
+    dateEl.textContent = _label;
   }
 
   // Config inputs
@@ -18071,6 +18775,8 @@ function _gsApplyMeta() {
   if (cfgSam && EXTRA.competition && EXTRA.competition.date_sam) cfgSam.value = EXTRA.competition.date_sam;
   var cfgDim = document.getElementById('cfg-date-dim');
   if (cfgDim && EXTRA.competition && EXTRA.competition.date_dim) cfgDim.value = EXTRA.competition.date_dim;
+  var cfgVen = document.getElementById('cfg-date-ven');
+  if (cfgVen && EXTRA.competition && EXTRA.competition.date_ven) cfgVen.value = EXTRA.competition.date_ven;
 }
 
 function _gsStatus(type, msg) {
@@ -18698,10 +19404,11 @@ FMT = {
     // PR-2025-2026_V03 §8.2.5 — FORMAT DE COMPÉTITION – CHAMPIONNATS QUÉBÉCOIS
     TR: {
       // v065: Routage Dynamix — N1 & N5+/SR finales samedi (collées), N2-N4 finales dimanche
-      'N1 12-':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N1 13+':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N2 13-':   {prelim:2,finale:1,finN:10,finDay:'dim'},
-      'N2 14+':   {prelim:2,finale:1,finN:10,finDay:'dim'},
+      // v122: finN=8 partout (PR-2025-2026 §8.2.5). Le finN=10 etait pour le Champ. de l'Est, pas ChQc.
+      'N1 12-':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N1 13+':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N2 13-':   {prelim:2,finale:1,finN:8,finDay:'dim'},
+      'N2 14+':   {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N3':       {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N4':       {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N5 16-':   {prelim:2,finale:1,finN:8,finDay:'sam'},
@@ -18728,10 +19435,11 @@ FMT = {
     },
     TU: {
       // v065: Routage Dynamix — N1 & N5+/SR finales samedi (collées), N2-N4 finales dimanche
-      'N1 12-':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N1 13+':   {prelim:2,finale:1,finN:10,finDay:'sam'},
-      'N2 13-':   {prelim:2,finale:1,finN:10,finDay:'dim'},
-      'N2 14+':   {prelim:2,finale:1,finN:10,finDay:'dim'},
+      // v122: finN=8 partout (PR-2025-2026 §8.2.5). Le finN=10 etait pour le Champ. de l'Est, pas ChQc.
+      'N1 12-':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N1 13+':   {prelim:2,finale:1,finN:8,finDay:'sam'},
+      'N2 13-':   {prelim:2,finale:1,finN:8,finDay:'dim'},
+      'N2 14+':   {prelim:2,finale:1,finN:8,finDay:'dim'},
       'N3':       {prelim:2,finale:2,finN:8,finDay:'dim'},
       'N4':       {prelim:2,finale:2,finN:8,finDay:'dim'},
       'N5 16-':   {prelim:2,finale:2,finN:8,finDay:'sam'},
@@ -20806,6 +21514,403 @@ function _insertJudgeBreak(dayBlks) {
   });
 }
 
+// ══════════════════════════════════════════════════════════════════
+// v122: CONSTRAINT SOLVER — _validateDay, _enforceHardConstraints, _optimizeSoft
+// Replaces the whack-a-mole pipeline of 9 functions called 75+ times.
+// ══════════════════════════════════════════════════════════════════
+
+function _moveBlock(b, newWuStart) {
+  var wuDur = b.cp_start - b.wu_start;
+  var cpDur = b.cp_end - b.cp_start;
+  b.wu_start = newWuStart;
+  b.cp_start = newWuStart + wuDur;
+  b.cp_end = b.cp_start + cpDur;
+}
+
+function _shiftBlockToCpStart(b, newCpStart) {
+  var wuDur = b.cp_start - b.wu_start;
+  var cpDur = b.cp_end - b.cp_start;
+  b.cp_start = newCpStart;
+  b.wu_start = newCpStart - wuDur;
+  b.cp_end = newCpStart + cpDur;
+}
+
+function _snap5(m) { return Math.ceil(m / 5) * 5; }
+
+function _findMatchingPrelim(fin, dayBlks) {
+  var finSexe = (fin.athletes && fin.athletes[0] && fin.athletes[0].sexe) || '';
+  var finCats = (fin.cats || []).slice().sort();
+  var finCatsKey = finCats.join('|');
+  var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+  var allCompatible = blks.filter(function(p) {
+    if (p.passType !== 'PRELIM') return false;
+    if (p.app !== fin.app) return false;
+    var pSexe = (p.athletes && p.athletes[0] && p.athletes[0].sexe) || '';
+    if (pSexe !== finSexe) return false;
+    return (p.cats || []).some(function(c) { return finCats.indexOf(c) >= 0; });
+  });
+  if (allCompatible.length === 0) return null;
+  var exactMatches = allCompatible.filter(function(p) {
+    return (p.cats || []).slice().sort().join('|') === finCatsKey;
+  });
+  var matches = exactMatches.length > 0 ? exactMatches : allCompatible;
+  matches.sort(function(a, b) { return b.cp_end - a.cp_end; });
+  return matches[0];
+}
+
+function _findGluedFinale(prelim, dayBlks) {
+  if (!prelim || prelim.passType !== 'PRELIM') return null;
+  var pSexe = (prelim.athletes && prelim.athletes[0] && prelim.athletes[0].sexe) || '';
+  return dayBlks.find(function(f) {
+    if (f.passType !== 'FINALE' || f.type === 'break') return false;
+    if (f.app !== prelim.app) return false;
+    if (Math.abs(f.wu_start - prelim.cp_end) > 1) return false;
+    var fSexe = (f.athletes && f.athletes[0] && f.athletes[0].sexe) || '';
+    if (fSexe !== pSexe) return false;
+    return (prelim.cats || []).some(function(c) { return (f.cats || []).indexOf(c) >= 0; });
+  }) || null;
+}
+
+function _buildAthleteIndex(dayBlks) {
+  var idx = {};
+  dayBlks.forEach(function(b) {
+    if (b.type === 'break') return;
+    (b.athletes || []).forEach(function(a) {
+      var k = (a.nom || '') + '|' + (a.prenom || '');
+      if (!idx[k]) idx[k] = [];
+      idx[k].push(b);
+    });
+  });
+  Object.keys(idx).forEach(function(k) {
+    idx[k].sort(function(a, b) { return a.wu_start - b.wu_start; });
+  });
+  return idx;
+}
+
+function _buildFamilies(dayBlks) {
+  var families = [];
+  var seen = {};
+  var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+  blks.forEach(function(b) {
+    if (seen[b.id]) return;
+    var fam = {blocks: [b], app: b.app};
+    seen[b.id] = true;
+    if (b.passType === 'PRELIM') {
+      var fin = _findGluedFinale(b, blks);
+      if (fin) { fam.blocks.push(fin); seen[fin.id] = true; }
+    } else if (b.passType === 'FINALE') {
+      var pre = _findMatchingPrelim(b, blks);
+      if (pre && Math.abs(b.wu_start - pre.cp_end) <= 1 && !seen[pre.id]) {
+        fam.blocks.unshift(pre); seen[pre.id] = true;
+      }
+    }
+    fam.wuStart = Math.min.apply(null, fam.blocks.map(function(x) { return x.wu_start; }));
+    fam.cpEnd = Math.max.apply(null, fam.blocks.map(function(x) { return x.cp_end; }));
+    fam.athleteKeys = {};
+    fam.blocks.forEach(function(x) {
+      (x.athletes || []).forEach(function(a) {
+        fam.athleteKeys[(a.nom || '') + '|' + (a.prenom || '')] = true;
+      });
+    });
+    families.push(fam);
+  });
+  return families;
+}
+
+function _savePositions(dayBlks) {
+  return dayBlks.map(function(b) {
+    return {id: b.id, app: b.app, wu_start: b.wu_start, cp_start: b.cp_start, cp_end: b.cp_end};
+  });
+}
+function _restorePositions(dayBlks, snapshot) {
+  var map = {};
+  snapshot.forEach(function(s) { map[s.id] = s; });
+  dayBlks.forEach(function(b) {
+    var s = map[b.id];
+    if (s) { b.app = s.app; b.wu_start = s.wu_start; b.cp_start = s.cp_start; b.cp_end = s.cp_end; }
+  });
+}
+
+function _findJudgeGaps(dayBlks) {
+  var trAll = dayBlks.filter(function(b) {
+    return (b.app === 'TR' || b.app === 'TR2') && b.type !== 'break';
+  }).sort(function(a, b) { return a.cp_start - b.cp_start; });
+  var gaps = [];
+  for (var i = 0; i < trAll.length - 1; i++) {
+    var gapSize = trAll[i + 1].cp_start - trAll[i].cp_end;
+    if (gapSize >= 5) {
+      gaps.push({start: trAll[i].cp_end, end: trAll[i + 1].cp_start, size: gapSize});
+    }
+  }
+  return gaps;
+}
+
+function _validateDay(dayBlks) {
+  var violations = [];
+  var penalties = [];
+  var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+
+  ['TR', 'TR2', 'DM', 'TU'].forEach(function(app) {
+    var col = blks.filter(function(b) { return b.app === app; })
+      .sort(function(a, b) { return a.wu_start - b.wu_start; });
+    for (var i = 1; i < col.length; i++) {
+      if (col[i].wu_start < col[i - 1].cp_end) {
+        violations.push({type: 'C1', app: app, blocks: [col[i - 1], col[i]],
+          overlap: col[i - 1].cp_end - col[i].wu_start});
+      }
+    }
+  });
+
+  var trAll = blks.filter(function(b) { return b.app === 'TR' || b.app === 'TR2'; })
+    .sort(function(a, b) { return a.cp_start - b.cp_start; });
+  for (var i = 1; i < trAll.length; i++) {
+    if (trAll[i].cp_start < trAll[i - 1].cp_end) {
+      violations.push({type: 'C2', blocks: [trAll[i - 1], trAll[i]],
+        overlap: trAll[i - 1].cp_end - trAll[i].cp_start});
+    }
+  }
+
+  var _needDmTu = (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc')
+    || (typeof _judgePanelOverride !== 'undefined' && _judgePanelOverride === 2);
+  if (_needDmTu) {
+    var dmtu = blks.filter(function(b) { return b.app === 'DM' || b.app === 'TU'; })
+      .sort(function(a, b) { return a.cp_start - b.cp_start; });
+    for (var i = 1; i < dmtu.length; i++) {
+      if (dmtu[i].cp_start < dmtu[i - 1].cp_end) {
+        violations.push({type: 'C3', blocks: [dmtu[i - 1], dmtu[i]],
+          overlap: dmtu[i - 1].cp_end - dmtu[i].cp_start});
+      }
+    }
+  }
+
+  blks.filter(function(b) { return b.passType === 'FINALE'; }).forEach(function(fin) {
+    var prelim = _findMatchingPrelim(fin, blks);
+    if (prelim) {
+      var gap = Math.abs(fin.wu_start - prelim.cp_end);
+      if (gap > 1) {
+        violations.push({type: 'C5', blocks: [prelim, fin], gap: fin.wu_start - prelim.cp_end});
+      }
+    }
+  });
+
+  blks.forEach(function(b) {
+    if (b.cp_end > 1260) {
+      violations.push({type: 'C6', block: b, excess: b.cp_end - 1260});
+    }
+  });
+
+  var athIdx = _buildAthleteIndex(dayBlks);
+  var s1Deficit = 0;
+  Object.keys(athIdx).forEach(function(k) {
+    var ab = athIdx[k];
+    for (var i = 1; i < ab.length; i++) {
+      if (ab[i].app === ab[i - 1].app) continue;
+      var gap = ab[i].wu_start - ab[i - 1].cp_end;
+      if (gap < 15) { s1Deficit += (15 - gap); penalties.push({type: 'S1', ath: k, gap: gap}); }
+    }
+  });
+
+  var s2Count = 0;
+  var trUni = blks.filter(function(b) { return b.app === 'TR' || b.app === 'TR2'; })
+    .sort(function(a, b) { return a.wu_start - b.wu_start; });
+  for (var i = 0; i < trUni.length - 1; i++) {
+    if (trUni[i + 1].wu_start > trUni[i].cp_end) continue;
+    var set1 = {};
+    (trUni[i].athletes || []).forEach(function(a) { set1[(a.nom || '') + '|' + (a.prenom || '')] = true; });
+    var hasCommon = (trUni[i + 1].athletes || []).some(function(a) {
+      return set1[(a.nom || '') + '|' + (a.prenom || '')];
+    });
+    if (hasCommon) { penalties.push({type: 'S2'}); s2Count++; }
+  }
+
+  var s3Gap = 0;
+  for (var i = 0; i < trAll.length - 1; i++) {
+    var g = trAll[i + 1].cp_start - trAll[i].cp_end;
+    if (g > 0) s3Gap += g;
+  }
+  if (s3Gap > 0) penalties.push({type: 'S3', totalGap: s3Gap});
+
+  [{name:'A', filter: function(b){return b.app==='TR'||b.app==='TR2';}},
+   {name:'B', filter: function(b){return b.app==='DM'||b.app==='TU';}}
+  ].forEach(function(panel) {
+    var pb = blks.filter(panel.filter).sort(function(a,b){return a.cp_start-b.cp_start;});
+    var hasBreak = false, cursor = 690;
+    pb.forEach(function(b) {
+      if (b.cp_end <= 690 || b.cp_start >= 810) return;
+      var bs = Math.max(b.cp_start, 690);
+      if (bs > cursor && (bs - cursor) >= 20) hasBreak = true;
+      if (b.cp_end > cursor) cursor = b.cp_end;
+    });
+    if (cursor < 810 && (810 - cursor) >= 20) hasBreak = true;
+    var breakExists = dayBlks.some(function(b) { return b.type === 'break' && b.panelName === panel.name; });
+    if (!hasBreak && !breakExists) penalties.push({type: 'S4', panel: panel.name});
+  });
+
+  var cost = violations.length * 10000 + s2Count * 100
+    + penalties.filter(function(p){return p.type==='S4';}).length * 50
+    + s1Deficit * 10 + s3Gap;
+  return {hardViolations: violations, softPenalties: penalties, cost: cost};
+}
+
+function _enforceHardConstraints(dayBlks) {
+  var MAX_ITER = 20;
+  var changed = false;
+  var _needDmTu = (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc')
+    || (typeof _judgePanelOverride !== 'undefined' && _judgePanelOverride === 2);
+  for (var iter = 0; iter < MAX_ITER; iter++) {
+    var report = _validateDay(dayBlks);
+    var hv = report.hardViolations;
+    if (hv.length === 0) break;
+    var didFix = false;
+    var blks = dayBlks.filter(function(b) { return b.type !== 'break'; });
+    hv.filter(function(v){return v.type==='C5';}).forEach(function(v) {
+      _moveBlock(v.blocks[1], v.blocks[0].cp_end); didFix = true;
+    });
+    blks.filter(function(b){return b.passType==='FINALE';}).forEach(function(fin) {
+      var prelim = _findMatchingPrelim(fin, blks);
+      if (!prelim) {
+        var dur = _calcDur(fin.app, fin.n || ((fin.athletes||[]).length));
+        var currentWu = fin.cp_start - fin.wu_start;
+        if (dur.wu > currentWu) { fin.wu_start = fin.cp_start - dur.wu; didFix = true; }
+      }
+    });
+    hv.filter(function(v){return v.type==='C2';}).forEach(function(v) {
+      _shiftBlockToCpStart(v.blocks[1], _snap5(v.blocks[0].cp_end));
+      var gf = _findGluedFinale(v.blocks[1], blks);
+      if (gf) _moveBlock(gf, v.blocks[1].cp_end);
+      didFix = true;
+    });
+    if (_needDmTu) {
+      hv.filter(function(v){return v.type==='C3';}).forEach(function(v) {
+        _shiftBlockToCpStart(v.blocks[1], _snap5(v.blocks[0].cp_end));
+        var gf = _findGluedFinale(v.blocks[1], blks);
+        if (gf) _moveBlock(gf, v.blocks[1].cp_end);
+        didFix = true;
+      });
+    }
+    hv.filter(function(v){return v.type==='C1';}).forEach(function(v) {
+      _moveBlock(v.blocks[1], _snap5(v.blocks[0].cp_end));
+      var gf = _findGluedFinale(v.blocks[1], blks);
+      if (gf) _moveBlock(gf, v.blocks[1].cp_end);
+      didFix = true;
+    });
+    if (!didFix) break;
+    changed = true;
+  }
+  return {changed: changed};
+}
+
+function _optimizeSoft(dayBlks) {
+  var MAX_ITER = 50;
+  var improved = false;
+  function applySwap(famA, famB) {
+    var delta = famB.blocks[0].wu_start - famA.blocks[0].wu_start;
+    famA.blocks.forEach(function(b){b.wu_start+=delta;b.cp_start+=delta;b.cp_end+=delta;});
+    famB.blocks.forEach(function(b){b.wu_start-=delta;b.cp_start-=delta;b.cp_end-=delta;});
+  }
+  function applyShift(fam, delta) {
+    fam.blocks.forEach(function(b){b.wu_start+=delta;b.cp_start+=delta;b.cp_end+=delta;});
+  }
+  function applyRelocate(fam, newCpStart, newApp) {
+    var firstWuDur = fam.blocks[0].cp_start - fam.blocks[0].wu_start;
+    var newWuStart = newCpStart - firstWuDur;
+    var shift = newWuStart - fam.blocks[0].wu_start;
+    fam.blocks.forEach(function(b){b.app=newApp;b.wu_start+=shift;b.cp_start+=shift;b.cp_end+=shift;});
+  }
+  function sameFormat(fA, fB) {
+    if (fA.blocks.length !== fB.blocks.length) return false;
+    for (var i=0;i<fA.blocks.length;i++) {
+      var a=fA.blocks[i],b=fB.blocks[i];
+      if (a.passType!==b.passType) return false;
+      if (a.app!==b.app&&!((a.app==='TR'||a.app==='TR2')&&(b.app==='TR'||b.app==='TR2'))) return false;
+      if ((a.cp_start-a.wu_start)!==(b.cp_start-b.wu_start)) return false;
+      if ((a.cp_end-a.cp_start)!==(b.cp_end-b.cp_start)) return false;
+    }
+    return true;
+  }
+  for (var iter = 0; iter < MAX_ITER; iter++) {
+    var baseCost = _validateDay(dayBlks).cost;
+    if (baseCost === 0) break;
+    var families = _buildFamilies(dayBlks);
+    var bestMove = null, bestCost = baseCost;
+    var snapshot = _savePositions(dayBlks);
+    for (var fi=0;fi<families.length;fi++) {
+      for (var fj=fi+1;fj<families.length;fj++) {
+        if (families[fi].app!==families[fj].app) continue;
+        if (!sameFormat(families[fi],families[fj])) continue;
+        applySwap(families[fi],families[fj]);
+        var r=_validateDay(dayBlks);
+        if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'swap',fi:fi,fj:fj};}
+        _restorePositions(dayBlks,snapshot);
+      }
+    }
+    var deltas=[5,10,15,20,30,45,60,90,-5,-10,-15,-20,-30,-45,-60];
+    for (var fi=0;fi<families.length;fi++) {
+      for (var di=0;di<deltas.length;di++) {
+        applyShift(families[fi],deltas[di]);
+        var r=_validateDay(dayBlks);
+        if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'shift',fi:fi,delta:deltas[di]};}
+        _restorePositions(dayBlks,snapshot);
+      }
+    }
+    // Move 3: relocate TR/TR2 families into judge gaps
+    var gaps=_findJudgeGaps(dayBlks);
+    for (var fi=0;fi<families.length;fi++) {
+      if (families[fi].app!=='TR'&&families[fi].app!=='TR2') continue;
+      for (var gi=0;gi<gaps.length;gi++) {
+        var apps=['TR','TR2'];
+        for (var ai=0;ai<apps.length;ai++) {
+          applyRelocate(families[fi],gaps[gi].start,apps[ai]);
+          var r=_validateDay(dayBlks);
+          if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'relocate',fi:fi,cpStart:gaps[gi].start,app:apps[ai]};}
+          _restorePositions(dayBlks,snapshot);
+        }
+      }
+    }
+    // Move 4: findFreeSlot — scan day for best position for ANY family with athlete conflicts
+    // Uses enforcement during speculative eval to handle cascading effects
+    for (var fi=0;fi<families.length;fi++) {
+      var fam=families[fi];
+      // Only try if this family has cross-app athlete conflicts (S1 penalties)
+      var famKeys=fam.athleteKeys;
+      var hasConflict=false;
+      var athIdx=_buildAthleteIndex(dayBlks);
+      Object.keys(famKeys).forEach(function(k) {
+        var ab=athIdx[k];
+        if (!ab||ab.length<2) return;
+        for (var ai=1;ai<ab.length;ai++) {
+          if (ab[ai].app===ab[ai-1].app) continue;
+          if (ab[ai].wu_start-ab[ai-1].cp_end<15) hasConflict=true;
+        }
+      });
+      if (!hasConflict) continue;
+      var famDur=fam.cpEnd-fam.wuStart;
+      var DS=420,DE=1260;
+      for (var t=DS;t+famDur<=DE;t+=10) {
+        var shDelta=t-fam.wuStart;
+        if (Math.abs(shDelta)<10) continue;
+        applyShift(fam,shDelta);
+        _enforceHardConstraints(dayBlks);
+        var r=_validateDay(dayBlks);
+        if (r.hardViolations.length===0&&r.cost<bestCost){bestCost=r.cost;bestMove={type:'shift',fi:fi,delta:shDelta};}
+        _restorePositions(dayBlks,snapshot);
+      }
+    }
+    if (bestMove) {
+      var fams=_buildFamilies(dayBlks);
+      if (bestMove.type==='swap') applySwap(fams[bestMove.fi],fams[bestMove.fj]);
+      else if (bestMove.type==='shift') applyShift(fams[bestMove.fi],bestMove.delta);
+      else if (bestMove.type==='relocate') applyRelocate(fams[bestMove.fi],bestMove.cpStart,bestMove.app);
+      _enforceHardConstraints(dayBlks);
+      improved=true;
+      console.log('[Solver] iter '+iter+': cost '+baseCost+' -> '+bestCost+' ('+bestMove.type+')');
+    } else { break; }
+  }
+  if (improved) console.log('[Solver] _optimizeSoft converged after '+iter+' iteration(s)');
+  return {improved:improved};
+}
+
+
 
 
 function _gsRebuild(athletes) {
@@ -21048,13 +22153,14 @@ function _gsRebuild(athletes) {
       // 1 prélim block with timing for rule.prelim passes (NOT multiple blocks)
       var nPasses = rule.prelim || 1;
       var dur = _calcDur(g.app, aths.length, nPasses);
-      // v058: en chQc, router petits groupes N3-N5 NON splittés vers vendredi PM
-      // (catégories complètes, pas de split Gr.1 ven / Gr.2 sam)
+      // v122: en chQc, router les PETITS GROUPES non splittés vers vendredi PM
+      // Critere: groupe non splitté (1 seul sous-groupe) ET taille <= seuil
       // TRS exclu (synchros restent dim)
+      // Ancien critere v058: hard-codé N[345] — remplacé par taille du groupe
       var blkDay = prelimDay;
-      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS' && grpAths.length === 1) {
-        var catLevel = (g.cat.match(/N[345]/) || [''])[0];
-        if (catLevel) blkDay = 'ven';
+      var _VEN_MAX_SIZE = 12; // seuil configurable: groupes <= 12 athletes → vendredi
+      if (_COMP_TYPE === 'chQc' && g.app !== 'TRS' && grpAths.length === 1 && aths.length <= _VEN_MAX_SIZE) {
+        blkDay = 'ven';
       }
       var blk = {
         id: 'prov_'+(bid++),
@@ -21394,116 +22500,39 @@ function _gsRebuild(athletes) {
   _conflictAwareLayout(dimBlocks, athletes, 480);
   _conflictAwareLayout(venBlocks, athletes, 990);
 
-  // Safety net: fix any remaining overlaps on same column
-  _fixOverlaps(satBlocks);
-  _fixOverlaps(dimBlocks);
-  _fixOverlaps(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
+  // ══════════════════════════════════════════════════════════════
+  // v122: CONSTRAINT SOLVER PIPELINE (replaces ~75 old pipeline calls)
+  // Phase B: Hard constraints -> Phase C: Soft optimization
+  // ══════════════════════════════════════════════════════════════
+
+  // Phase B: Enforce hard constraints (C1-C5)
+  _enforceHardConstraints(satBlocks);
+  _enforceHardConstraints(dimBlocks);
+  _enforceHardConstraints(venBlocks);
+
+  // Phase C: Soft optimization (S1-S3)
+  _optimizeSoft(satBlocks);
+  _optimizeSoft(dimBlocks);
+  _optimizeSoft(venBlocks);
+
+  // Phase C.5: Insert judge breaks (sam+dim only, not ven PM -- too short)
   _insertJudgeBreak(satBlocks);
   _insertJudgeBreak(dimBlocks);
-  // Pas de pause des officiels sur vendredi PM (trop court, ~3h)
-  // Re-coller les paires que le break aurait pu décaler
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  // Optimisation finale: échanger des familles pour donner du répit aux athlètes multi-apparels
-  _swapForRest(satBlocks);
-  _swapForRest(dimBlocks);
-  _swapForRest(venBlocks);
-  // Re-coller au cas où les swaps auraient bougé qq chose
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  // Résoudre les conflits cross-apparels restants
-  _resolveCrossAppConflicts(satBlocks);
-  _resolveCrossAppConflicts(dimBlocks);
-  _resolveCrossAppConflicts(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  // v114: anti back-to-back même athlète sur colonne unifiée (TR+TR2)
-  _avoidBackToBackSameAthlete(satBlocks);
-  _avoidBackToBackSameAthlete(dimBlocks);
-  _avoidBackToBackSameAthlete(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  // Compactage final: éliminer les temps morts entre cp TR/TR2 (juges)
-  _compactJudgeCp(satBlocks);
-  _compactJudgeCp(dimBlocks);
-  _compactJudgeCp(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
+  // Re-enforce after break insertion (may have pushed blocks)
+  _enforceHardConstraints(satBlocks);
+  _enforceHardConstraints(dimBlocks);
+  // One more optimization pass to recover from break displacement
+  _optimizeSoft(satBlocks);
+  _optimizeSoft(dimBlocks);
 
-  // v061: DM+TU partagent un panel de juges en chQc — 3 passes pour stabilité
-  if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
-    for (var _dmtuPass = 0; _dmtuPass < 3; _dmtuPass++) {
-      _enforceDmTuPanel(satBlocks);
-      _enforceDmTuPanel(dimBlocks);
-      _enforceDmTuPanel(venBlocks);
-      _fixOverlaps(satBlocks);
-      _fixOverlaps(dimBlocks);
-      _fixOverlaps(venBlocks);
-      _gluePrelimFinale(satBlocks);
-      _gluePrelimFinale(dimBlocks);
-      _gluePrelimFinale(venBlocks);
-      // v118: re-vérifier back-to-back même athlète après chaque passe chQc
-      _avoidBackToBackSameAthlete(satBlocks);
-      _avoidBackToBackSameAthlete(dimBlocks);
-      _avoidBackToBackSameAthlete(venBlocks);
-      _gluePrelimFinale(satBlocks);
-      _gluePrelimFinale(dimBlocks);
-      _gluePrelimFinale(venBlocks);
-    }
-  }
+  console.log('[Solver] Phase B+C complete. Validation:',
+    'sam:', _validateDay(satBlocks).hardViolations.length, 'hard,', _validateDay(satBlocks).cost, 'cost',
+    'dim:', _validateDay(dimBlocks).hardViolations.length, 'hard,', _validateDay(dimBlocks).cost, 'cost',
+    'ven:', _validateDay(venBlocks).hardViolations.length, 'hard,', _validateDay(venBlocks).cost, 'cost');
 
-  // v064: Re-insert breaks AFTER all other algos so the panels are placed cleanly
-  // on the final schedule (compactJudgeCp may have pulled blocks back into break zone)
-  _insertJudgeBreak(satBlocks);
-  _insertJudgeBreak(dimBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-
-  // v069: tighten pass for small cross-app conflicts (< 30 min overlaps)
-  // that _resolveCrossAppConflicts couldn't handle with findFreeSlot
-  _tightenCrossAppConflicts(satBlocks);
-  _tightenCrossAppConflicts(dimBlocks);
-  _tightenCrossAppConflicts(venBlocks);
-  // v118: passe finale anti back-to-back après tous les correcteurs
-  _avoidBackToBackSameAthlete(satBlocks);
-  _avoidBackToBackSameAthlete(dimBlocks);
-  _avoidBackToBackSameAthlete(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-  _fixOverlaps(satBlocks);
-  _fixOverlaps(dimBlocks);
-  _fixOverlaps(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-
-  // v073: extend warmup for finales NOT glued to their prelim
-  _adjustUngluedFinaleWarmup(satBlocks);
-  _adjustUngluedFinaleWarmup(dimBlocks);
-  _adjustUngluedFinaleWarmup(venBlocks);
-  _fixOverlaps(satBlocks);
-  _fixOverlaps(dimBlocks);
-  _fixOverlaps(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
-
-  // ────────────────────────────────────────────────────────────
-  // v065: Overflow samedi → dimanche
-  // Si une colonne samedi (TR/TR2 groupés, DM, TU) dépasse 21h00,
-  // on déplace UNE finale à la fois vers dimanche (la plus basse en
-  // niveau d'abord : N1 avant N5 avant SR), uniquement sur l'appareil
-  // qui déborde, puis on re-layout et on re-vérifie. Max 10 passes.
-  // ────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════
+  // Phase D: Overflow management
+  // ══════════════════════════════════════════════════════════════
   var MAX_SAM_END = 1260; // 21h00
   function _maxEndByAppGroup(blks) {
     var maxTr = 0, maxDm = 0, maxTu = 0;
@@ -21515,132 +22544,122 @@ function _gsRebuild(athletes) {
     });
     return {TR: maxTr, DM: maxDm, TU: maxTu};
   }
+  // v122: Simplified sub-pipeline using constraint solver
   function _relayoutPair(satBlks, dimBlks) {
     _smartSplitTR(satBlks, 480);
     _smartSplitTR(dimBlks, 480);
     _conflictAwareLayout(satBlks, athletes, 480);
     _conflictAwareLayout(dimBlks, athletes, 480);
-    _fixOverlaps(satBlks);
-    _fixOverlaps(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
+    _enforceHardConstraints(satBlks);
+    _enforceHardConstraints(dimBlks);
+    _optimizeSoft(satBlks);
+    _optimizeSoft(dimBlks);
     _insertJudgeBreak(satBlks);
     _insertJudgeBreak(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
-    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') {
-      for (var _p = 0; _p < 3; _p++) {
-        _enforceDmTuPanel(satBlks);
-        _enforceDmTuPanel(dimBlks);
-        _fixOverlaps(satBlks);
-        _fixOverlaps(dimBlks);
-        _gluePrelimFinale(satBlks);
-        _gluePrelimFinale(dimBlks);
-      }
-    }
-    // v069: tighten pass after re-layout
-    _tightenCrossAppConflicts(satBlks);
-    _tightenCrossAppConflicts(dimBlks);
-    _fixOverlaps(satBlks);
-    _fixOverlaps(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
-    // v073: extend warmup for finales not glued to their prelim
-    _adjustUngluedFinaleWarmup(satBlks);
-    _adjustUngluedFinaleWarmup(dimBlks);
-    _fixOverlaps(satBlks);
-    _fixOverlaps(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
-    // v119: dernier nettoyage anti back-to-back dans _relayoutPair
-    _avoidBackToBackSameAthlete(satBlks);
-    _avoidBackToBackSameAthlete(dimBlks);
-    _gluePrelimFinale(satBlks);
-    _gluePrelimFinale(dimBlks);
+    _enforceHardConstraints(satBlks);
+    _enforceHardConstraints(dimBlks);
   }
 
-  // v071: tri de priorité pour choisir quelle finale déplacer vers dimanche.
-  // Ordre: N1 12- > N1 13+ > N5/N6/N7 > JR/SR. À égalité, la plus tardive.
+  // v071: tri de priorite pour choisir quelle finale deplacer vers dimanche.
   function _pickFinaleToMove(candidates) {
     candidates.sort(function(a, b) {
       var catA = (a.cats && a.cats[0]) || a.cat || '';
       var catB = (b.cats && b.cats[0]) || b.cat || '';
       var coA = _catOrder(catA);
       var coB = _catOrder(catB);
-      if (coA !== coB) return coA - coB; // niveau croissant (N1 avant N5)
-      // À niveau égal (ex. N1), préférer 12- avant 13+
+      if (coA !== coB) return coA - coB;
       var is12A = /12-/.test(catA), is12B = /12-/.test(catB);
       if (is12A !== is12B) return is12A ? -1 : 1;
-      return b.cp_end - a.cp_end; // à égalité finale: la plus tardive
+      return b.cp_end - a.cp_end;
     });
     return candidates[0];
   }
 
+  // Overflow sam -> dim
   for (var _ovPass = 0; _ovPass < 15; _ovPass++) {
     var maxBy = _maxEndByAppGroup(satBlocks);
     var target = null;
     var reason = '';
-    var targetEnd = 0;
-
-    // Règle 1 (v065): Colonne samedi > 21h00 → overflow hard
     ['TR','DM','TU'].forEach(function(app) {
       if (maxBy[app] > MAX_SAM_END && (!target || maxBy[app] > maxBy[target])) {
-        target = app;
-        reason = '> 21h00';
-        targetEnd = maxBy[app];
+        target = app; reason = '> 21h00';
       }
     });
-
-    // Règle 2 (v071): DM finit après TR samedi → DM est le goulot (panel DM+TU partagé)
-    // Déplacer une finale DM vers dimanche pour soulager
     if (!target && (maxBy.DM || 0) > (maxBy.TR || 0)) {
-      target = 'DM';
-      reason = 'DM > TR (' + Math.floor(maxBy.DM/60)+'h'+(maxBy.DM%60).toString().padStart(2,'0') +
-               ' > ' + Math.floor((maxBy.TR||0)/60)+'h'+((maxBy.TR||0)%60).toString().padStart(2,'0') + ')';
-      targetEnd = maxBy.DM;
+      target = 'DM'; reason = 'DM > TR';
     }
-
     if (!target) {
-      if (_ovPass > 0) console.log('[Prov] v071 overflow: stabilized after ' + _ovPass + ' pass(es)');
+      if (_ovPass > 0) console.log('[Solver] overflow sam->dim stabilized after ' + _ovPass + ' pass(es)');
       break;
     }
-
-    // Chercher une finale déplaçable sur l'appareil en cause
-    // (TR = TR+TR2 groupés pour règle 1 ; DM/TU = ce seul appareil)
     var candidates = satBlocks.filter(function(b) {
       if (b.passType !== 'FINALE' || b.type === 'break') return false;
       if (target === 'TR') return (b.app === 'TR' || b.app === 'TR2');
       return b.app === target;
     });
-    if (candidates.length === 0) {
-      console.warn('[Prov] v071 overflow: ' + target + ' ' + reason + ' mais aucune finale déplaçable');
-      break;
-    }
-
+    if (candidates.length === 0) { console.warn('[Solver] overflow: no movable finale for ' + target); break; }
     var toMove = _pickFinaleToMove(candidates);
-    var moveLabel = toMove.label || (toMove.app + ' ' + ((toMove.cats && toMove.cats[0]) || ''));
-    console.log('[Prov] v071 overflow pass ' + (_ovPass+1) + ': ' + target + ' ' + reason +
-      ' — déplace "' + moveLabel + '" vers dimanche');
-
+    console.log('[Solver] overflow pass ' + (_ovPass+1) + ': ' + target + ' ' + reason +
+      ' -- moving "' + (toMove.label||'') + '" to dim');
     toMove.day = 'dim';
     var idx = satBlocks.indexOf(toMove);
     if (idx >= 0) satBlocks.splice(idx, 1);
     dimBlocks.push(toMove);
-
     _relayoutPair(satBlocks, dimBlocks);
   }
 
-  // Auto-spillover désactivé — tout reste sur la même journée
+  // Overflow ven -> sam
+  var MAX_VEN_END = 1260;
+  function _relayoutVenSam() {
+    _smartSplitTR(venBlocks, 990);
+    _smartSplitTR(satBlocks, 480);
+    _conflictAwareLayout(venBlocks, athletes, 990);
+    _conflictAwareLayout(satBlocks, athletes, 480);
+    _enforceHardConstraints(venBlocks);
+    _enforceHardConstraints(satBlocks);
+    _optimizeSoft(venBlocks);
+    _optimizeSoft(satBlocks);
+  }
+  for (var _vOvPass = 0; _vOvPass < 15; _vOvPass++) {
+    var venMaxBy = _maxEndByAppGroup(venBlocks);
+    var venTarget = null;
+    ['TR','DM','TU'].forEach(function(app) {
+      if (venMaxBy[app] > MAX_VEN_END && (!venTarget || venMaxBy[app] > venMaxBy[venTarget])) {
+        venTarget = app;
+      }
+    });
+    if (!venTarget) {
+      if (_vOvPass > 0) console.log('[Solver] overflow ven->sam stabilized after ' + _vOvPass + ' pass(es)');
+      break;
+    }
+    var venCandidates = venBlocks.filter(function(b) {
+      if (b.type === 'break') return false;
+      if (venTarget === 'TR') return (b.app === 'TR' || b.app === 'TR2');
+      return b.app === venTarget;
+    });
+    if (venCandidates.length === 0) { console.warn('[Solver] ven overflow: no movable block'); break; }
+    venCandidates.sort(function(a, b) {
+      var aF = a.passType === 'FINALE' ? 1 : 0, bF = b.passType === 'FINALE' ? 1 : 0;
+      if (aF !== bF) return bF - aF;
+      return b.cp_end - a.cp_end;
+    });
+    var venToMove = venCandidates[0];
+    console.log('[Solver] ven overflow pass ' + (_vOvPass+1) + ': ' + venTarget + ' > 21h00 -- moving "' + (venToMove.label||'') + '" to sam');
+    venToMove.day = 'sam';
+    var venIdx = venBlocks.indexOf(venToMove);
+    if (venIdx >= 0) venBlocks.splice(venIdx, 1);
+    satBlocks.push(venToMove);
+    _relayoutVenSam();
+  }
 
-  // v119: PASSE FINALE ULTIME anti back-to-back, juste avant le snapshot.
-  // À ce stade tous les autres correcteurs ont fini et plus rien ne peut
-  // réintroduire de conflits collés sur la colonne unifiée.
-  _avoidBackToBackSameAthlete(satBlocks);
-  _avoidBackToBackSameAthlete(dimBlocks);
-  _avoidBackToBackSameAthlete(venBlocks);
-  _gluePrelimFinale(satBlocks);
-  _gluePrelimFinale(dimBlocks);
-  _gluePrelimFinale(venBlocks);
+  // Final validation pass
+  _enforceHardConstraints(satBlocks);
+  _enforceHardConstraints(dimBlocks);
+  _enforceHardConstraints(venBlocks);
+  console.log('[Solver] Final validation:',
+    'sam:', _validateDay(satBlocks).hardViolations.length, 'hard,', _validateDay(satBlocks).cost, 'cost',
+    'dim:', _validateDay(dimBlocks).hardViolations.length, 'hard,', _validateDay(dimBlocks).cost, 'cost',
+    'ven:', _validateDay(venBlocks).hardViolations.length, 'hard,', _validateDay(venBlocks).cost, 'cost');
 
   // v121: Cap ChQc finales à leur finN (top 8 finalistes typique).
   // No-op en coupeQc (early-return sur _COMP_TYPE). Doit être APRÈS glue
@@ -21652,14 +22671,32 @@ function _gsRebuild(athletes) {
 
   var allBlks = satBlocks.concat(dimBlocks).concat(venBlocks);
 
-  // ── Update EXTRA / EXTRA_DIM ──────────────────────────────
+  // ── Update EXTRA / EXTRA_DIM / EXTRA_VEN ──────────────────────────────
+  // Normalize athletes so every entry exposes tr_cat/dm_cat/tu_cat/trs_cat,
+  // the field names the rest of the codebase (render, filters, sort) reads.
+  // Raw GS parsing gives us tr/dmt/tu/trs; we keep those and add the _cat aliases.
+  function _normCatRaw(c) {
+    return (c||'').toString().replace(/\(/g,'').replace(/\)/g,'').replace(/\s+/g,' ').trim();
+  }
+  var _athletesWithCats = athletes.map(function(a) {
+    return Object.assign({}, a, {
+      tr_cat:  _normCatRaw(a.tr),
+      dm_cat:  _normCatRaw(a.dmt),
+      tu_cat:  _normCatRaw(a.tu),
+      trs_cat: _normCatRaw(a.trs)
+    });
+  });
   if (typeof EXTRA !== 'undefined') {
-    EXTRA.athletes_full = athletes;
+    EXTRA.athletes_full = _athletesWithCats;
     EXTRA.awards = [];
   }
   if (typeof EXTRA_DIM !== 'undefined') {
-    EXTRA_DIM.athletes_full = athletes;
+    EXTRA_DIM.athletes_full = _athletesWithCats;
     EXTRA_DIM.awards = [];
+  }
+  if (typeof EXTRA_VEN !== 'undefined') {
+    EXTRA_VEN.athletes_full = _athletesWithCats;
+    EXTRA_VEN.awards = [];
   }
 
   var nSam = satBlocks.length, nDim = dimBlocks.length;
@@ -21861,6 +22898,40 @@ function buildAthIndex() {
   return idx;
 }
 
+// Cross-day athlete index: iterates all day caches + the current day's live
+// `blocks` buffer so the Athletes tab can list every athlete once with a time
+// entry per apparatus tagged with its day (sam/dim/ven).
+function buildAthIndexAllDays() {
+  const idx = {};
+  const _push = (blks, day) => {
+    if (!blks || !blks.length) return;
+    for (const b of blks) {
+      if (!b || !b.athletes) continue;
+      for (const a of b.athletes) {
+        const k = a.nom+'|'+a.prenom;
+        (idx[k] = idx[k]||[]).push({
+          app:b.app, bid:b.id, wu_start:b.wu_start, cp_end:b.cp_end,
+          cat:a.cat, club:a.club, level:b.level||1, day:day,
+          // Athletes-tab cat column reads passType + blockCats to show
+          // "Prélim N1 12-" / "Finale N1 12-" per block membership.
+          passType: b.passType || '', blockCats: (b.cats || []),
+          // Synchro blocks get their `app` reassigned to TR/TR2 by
+          // _smartSplitTR (they physically run on a trampoline), so the
+          // TRS column can't filter on `app` — use `is_trs` instead.
+          is_trs: !!b.is_trs
+        });
+      }
+    }
+  };
+  // Current day uses the live buffer (may contain unsaved drags)
+  _push(blocks, currentDay);
+  // Other days pull from their cache; skip the current-day cache to avoid dupes
+  if (currentDay !== 'sam') _push(typeof _blocks_sam !== 'undefined' ? _blocks_sam : null, 'sam');
+  if (currentDay !== 'dim') _push(typeof _blocks_dim !== 'undefined' ? _blocks_dim : null, 'dim');
+  if (currentDay !== 'ven') _push(typeof _blocks_ven !== 'undefined' ? _blocks_ven : null, 'ven');
+  return idx;
+}
+
 // Check if a TRS athlete's partner is missing from the same block
 // Returns: null (not TRS or partner present), or {partnerKey, partnerName, status}
 // status: 'orphan' (partner not in same block), 'no_partner' (no partner defined)
@@ -21983,6 +23054,9 @@ function toggleColorMode() {
 function updateLegend() {
   var el = document.getElementById('legend-items');
   if (!el) return;
+  // Sync the judge panel selector with the current state
+  var _jpSel = document.getElementById('judge-panel-sel');
+  if (_jpSel) _jpSel.value = (typeof _judgePanelOverride !== 'undefined' && _judgePanelOverride) ? _judgePanelOverride : 0;
   if (COLOR_MODE === 'level') {
     // v105: rainbow ROYGBIV, 7 levels (novice=N5, junior=N6, senior=N7)
     el.innerHTML = [
@@ -21997,14 +23071,33 @@ function updateLegend() {
       return '<span class="leg-item" title="'+x.label+'"><span class="leg-swatch" style="background:'+x.c+'"></span>'+x.label+'</span>';
     }).join('');
   } else {
-    var _n = typeof _judgeNPanels !== 'undefined' ? _judgeNPanels : 4;
-    var _jL = {1:'TR-A',2:'TR-B',3:'DM',4:'TU'};
-    if (_n===3) _jL[1]='TR (A+B)';
-    var _items=[];
-    for(var _j=1;_j<=_n;_j++){
-      var _c=JUDGE_COLORS[_j];
-      _items.push('<span class="leg-item"><span class="leg-swatch" style="background:'+_c.bright+'"></span>P'+_j+' '+_jL[_j]+'</span>');
+    // Scan live blocks to build an accurate legend that reflects the real schedule.
+    // Each panel gets a label built from the apparatus names actually assigned to it.
+    var _panelApps = {};
+    var _allBlks = (typeof blocks !== 'undefined' ? blocks : [])
+      .concat(typeof _blocks_sam !== 'undefined' && _blocks_sam ? _blocks_sam : [])
+      .concat(typeof _blocks_dim !== 'undefined' && _blocks_dim ? _blocks_dim : [])
+      .concat(typeof _blocks_ven !== 'undefined' && _blocks_ven ? _blocks_ven : []);
+    _allBlks.forEach(function(b) {
+      if (!b || b.type === 'break') return;
+      var jp = b.judgePanel || (typeof DEFAULT_JUDGE_PANEL !== 'undefined' ? DEFAULT_JUDGE_PANEL[b.app] : 1) || 1;
+      if (!_panelApps[jp]) _panelApps[jp] = {};
+      var appLabel = (b.is_trs || b.app === 'TRS') ? 'TRS' : b.app;
+      _panelApps[jp][appLabel] = true;
+    });
+    var _panels = Object.keys(_panelApps).map(Number).sort(function(a,b){return a-b;});
+    if (_panels.length === 0) {
+      // Fallback: use _judgeNPanels static mapping
+      var _n = typeof _judgeNPanels !== 'undefined' ? _judgeNPanels : 4;
+      _panels = []; for (var _fi=1;_fi<=_n;_fi++) _panels.push(_fi);
     }
+    var _items = [];
+    _panels.forEach(function(jp) {
+      var _c = JUDGE_COLORS[jp] || JUDGE_COLORS[1];
+      var apps = _panelApps[jp] ? Object.keys(_panelApps[jp]).sort() : [];
+      var label = apps.length > 0 ? apps.join('+') : '?';
+      _items.push('<span class="leg-item"><span class="leg-swatch" style="background:'+_c.bright+'"></span>P'+jp+' '+label+'</span>');
+    });
     _items.push('<span style="font-size:9px;color:#94a3b8;margin-left:4px">— clic badge = changer panel</span>');
     el.innerHTML=_items.join('');
   }
@@ -22109,19 +23202,17 @@ function autoAssignJudgePanels() {
     }); });
     if (trOverlap) return 4;
 
-    // v069: en chQc, DM+TU partagent obligatoirement UN panel (règlement).
-    // _enforceDmTuPanel garantit déjà qu'ils ne se chevauchent pas en cp.
-    // On force 2 panels (TR+TR2=J1, DM+TU=J2) sans checker les chevauchements.
-    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') return 2;
-
-    // Check if DM and TU COMPETITION times overlap → need at least 3 panels
+    // v122: DM+TU panel detection — configurable pour les 2 formats.
+    // En chQc, _enforceDmTuPanel garantit deja pas d'overlap cp → Auto detecte 2.
+    // En CoupeQc, si DM/TU overlappent en cp → 3 panels; sinon 2 (partage OK).
+    // L'utilisateur peut forcer via le dropdown judge-panel-sel dans les 2 modes.
     var dmtuOverlap = false;
     dm.forEach(function(a) { tu.forEach(function(b) {
       if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) dmtuOverlap = true;
     }); });
     if (dmtuOverlap) return 3;
 
-    // 2 panels works fine
+    // 2 panels works fine (DM+TU cp ne se chevauchent pas)
     return 2;
   }
 
@@ -22161,6 +23252,46 @@ function autoAssignJudgePanels() {
   updateJudgeBadges();
   updateLegend();
   return _judgeNPanels;
+}
+
+// ── Manual judge panel override ──────────────────────────────────────────
+// 0 = auto-detect, 2/3/4 = force that many panels and reassign all blocks.
+var _judgePanelOverride = 0;
+
+function setJudgePanels(n) {
+  _judgePanelOverride = n;
+  if (n === 0) {
+    // Back to auto — clear all manual flags and re-detect
+    var _all = (blocks||[]).concat(_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]);
+    _all.forEach(function(b) { if (b) delete b._panelManual; });
+    autoAssignJudgePanels();
+  } else {
+    // Force n panels on all blocks (clear manual flags so assignDay takes effect)
+    var _map = {
+      2: {TR:1, TR2:1, DM:2, TU:2, TRS:1},
+      3: {TR:1, TR2:1, DM:2, TU:3, TRS:1},
+      4: {TR:1, TR2:2, DM:3, TU:4, TRS:1}
+    };
+    var map = _map[n] || _map[3];
+    var _all = (blocks||[]).concat(_blocks_sam||[]).concat(_blocks_dim||[]).concat(_blocks_ven||[]);
+    _all.forEach(function(b) {
+      if (!b || b.type === 'break') return;
+      b.judgePanel = map[b.app] || 1;
+      delete b._panelManual;
+    });
+    _judgeNPanels = n;
+    updateJudgeBadges();
+    updateLegend();
+  }
+  // Auto-switch to Juges color mode so the change is immediately visible
+  if (COLOR_MODE !== 'judge') {
+    COLOR_MODE = 'judge';
+    var _cmBtn = document.getElementById('color-mode-toggle');
+    if (_cmBtn) _cmBtn.textContent = '🎨 Juges';
+    updateLegend();
+  }
+  renderBlocks();
+  scheduleSave();
 }
 
 // Cycle a block to the next judge panel (manual override)
@@ -22269,11 +23400,7 @@ function autoAssignJudgePanels() {
     }); });
     if (trOverlap) return 4;
 
-    // v069: en chQc, DM+TU partagent obligatoirement UN panel (règlement).
-    // _enforceDmTuPanel garantit déjà qu'ils ne se chevauchent pas en cp.
-    if (typeof _COMP_TYPE !== 'undefined' && _COMP_TYPE === 'chQc') return 2;
-
-    // 3 panels si DM/TU se chevauchent en compétition
+    // v122: DM+TU panel detection — configurable pour les 2 formats.
     var dmtuOverlap = false;
     dm.forEach(function(a) { tu.forEach(function(b) {
       if (a.cp_start < b.cp_end && b.cp_start < a.cp_end) dmtuOverlap = true;
@@ -23728,6 +24855,19 @@ function saveModal() {
   render();
 }
 
+// ── Fichier dropdown menu ──
+function toggleFileMenu(e) {
+  if (e) e.stopPropagation();
+  var dd = document.getElementById('file-dropdown');
+  if (!dd) return;
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+function closeFileMenu() {
+  var dd = document.getElementById('file-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+document.addEventListener('click', function() { closeFileMenu(); });
+
 function openHelp() {
   var ov = document.getElementById('help-overlay');
   // Toggle: close if already open
@@ -23928,12 +25068,13 @@ render();
 // Init competition config inputs + title bar + status bar from baked data
 (function(){
   const c = EXTRA.competition||{};
-  ['cfg-nom','cfg-date-sam','cfg-date-dim'].forEach(function(id){
+  ['cfg-nom','cfg-date-sam','cfg-date-dim','cfg-date-ven'].forEach(function(id){
     const el = document.getElementById(id);
     if(!el) return;
     if(id==='cfg-nom')      el.value = c.nom||'';
     if(id==='cfg-date-sam') el.value = c.date_sam||'';
     if(id==='cfg-date-dim') el.value = c.date_dim||'';
+    if(id==='cfg-date-ven') el.value = c.date_ven||'';
   });
   // Update title bar
   if (c.nom) {
@@ -24119,10 +25260,31 @@ function populateAthFullClub() {
 }
 
 function renderAthletesTab() {
-  const athIdx = buildAthIndex();
+  // All-days view: list every athlete once, with time entries tagged by day.
+  const athIdx = buildAthIndexAllDays();
   const conflicts = getConflicts(athIdx);
 
-  let aths = [...(currentDay==='dim' ? EXTRA_DIM : EXTRA).athletes_full];
+  // Merge SAT + DIM rosters, dedup by nom|prenom. Each day's athletes_full
+  // carries the complete cat columns (tr_cat / dm_cat / tu_cat / trs_cat) for
+  // its members, so dedup on identity is enough.
+  let aths = (() => {
+    const _seen = {};
+    const _merged = [];
+    const _addAll = (arr) => {
+      if (!arr) return;
+      for (const a of arr) {
+        const k = a.nom+'|'+a.prenom;
+        if (_seen[k]) continue;
+        _seen[k] = true;
+        _merged.push(a);
+      }
+    };
+    _addAll((typeof _SAT_EXTRA !== 'undefined' && _SAT_EXTRA) ? _SAT_EXTRA.athletes_full : null);
+    _addAll(typeof EXTRA !== 'undefined' ? EXTRA.athletes_full : null);
+    _addAll(typeof EXTRA_DIM !== 'undefined' ? EXTRA_DIM.athletes_full : null);
+    _addAll(typeof EXTRA_VEN !== 'undefined' ? EXTRA_VEN.athletes_full : null);
+    return _merged;
+  })();
   if (filterClub)  aths = aths.filter(a => a.club === filterClub);
   if (filterText)  aths = aths.filter(a => (a.nom+' '+a.prenom).toLowerCase().includes(filterText) || (a.club||'').toLowerCase().includes(filterText));
   if (filterCat) {
@@ -24169,7 +25331,17 @@ function renderAthletesTab() {
   const _sortTimes = {};
   for (const [k, entries] of Object.entries(liveAthIdx)) {
     _sortTimes[k] = {};
-    for (const e of entries) _sortTimes[k][e.app] = e.wu_start;
+    for (const e of entries) {
+      // TR2 shares the TR sort column (2 physical trampolines → 1 column in athletes tab).
+      // Synchro (is_trs) goes to the TRS sort column regardless of its reassigned app.
+      // Keep the earliest start time across days/platforms as the sort key.
+      let _sortApp;
+      if (e.is_trs) _sortApp = 'TRS';
+      else if (e.app === 'TR2') _sortApp = 'TR';
+      else _sortApp = e.app;
+      const _cur = _sortTimes[k][_sortApp];
+      if (_cur == null || e.wu_start < _cur) _sortTimes[k][_sortApp] = e.wu_start;
+    }
   }
   const _timeSort = {'tr_time':'TR','dm_time':'DM','tu_time':'TU','trs_time':'TRS'};
   // Pre-build award time lookup: key → { TR: start_m, DM:..., TU:..., TRS:... }
@@ -24231,15 +25403,25 @@ function renderAthletesTab() {
         if (cmp !== 0) return cmp;
       } else {
         // Smart sort for category columns (tr_cat, dm_cat, tu_cat, trs_cat)
-        // Extract R-level and age group numerically so R1 < R2, and 8 ans < 9-10 < 11-12 < 13-14 < 15+
+        // Provincial: Novice, N1-N7, Junior, Senior with age splits (12-, 13+, 15-16, 17+)
+        // Regional: R1-R9 with age groups (8 ans, 9-10, 11-12, 13-14, 15+)
         const _catCols = ['tr_cat','dm_cat','tu_cat','trs_cat'];
         if (_catCols.includes(col)) {
           const _catKey = s => {
             if (!s) return [99, 99];
-            const lm = s.match(/R(\d)/); const lvl = lm ? +lm[1] : 99;
-            const ages = [['8 ans',0],['9-10',1],['11-12',2],['13-14',3],['15+',4]];
-            for (const [ag,v] of ages) if (s.includes(ag)) return [lvl, v];
-            return [lvl, 99];
+            // Provincial levels: Novice < N1 < N2 < N3 < N4 < N5 < N6 < N7 < Junior < Senior
+            const _provLvls = [['novice',0],['n1',1],['n2',2],['n3',3],['n4',4],['n5',5],['n6',6],['n7',7],['junior',8],['senior',9]];
+            const sl = s.toLowerCase();
+            let lvl = 99;
+            for (const [k,v] of _provLvls) { if (sl.includes(k)) { lvl = v; break; } }
+            // Fallback: regional R-levels
+            if (lvl === 99) { const lm = s.match(/R(\d)/); if (lm) lvl = +lm[1]; }
+            // Age splits: 12- < 13+ < 15-16 < 16- < 17+ < 8 ans < 9-10 < 11-12 < 13-14 < 15+
+            const _ages = [['12-',0],['13+',1],['13-',1],['14+',2],['15-16',3],['16-',4],['17+',5],
+                           ['8 ans',10],['9-10',11],['11-12',12],['13-14',13],['15+',14]];
+            let age = 99;
+            for (const [k,v] of _ages) { if (s.includes(k)) { age = v; break; } }
+            return [lvl, age];
           };
           const [laA, aaA] = _catKey(a[col]||'');
           const [laB, aaB] = _catKey(b[col]||'');
@@ -24267,24 +25449,78 @@ function renderAthletesTab() {
 
     // Get live times from blocks (they may have been dragged)
     const liveApps = liveAthIdx[k]||[];
-    const getTimes = app => { const e=liveApps.find(x=>x.app===app); return e?`${toT(e.wu_start)}→${toT(e.cp_end)}`:''};
-    
-    // Compute span from live block times
-    const allTimes = liveApps.map(x => ({s: x.wu_start, e: x.cp_end}));
+    // ChQc/Coupe Qc multi-day: each entry carries a `day` (sam/dim/ven). Render one
+    // line per entry as "<date configurée> HH:MM→HH:MM", sorted by start time.
+    // The TR column unifies TR + TR2 (2 physical trampolines → 1 athletes-tab column).
+    const _comp = (typeof EXTRA !== 'undefined' && EXTRA.competition) ? EXTRA.competition : {};
+    const _dateFor = d => {
+      if (d === 'ven') return _comp.date_ven || 'Ven';
+      if (d === 'dim') return _comp.date_dim || 'Dim';
+      return _comp.date_sam || 'Sam';
+    };
+    // Column membership: synchro blocks have their `app` reassigned to TR/TR2
+    // by _smartSplitTR. Use `is_trs` as the discriminator so synchro always
+    // lands in the TRS column and never in the TR column.
+    const _inCol = (e, apps, wantTRS) => {
+      if (wantTRS) return !!e.is_trs;
+      if (e.is_trs) return false;
+      return apps.includes(e.app);
+    };
+    const renderSched = (apps, wantTRS) => {
+      const _es = liveApps.filter(x => _inCol(x, apps, wantTRS)).sort((a,b) => a.wu_start - b.wu_start);
+      return _es.map(e => `<div>${_dateFor(e.day)} ${toT(e.wu_start)}→${toT(e.cp_end)}<${'/'}div>`).join('');
+    };
+    const firstLvl = (apps, wantTRS) => { const e = liveApps.find(x => _inCol(x, apps, wantTRS)); return e ? 'R'+(e.level||1) : ''; };
+
+    // Span = longest single-day span. Cross-day min/max is meaningless on a 3-day comp.
     let liveSpan = 0;
-    if (allTimes.length > 0) {
-      const minS = Math.min(...allTimes.map(x=>x.s));
-      const maxE = Math.max(...allTimes.map(x=>x.e));
-      liveSpan = Math.round((maxE - minS) / 6) / 10; // in hours, 1 decimal
+    {
+      const _byDay = {};
+      for (const x of liveApps) {
+        const _d = x.day || 'sam';
+        (_byDay[_d] = _byDay[_d] || []).push(x);
+      }
+      for (const _d in _byDay) {
+        const _arr = _byDay[_d];
+        const _mn = Math.min(..._arr.map(x => x.wu_start));
+        const _mx = Math.max(..._arr.map(x => x.cp_end));
+        const _s = Math.round((_mx - _mn) / 6) / 10; // hours, 1 decimal
+        if (_s > liveSpan) liveSpan = _s;
+      }
     }
     const spanCls = liveSpan > 8 ? 'td-span-bad' : liveSpan > 6 ? 'td-span-warn' : 'td-span-ok';
-    const confCell = hasConflict ? `<span style="color:var(--conflict);font-weight:700">⚠ ${myConflicts.filter(c=>c.severity==='conflict').length}<${'/'}span>` 
+    const confCell = hasConflict ? `<span style="color:var(--conflict);font-weight:700">⚠ ${myConflicts.filter(c=>c.severity==='conflict').length}<${'/'}span>`
                    : hasWarn    ? `<span style="color:var(--warn)">△ ${myConflicts.length}<${'/'}span>`
                    : `<span style="color:var(--ok)">✓<${'/'}span>`;
 
-    const tr = getTimes('TR'), dm = getTimes('DM'), tu = getTimes('TU'), trs = getTimes('TRS');
-    const getLevel = app => { const e=liveApps.find(x=>x.app===app); return e?'R'+(e.level||1):''; };
-    const trL = getLevel('TR'), dmL = getLevel('DM'), tuL = getLevel('TU'), trsL = getLevel('TRS');
+    const tr  = renderSched(['TR','TR2'], false);
+    const dm  = renderSched(['DM'],       false);
+    const tu  = renderSched(['TU'],       false);
+    const trs = renderSched([],           true);
+    const trL  = firstLvl(['TR','TR2'], false);
+    const dmL  = firstLvl(['DM'],       false);
+    const tuL  = firstLvl(['TU'],       false);
+    const trsL = firstLvl([],           true);
+
+    // Build "Prélim/Finale <cat>" lines per apparatus column from live block
+    // membership. Synchro only renders in the TRS column (apps filter on
+    // b.app), never in the trampoline column, regardless of roster cat fields.
+    const _passLabel = pt => pt === 'PRELIM' ? 'Prélim' : pt === 'FINALE' ? 'Finale' : '';
+    const renderCat = (apps, wantTRS) => {
+      const _es = liveApps
+        .filter(x => _inCol(x, apps, wantTRS))
+        .sort((a,b) => a.wu_start - b.wu_start);
+      if (_es.length === 0) return '';
+      return _es.map(e => {
+        const _cat = (e.blockCats && e.blockCats[0]) || e.cat || '';
+        const _lbl = _passLabel(e.passType);
+        return `<div>${_lbl ? _lbl+' ' : ''}${_cat}<${'/'}div>`;
+      }).join('');
+    };
+    const trCat  = renderCat(['TR','TR2'], false) || (a.tr_cat  || '');
+    const dmCat  = renderCat(['DM'],       false) || (a.dm_cat  || '');
+    const tuCat  = renderCat(['TU'],       false) || (a.tu_cat  || '');
+    const trsCat = renderCat([],           true)  || (a.trs_cat || '');
 
     // Find award time per apparatus for this athlete
     const k2 = a.nom+'|'+a.prenom;
@@ -24306,26 +25542,39 @@ function renderAthletesTab() {
       <td>${a.prenom}<${'/'}td>
       <td class="acol-club" style="color:var(--xl-gray5)">${a.club}<${'/'}td>
       <td class="acol-TR ${tr?'td-lvl '+trL:''}">${tr}<${'/'}td>
-      <td class="acol-TR ${tr?'td-lvl '+trL:''}" style="font-size:9px">${a.tr_cat||''}<${'/'}td>
+      <td class="acol-TR ${tr?'td-lvl '+trL:''}" style="font-size:9px">${trCat}<${'/'}td>
       <td class="acol-TR" style="font-family:monospace;font-size:10px;color:var(--xl-gray5)">${awTR}<${'/'}td>
       <td class="acol-DM ${dm?'td-lvl '+dmL:''}">${dm}<${'/'}td>
-      <td class="acol-DM ${dm?'td-lvl '+dmL:''}" style="font-size:9px">${a.dm_cat||''}<${'/'}td>
+      <td class="acol-DM ${dm?'td-lvl '+dmL:''}" style="font-size:9px">${dmCat}<${'/'}td>
       <td class="acol-DM" style="font-family:monospace;font-size:10px;color:var(--xl-gray5)">${awDM}<${'/'}td>
       <td class="acol-TU ${tu?'td-lvl '+tuL:''}">${tu}<${'/'}td>
-      <td class="acol-TU ${tu?'td-lvl '+tuL:''}" style="font-size:9px">${a.tu_cat||''}<${'/'}td>
+      <td class="acol-TU ${tu?'td-lvl '+tuL:''}" style="font-size:9px">${tuCat}<${'/'}td>
       <td class="acol-TU" style="font-family:monospace;font-size:10px;color:var(--xl-gray5)">${awTU}<${'/'}td>
       <td class="acol-TRS ${trs?'td-lvl '+trsL:''}">${trs}<${'/'}td>
-      <td class="acol-TRS ${trs?'td-lvl '+trsL:''}" style="font-size:9px;font-weight:bold">${a.trs_cat||''}<${'/'}td>
+      <td class="acol-TRS ${trs?'td-lvl '+trsL:''}" style="font-size:9px;font-weight:bold">${trsCat}<${'/'}td>
       <td class="acol-TRS" style="font-size:9px;color:var(--xl-gray5)">${(()=>{
         const pk = PARTNER_MAP[a.nom+'|'+a.prenom];
         if (!pk) return a.trs_cat ? '<span style="color:#ef4444;font-weight:700">⚠ Aucun partenaire</span>' : '—';
-        const extra = currentDay==='dim' ? EXTRA_DIM : EXTRA;
-        const pAth = (extra.athletes_full||[]).find(x=>x.nom+'|'+x.prenom===pk);
+        // Cross-day partner lookup: ChQc/Coupe Qc lets athletes compete on any
+        // of Ven/Sam/Dim, so search all day rosters — not just the current day.
+        const _allAths = [].concat(
+          (typeof EXTRA     !== 'undefined' && EXTRA.athletes_full)     || [],
+          (typeof EXTRA_DIM !== 'undefined' && EXTRA_DIM.athletes_full) || [],
+          (typeof EXTRA_VEN !== 'undefined' && EXTRA_VEN.athletes_full) || []
+        );
+        const pAth = _allAths.find(x=>x.nom+'|'+x.prenom===pk);
         if (!pAth || !pAth.trs_cat) return a.trs_cat ? '<span style="color:#ef4444;font-weight:700">⚠ Partenaire absent</span>' : '—';
         if (!a.trs_cat) return '—';
         const [pn,pp] = pk.split('|');
         const athKey = a.nom+'|'+a.prenom;
-        const trsBlocks = blocks.filter(b => b.app === 'TRS' && b.athletes.some(x => x.nom+'|'+x.prenom === athKey));
+        // Same-block check also needs every day's blocks (current day is live `blocks`).
+        const _allBlocks = [].concat(
+          blocks,
+          (currentDay !== 'sam' && typeof _blocks_sam !== 'undefined' && _blocks_sam) ? _blocks_sam : [],
+          (currentDay !== 'dim' && typeof _blocks_dim !== 'undefined' && _blocks_dim) ? _blocks_dim : [],
+          (currentDay !== 'ven' && typeof _blocks_ven !== 'undefined' && _blocks_ven) ? _blocks_ven : []
+        );
+        const trsBlocks = _allBlocks.filter(b => b.app === 'TRS' && b.athletes.some(x => x.nom+'|'+x.prenom === athKey));
         const partnerSameBlock = trsBlocks.some(b => b.athletes.some(x => x.nom+'|'+x.prenom === pk));
         if (!partnerSameBlock && trsBlocks.length > 0) return '<span style="color:#f59e0b;font-weight:700">⚠ '+pp+' '+pn+' (autre bloc)</span>';
         return pp+' '+pn;
@@ -24414,20 +25663,58 @@ function renderRemisesTab() {
   const rows = document.getElementById('rem-rows');
   if (!rows) return;
   rows.innerHTML='';
-  // Use live awBlocks (respect drag positions) sorted by start time
-  const sorted = [...awBlocks].sort((a,b) => a.start_m - b.start_m);
-  let total = 0;
 
-  sorted.forEach(aw => {
-    const dur = aw.end_m - aw.start_m;
+  // Build the full 3-day list: current-day live awBlocks + cached snapshots
+  // from the other days. Cached entries carry the same shape as awBlocks
+  // because _awBlocksFull_<day> stores deep-copied objects.
+  const cfg = (typeof EXTRA !== 'undefined' && EXTRA.competition) || {};
+  const _dateFor = d => {
+    if (d === 'ven') return cfg.date_ven || 'Vendredi';
+    if (d === 'dim') return cfg.date_dim || 'Dimanche';
+    return cfg.date_sam || 'Samedi';
+  };
+  const _dayOrder = { ven: 0, sam: 1, dim: 2 };
+
+  const bundle = [];
+  const _pushDay = (aws, day) => {
+    if (!aws || !aws.length) return;
+    for (const aw of aws) bundle.push({ aw, day });
+  };
+  // Current day uses the live buffer (respects unsaved drags)
+  _pushDay(awBlocks, currentDay);
+  if (currentDay !== 'sam' && typeof _awBlocksFull_sam !== 'undefined' && _awBlocksFull_sam) _pushDay(_awBlocksFull_sam, 'sam');
+  if (currentDay !== 'dim' && typeof _awBlocksFull_dim !== 'undefined' && _awBlocksFull_dim) _pushDay(_awBlocksFull_dim, 'dim');
+  if (currentDay !== 'ven' && typeof _awBlocksFull_ven !== 'undefined' && _awBlocksFull_ven) _pushDay(_awBlocksFull_ven, 'ven');
+
+  // Sort by day then start time
+  bundle.sort((a, b) => {
+    const da = _dayOrder[a.day] ?? 9;
+    const db = _dayOrder[b.day] ?? 9;
+    if (da !== db) return da - db;
+    return (a.aw.start_m || 0) - (b.aw.start_m || 0);
+  });
+
+  let total = 0;
+  let lastDay = null;
+  bundle.forEach(({aw, day}) => {
+    if (day !== lastDay) {
+      // Insert a day separator row
+      const sep = document.createElement('div');
+      sep.className = 'rem-row rem-day-sep';
+      sep.style.cssText = 'background:#e0e7ff;border-top:2px solid #6366f1;font-weight:700;color:#3730a3;grid-column:1 / -1;padding:4px 10px;font-size:11px;letter-spacing:.3px;text-transform:uppercase;display:block';
+      sep.textContent = _dateFor(day);
+      rows.appendChild(sep);
+      lastDay = day;
+    }
+    const dur = (aw.end_m || 0) - (aw.start_m || 0);
     total += dur;
-    const cats = aw.cats.map(c=>c.replace(/^(TR|DMT|TU|TRS)\s*-\s*/,'')).join('  ·  ');
-    const row=document.createElement('div');
-    row.className='rem-row';
-    row.innerHTML=`
+    const cats = (aw.cats || []).map(c => c.replace(/^(TR|DMT|TU|TRS)\s*-\s*/, '')).join('  ·  ');
+    const row = document.createElement('div');
+    row.className = 'rem-row';
+    row.innerHTML = `
       <div class="rem-cell"><span class="rem-app-badge ${aw.app} R${aw.level}">${aw.app}${aw.sexe?' '+aw.sexe.charAt(0):''} R${aw.level}<${'/'}span><${'/'}div>
       <div class="rem-cell" style="font-weight:700">R${aw.level}<${'/'}div>
-      <div class="rem-cell" style="font-family:monospace;font-size:11px;font-weight:600">${toT(aw.start_m)}<${'/'}div>
+      <div class="rem-cell" style="font-family:monospace;font-size:11px;font-weight:600">${_dateFor(day)} ${toT(aw.start_m)}<${'/'}div>
       <div class="rem-cell" style="font-family:monospace;font-size:11px">${toT(aw.end_m)}<${'/'}div>
       <div class="rem-cell rem-cats">${cats}<${'/'}div>
     `;
@@ -25213,23 +26500,16 @@ function importScheduleFromFile() {
           c.nom = _gsCompMeta.nom;
           EXTRA.competition.nom = _gsCompMeta.nom;
         }
-        if (!c.date_sam && _gsCompMeta && _gsCompMeta.date) {
-          var dm = _gsCompMeta.date.match(/(\d{1,2})-(\d{1,2})\s+(janvier|f\u00e9vrier|mars|avril|mai|juin|juillet|ao\u00fbt|septembre|octobre|novembre|d\u00e9cembre)/i);
-          if (dm) {
-            c.date_sam = dm[1] + ' ' + dm[3];
-            c.date_dim = dm[2] + ' ' + dm[3];
-          } else {
-            c.date_sam = _gsCompMeta.date;
-          }
-          EXTRA.competition.date_sam = c.date_sam;
-          EXTRA.competition.date_dim = c.date_dim || '';
-        }
+        // Dates come from the imported file only — never from _gsCompMeta.date,
+        // which can be polluted by athlete names on the Formulaire tab.
         var cfgNom = document.getElementById('cfg-nom');
         if (cfgNom) cfgNom.value = c.nom || '';
         var cfgSam = document.getElementById('cfg-date-sam');
         if (cfgSam) cfgSam.value = c.date_sam || '';
         var cfgDim = document.getElementById('cfg-date-dim');
         if (cfgDim) cfgDim.value = c.date_dim || '';
+        var cfgVen = document.getElementById('cfg-date-ven');
+        if (cfgVen) cfgVen.value = c.date_ven || '';
         if (c.nom) {
           var t = c.nom + ' - Horaire';
           document.title = t;
@@ -25768,15 +27048,19 @@ function switchDay(day) {
   const _firstVisitDim = (day === 'dim' && _awBlocks_dim === null);
   const _firstVisitSam = (day === 'sam' && _awBlocks_sam === null);
   // Save current day state BEFORE switching
+  const _fullAwSnap = awBlocks.map(aw => JSON.parse(JSON.stringify(aw)));
   if (currentDay === 'sam') {
-    _blocks_sam   = JSON.parse(JSON.stringify(blocks));
-    _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _blocks_sam       = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_sam     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_sam = _fullAwSnap;
   } else if (currentDay === 'ven') {
-    _blocks_ven   = JSON.parse(JSON.stringify(blocks));
-    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _blocks_ven       = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_ven     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_ven = _fullAwSnap;
   } else {
-    _blocks_dim   = JSON.parse(JSON.stringify(blocks));
-    _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _blocks_dim       = JSON.parse(JSON.stringify(blocks));
+    _awBlocks_dim     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_dim = _fullAwSnap;
   }
   currentDay = day;
   if (day === 'sam') {
@@ -25811,7 +27095,7 @@ function switchDay(day) {
   // Update status date
   const cfg = EXTRA.competition || {};
   const dateEl = document.querySelector('#status-bar .status-item');
-  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||_gsCompMeta.date||'Samedi') : (day==='ven' ? (cfg.date_ven||'Vendredi') : (cfg.date_dim||_gsCompMeta.date||'Dimanche'));
+  if (dateEl) dateEl.textContent = day==='sam' ? (cfg.date_sam||'Samedi') : (day==='ven' ? (cfg.date_ven||'Vendredi') : (cfg.date_dim||'Dimanche'));
   // Update age filter
   const ageSel = document.getElementById('age-filter');
   if (ageSel) {
@@ -25863,12 +27147,16 @@ function switchDay(day) {
   }
   autoScheduleAwards();
   try { renderAwardBlocks(); } catch(e){ console.warn('switchDay: renderAwardBlocks:', e); }
+  const _fullAwSnap2 = awBlocks.map(aw => JSON.parse(JSON.stringify(aw)));
   if (day === 'dim') {
-    _awBlocks_dim = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocks_dim     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_dim = _fullAwSnap2;
   } else if (day === 'ven') {
-    _awBlocks_ven = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocks_ven     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_ven = _fullAwSnap2;
   } else {
-    _awBlocks_sam = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocks_sam     = awBlocks.map(aw => ({id:aw.id, start_m:aw.start_m, end_m:aw.end_m}));
+    _awBlocksFull_sam = _fullAwSnap2;
   }
   scheduleSave();
   requestAnimationFrame(function() { try { autoFitCols(); } catch(e) {} });
@@ -26828,8 +28116,10 @@ function printAthleteList() {
   const club   = (document.getElementById('ath-full-club')||{value:''}).value||'';
   const cfg = EXTRA.competition || {};
   const dayLabel = currentDay === 'dim'
-    ? 'Dimanche ' + (cfg.date_dim || _gsCompMeta.date || '')
-    : 'Samedi ' + (cfg.date_sam || _gsCompMeta.date || '');
+    ? 'Dimanche ' + (cfg.date_dim || '')
+    : currentDay === 'ven'
+      ? 'Vendredi ' + (cfg.date_ven || '')
+      : 'Samedi ' + (cfg.date_sam || '');
   const extra = currentDay === 'dim' ? EXTRA_DIM : EXTRA;
   const athIdx = buildAthIndex();
   const conflicts = getConflicts(athIdx);
