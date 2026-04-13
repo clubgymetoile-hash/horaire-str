@@ -6496,6 +6496,12 @@ function _gsRebuild(athletes) {
     [['TR',a.tr],['DM',a.dmt],['TU',a.tu],['TRS',a.trs]].forEach(function(pair){
       var app=pair[0], cat=pair[1];
       if (!cat) return;
+      // v122: TRS (synchro) — skip athletes without a valid partner
+      // An athlete with trs category but no partner in PARTNER_MAP should not create a block
+      if (app === 'TRS') {
+        var athKey = a.nom+'|'+a.prenom;
+        if (!newPM[athKey]) return; // no partner found → skip this athlete for synchro
+      }
       // Key includes sex: N3 Masculin and N3 Féminin are separate groups
       // TRS (synchro) can have mixed pairs — don't separate by sex
       var sexeKey = (app === 'TRS') ? '' : (a.sexe||'').trim();
@@ -21959,6 +21965,12 @@ function _gsRebuild(athletes) {
     [['TR',a.tr],['DM',a.dmt],['TU',a.tu],['TRS',a.trs]].forEach(function(pair){
       var app=pair[0], cat=pair[1];
       if (!cat) return;
+      // v122: TRS (synchro) — skip athletes without a valid partner
+      // An athlete with trs category but no partner in PARTNER_MAP should not create a block
+      if (app === 'TRS') {
+        var athKey = a.nom+'|'+a.prenom;
+        if (!newPM[athKey]) return; // no partner found → skip this athlete for synchro
+      }
       // Key includes sex: N3 Masculin and N3 Féminin are separate groups
       // TRS (synchro) can have mixed pairs — don't separate by sex
       var sexeKey = (app === 'TRS') ? '' : (a.sexe||'').trim();
